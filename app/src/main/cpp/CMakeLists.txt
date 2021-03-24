@@ -9,11 +9,7 @@ cmake_minimum_required(VERSION 3.10.2)
 
 project("simaromur")
 
-add_library(flite STATIC IMPORTED)
-add_library(flite_cmu_indic_lex STATIC IMPORTED)
-add_library(flite_cmu_indic_lang STATIC IMPORTED)
-add_library(flite_cmulex STATIC IMPORTED)
-add_library(flite_usenglish STATIC IMPORTED)
+set(CMAKE_VERBOSE_MAKEFILE on)
 
 if("${ANDROID_ABI}" STREQUAL "armeabi-v7a")
     set (ARCH armv7a-linux-androideabi)
@@ -24,6 +20,13 @@ elseif("${ANDROID_ABI}" STREQUAL "x86")
 elseif("${ANDROID_ABI}" STREQUAL "x86_64")
     set (ARCH x86_64-linux-android)
 endif()
+
+# Flite libraries
+add_library(flite STATIC IMPORTED)
+add_library(flite_cmu_indic_lex STATIC IMPORTED)
+add_library(flite_cmu_indic_lang STATIC IMPORTED)
+add_library(flite_cmulex STATIC IMPORTED)
+add_library(flite_usenglish STATIC IMPORTED)
 
 # Variable FLITE_DIR is set by build.gradle which again looks for the entry "flite.dir" in file
 # local.properties. That's the way how to pass build variables from outside.
@@ -37,18 +40,8 @@ set_target_properties(flite_usenglish PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/
 set_target_properties(flite PROPERTIES INCLUDE_DIRECTORIES ${FLITE_DIR}/include)
 include_directories( ${FLITE_DIR}/include )
 
-# Searches for a specified prebuilt library and stores the path as a
-# variable. Because CMake includes system libraries in the search path by
-# default, you only need to specify the name of the public NDK library
-# you want to add. CMake verifies that the library exists before
-# completing its build.
-
 find_library(
-        # Sets the name of the path variable.
         log-lib
-
-        # Specifies the name of the NDK library that
-        # you want CMake to locate.
         log
 )
 
@@ -83,3 +76,6 @@ target_link_libraries( ttsflite PUBLIC
         # included in the NDK.
         ${log-lib}
        )
+
+add_subdirectory(g2p)
+

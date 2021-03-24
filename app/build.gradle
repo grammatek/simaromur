@@ -13,21 +13,37 @@ def getFliteDir() {
     return externalModuleDir
 }
 
+def get3rdPartyDir() {
+    Properties properties = new Properties()
+    properties.load(new File(rootDir.absolutePath + "/local.properties").newDataInputStream())
+    def externalModuleDir = properties.getProperty('3rdparty.dir', null)
+    if (externalModuleDir == null) {
+        throw new GradleException(
+                "3rdparty location not found. Define location with 3rdparty.dir in the local.properties file!")
+    }
+    return externalModuleDir
+}
+
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
+    ndkVersion '23.0.7123448'
 
     defaultConfig {
         applicationId "com.grammatek.simaromur"
         minSdkVersion 28
         targetSdkVersion 30
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
                 arguments "-DFLITE_DIR="+getFliteDir()
+                arguments "-DTHIRD_PARTY_DIR="+get3rdPartyDir()
+                arguments "-DCMAKE_VERBOSE_MAKEFILE=ON", "V=1"
+                arguments "-DCMAKE_CXX_FLAGS -Wno-deprecated"
+                arguments "-DCMAKE_C_FLAGS -Wno-deprecated"
                 cppFlags "-std=c++17"
             }
         }
@@ -35,14 +51,24 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            // Enables code shrinking, obfuscation, and optimization for only
+            // your project's release build type.
+            minifyEnabled true
+
+            // Enables resource shrinking, which is performed by the
+            // Android Gradle plugin.
+            shrinkResources true
+
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            ndk {
+                debugSymbolLevel 'full'
+            }
         }
     }
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
-            version "3.10.2"
+            version "3.18.1"
         }
     }
     compileOptions {

@@ -56,6 +56,7 @@ import android.util.Log;
 public class FliteTtsService extends TextToSpeechService {
 	private final static String LOG_TAG = "Flite_Java_" + FliteTtsService.class.getSimpleName();
 	private NativeFliteTTS mEngine;
+	private NativeG2P mG2P;
 
 	private static final String DEFAULT_LANGUAGE = "eng";
 	private static final String DEFAULT_COUNTRY = "USA";
@@ -70,7 +71,7 @@ public class FliteTtsService extends TextToSpeechService {
 	@Override
 	public void onCreate() {
 		initializeFliteEngine();
-
+		initializeG2P();
 		// This calls onIsLanguageAvailable() and must run after Initialization
 		super.onCreate();
 	}
@@ -81,6 +82,14 @@ public class FliteTtsService extends TextToSpeechService {
 			mEngine = null;
 		}
 		mEngine = new NativeFliteTTS(this, mSynthCallback);
+	}
+
+	private void initializeG2P() {
+		if (mG2P != null) {
+			// @todo: mG2P.stop();
+			mG2P = null;
+		}
+		mG2P = new NativeG2P(this);
 	}
 
 	@Override
@@ -117,14 +126,19 @@ public class FliteTtsService extends TextToSpeechService {
 		String language = request.getLanguage();
 		String country = request.getCountry();
 		String variant = request.getVariant();
-		String text = request.getText();
-		Integer speechrate = request.getSpeechRate();
+		String text = request.getCharSequenceText().toString();
 
 		boolean result = true;
 
-		if (! ((mLanguage == language) &&
-				(mCountry == country) &&
-				(mVariant == variant ))) {
+		// @Todo DS: here we test our G2P pipeline. So far, we send the full text without normalization,
+		//           word splitting, etc., but that will of course be changed later. So far, we want
+		//           to see our pipeline work, so watch out in Logcat for the results ...
+		String g2pText = mG2P.process(text);
+		Log.i(LOG_TAG, text + " => " + g2pText);
+
+		if (! ((mLanguage.equals(language)) &&
+				(mCountry.equals(country)) &&
+				(mVariant.equals(variant)))) {
 			result = mEngine.setLanguage(language, country, variant);
 			mLanguage = language;
 			mCountry = country;
@@ -136,10 +150,11 @@ public class FliteTtsService extends TextToSpeechService {
 			return;
 		}
 
+		int speechrate = request.getSpeechRate();
 		mEngine.setSpeechRate(speechrate);
 		
 		mCallback = callback;
-        Integer rate = new Integer(mEngine.getSampleRate());
+        Integer rate = mEngine.getSampleRate();
         Log.e(LOG_TAG, rate.toString());
 		mCallback.start(mEngine.getSampleRate(), AudioFormat.ENCODING_PCM_16BIT, 1);
 		mEngine.synthesize(text);

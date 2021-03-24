@@ -183,7 +183,18 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 		mStrings.add("Click an item here to synthesize, or enter your own text below!");
 		mStrings.add("A whole joy was reaping, but they've gone south, go fetch azure mike!");
 		mStrings.add("हिन्दी संवैधानिक रूप से भारत की प्रथम राजभाषा और भारत की सबसे अधिक बोली और समझी जाने वाली भाषा है।");
-		mStrings.add("महाराष्ट्र आणि गोवा ह्या राज्यांची मराठी ही अधिकृत राजभाषा आहे.");
+		mStrings.add("Innanlandssmitið sem greindist utan sóttkvíar í gær sýnir að veiran er ekki horfin úr íslensku samfélagi");
+		mStrings.add("Innanlandssmitið sem greindist utan sóttkvíar í gær sýnir að veiran er ekki horfin úr íslensku samfélagi." +
+				"Ekki er búið að rekja smitið og þá liggur raðgreining ekki fyrir.Þetta kom fram í máli Þórólfs Guðnasonar," +
+				"sóttvarnalæknis, á upplýsingafundi almannavarna og landlæknis í dag. Hann sagðist vona að hópsýkingin sem kom" +
+				"upp fyrir tveimur vikum væri yfirstaðin en tók fram að ekki væri hægt að útiloka eitthvað samfélagslegt smit" +
+				"út frá smitinu sem greindist í gær. Þórólfur sagði smitrakningu standa yfir og þá býst hann við niðurstöðu úr" +
+				"raðgreiningu í kvöld. Þá sagði hann að þeir staðir sem sá smitaði var á væru nokkuð afmarkaðir og ekki mjög margir." +
+				"Líklegast yrði hægt að hafa samband við alla þá sem voru á þeim stöðum upp á sóttkví og sýnatöku að gera." +
+				" Það er ástæða til að hafa áhyggjur af smitinu sem greindist í gær utan sóttkvíar en við erum á fullu að setja fólk" +
+				" í sóttkví og skima í kringum þennan einstakling, sagði Þórólfur. Þá hvatti hann almenning til að gæta áfram að" +
+				"  ítrustu sóttvörnum. Tilfellið sem greindist í gær sýnir það að veiran er ekki horfin úr íslensku samfélagi og ef" +
+				"  við pössum okkur ekki getum við fengið aðra bylgju í bakið, sagði Þórólfur.");
 		mStrings.add("Hello World, नमस्कार, வணக்கம், నమస్కారం");
 
 		mAdapter = new InputHistoryAdapter(this, R.layout.list_tts_history, mStrings);
