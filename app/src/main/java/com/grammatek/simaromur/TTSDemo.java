@@ -291,50 +291,42 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 	}
 
 	@SuppressWarnings("deprecation")
+	// onInit() can also be called in case of an Error in new TextToSpeech()
 	@Override
 	public void onInit(int status) {
-		boolean success = true;
-		if (status == TextToSpeech.ERROR) {
-			success = false;
+		// mTts is only set in case status != TextToSpeech.ERROR !
+		boolean success = false;
+		if ((status != TextToSpeech.ERROR) &&
+				(mTts.setEngineByPackageName("com.grammatek.simaromur") != TextToSpeech.ERROR)) {
+			// REALLY check that it is flite engine that has been initialized
+			// This is done using a hack, for now, since for API < 14
+			// there seems to be no way to check which engine is being used.
+			Locale locale = new Locale("eng", "USA", "is_flite_available");
+			if (mTts.isLanguageAvailable(locale) == TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE) {
+				success = true;
+			}
 		}
 
-		if (success &&
-				(android.os.Build.VERSION.SDK_INT >=
-				android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH)) {
-			status = mTts.setEngineByPackageName("com.grammatek.simaromur");
+		if (success) {
+			buildUI();
 		}
-
-		if (status == TextToSpeech.ERROR) {
-			success = false;
-		}
-
-		// REALLY check that it is flite engine that has been initialized
-		// This is done using a hack, for now, since for API < 14
-		// there seems to be no way to check which engine is being used.
-
-		if (mTts.isLanguageAvailable(new Locale("eng", "USA", "is_flite_available"))
-				!= TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE) {
-			success = false;
-		}
-
-		if (!success) {
+		else {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setMessage("Flite TTS Engine could not be initialized. Check that Flite is enabled on your phone!. In some cases, you may have to select flite as the default engine.");
 			builder.setNegativeButton("Open TTS Settings", new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					dialog.cancel();
+					//Open Android Text-To-Speech Settings
 					Intent intent = new Intent();
-					intent.setComponent(new ComponentName("com.android.settings", "com.android.settings.TextToSpeechSettings"));
-			        startActivity(intent);
+					intent.setAction("com.android.settings.TTS_SETTINGS");
+					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					startActivity(intent);
 					finish();
 				}
 			});
 			AlertDialog alert = builder.create();
 			alert.show();
-		}
-		else {
-			buildUI();
 		}
 	}
 
