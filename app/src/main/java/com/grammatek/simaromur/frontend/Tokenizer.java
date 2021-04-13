@@ -26,7 +26,6 @@ public class Tokenizer {
         Abbreviations abbr = new Abbreviations(context);
         mAbbreviations = abbr.getAbbreviations();
         mAbbreviationsNonending = abbr.getNonEndingAbbr();
-
     }
 
     /**

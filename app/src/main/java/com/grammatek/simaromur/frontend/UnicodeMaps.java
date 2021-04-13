@@ -75,6 +75,7 @@ public class UnicodeMaps {
         ipaMap.put('\u028a', ""); // latin small letter upsilon
         ipaMap.put('\u028b', ""); // latin small letter v with hook
     }
+
     public static Map<Character, String> greekAlphabet = new HashMap<>();
     static {
         greekAlphabet.put('\u0394', "delta"); // greek capital letter delta
@@ -208,8 +209,6 @@ public class UnicodeMaps {
         otherSubstMap.put('\u017c', "s"); // latin small letter z with dot above
         otherSubstMap.put('\u0219', "s"); // latin small letter s with comma below
         otherSubstMap.put('\u2032', "fet"); // prime -> add a sign for normalizer, that an inflection might be needed? fet, feta, ...
-
-
     }
 
     public static Set<Character> CharactersOutOfRange2Keep = new HashSet<>();
@@ -228,5 +227,4 @@ public class UnicodeMaps {
     public static Character CombiningDotAbove = '\u0307'; // ̇
     public static Character CombiningDiaeresis = '\u0308'; // ¨ as in ä, ü, ...
     // etc. upto u0362 all kinds of "combining" characters
-
 }
