@@ -37,6 +37,7 @@
 package com.grammatek.simaromur;
 
 import com.grammatek.simaromur.NativeFliteTTS.SynthReadyCallback;
+import com.grammatek.simaromur.frontend.FrontendManager;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -58,6 +59,8 @@ public class FliteTtsService extends TextToSpeechService {
 	private NativeFliteTTS mEngine;
 	private NativeG2P mG2P;
 
+	private FrontendManager mFrontendManager;
+
 	private static final String DEFAULT_LANGUAGE = "eng";
 	private static final String DEFAULT_COUNTRY = "USA";
 	private static final String DEFAULT_VARIANT = "male,rms";
@@ -71,7 +74,7 @@ public class FliteTtsService extends TextToSpeechService {
 	@Override
 	public void onCreate() {
 		initializeFliteEngine();
-		initializeG2P();
+		initializeFrontendManager(this);
 		// This calls onIsLanguageAvailable() and must run after Initialization
 		super.onCreate();
 	}
@@ -84,12 +87,9 @@ public class FliteTtsService extends TextToSpeechService {
 		mEngine = new NativeFliteTTS(this, mSynthCallback);
 	}
 
-	private void initializeG2P() {
-		if (mG2P != null) {
-			// @todo: mG2P.stop();
-			mG2P = null;
-		}
-		mG2P = new NativeG2P(this);
+	private void initializeFrontendManager(Context context) {
+		if (mFrontendManager == null)
+			mFrontendManager = new FrontendManager(context);
 	}
 
 	@Override
@@ -130,12 +130,11 @@ public class FliteTtsService extends TextToSpeechService {
 
 		boolean result = true;
 
-		// @Todo DS: here we test our G2P pipeline. So far, we send the full text without normalization,
-		//           word splitting, etc., but that will of course be changed later. So far, we want
-		//           to see our pipeline work, so watch out in Logcat for the results ...
-		String g2pText = mG2P.process(text);
-		Log.i(LOG_TAG, text + " => " + g2pText);
-
+		// this string, engineInput, is unused at the moment, will become the input to our engine
+		// when that interface is defined
+		String engineInput = mFrontendManager.process(text);
+		Log.i(LOG_TAG, text + " => " + engineInput);
+		
 		if (! ((mLanguage.equals(language)) &&
 				(mCountry.equals(country)) &&
 				(mVariant.equals(variant)))) {
