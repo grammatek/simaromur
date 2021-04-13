@@ -5,6 +5,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * This class holds different maps, containing unicode character encodings and their respective
+ * replacement for the unicode cleaning of raw text (see @TTSUnicodeNormalizer).
+ * The maps are by no means finalized, need to be extended and adjusted, as we run into problematic
+ * characters.
+ */
 public class UnicodeMaps {
 
     public static Map<Character, String> deleteCharsMap = new HashMap<>();

@@ -1,12 +1,8 @@
 package com.grammatek.simaromur.frontend;
 
 import android.content.Context;
-import android.media.session.MediaSession;
 import android.util.Log;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.grammatek.simaromur.FliteTtsService;
 import com.grammatek.simaromur.NativeG2P;
 
 import java.util.List;
@@ -22,26 +18,34 @@ import java.util.List;
 public class FrontendManager {
     private final static String LOG_TAG = "Flite_Java_" + FrontendManager.class.getSimpleName();
     private NativeG2P mG2P;
-    private TTSTextNormalizer mNormalizer;
+    private TTSUnicodeNormalizer mNormalizer;
     private Tokenizer mTokenizer;
 
     public FrontendManager(Context context) {
-        mNormalizer = new TTSTextNormalizer();
+        mNormalizer = new TTSUnicodeNormalizer();
         initializeTokenizer(context);
         initializeG2P(context);
     }
 
+    /**
+     * Processes text for input into a TTS engine. This includes unicode cleaning, tokenizing, and
+     * normalizing the the text, and then to convert it into an X-SAMPA transcription.
+     *
+     * @param text raw input text
+     * @return an X-SAMPA transcription of @text
+     */
     public String process(String text) {
         String processed = text;
         String cleaned = mNormalizer.normalize_encoding(processed);
         Log.i(LOG_TAG, text + " => " + cleaned);
         //tokenize
         List<String> sentences = mTokenizer.detectSentences(cleaned);
-        String tokenized = getTokens(sentences);
+        String tokenized = getSentencesAsString(sentences);
         Log.i(LOG_TAG, text + " => " + tokenized);
         //normalize
-
+        //TODO
         //transcribe: a) dictionary look-up b) g2p
+        // TODO: dictionary lookup, only send unknown words to g2p
         String g2pText = mG2P.process(tokenized);
         Log.i(LOG_TAG, text + " => " + g2pText);
 
@@ -49,7 +53,8 @@ public class FrontendManager {
         return processed;
     }
 
-    private String getTokens(List<String> sentences) {
+    // Joins the sentences into one string, separated by a white space. No further processing.
+    private String getSentencesAsString(List<String> sentences) {
         StringBuilder sb = new StringBuilder();
         for (String s : sentences) {
             sb.append(s);

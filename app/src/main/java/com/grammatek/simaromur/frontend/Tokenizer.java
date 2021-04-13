@@ -6,18 +6,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * The Tokenizer is a basic white space tokenizer, that takes abbreviations and digits into account,
+ * when splitting and determining end of sentences.
+ * Algorithm:
+ *      a. split on white spaces
+ *      b. insert spaces before punctuation where appropriate (see processSpecialCharacters)
+ *      c. determine end of sentence (EOS) with the help of context (see detectSentences)
+ *      d. collect sentences in a list to return
+ */
 public class Tokenizer {
-    private Set<String> abbreviations;
-    private Set<String> abbreviations_nonending;
+    private Set<String> mAbbreviations;
+    private Set<String> mAbbreviationsNonending;
 
-    private String alphabetic = "[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ]+";
-    private String upperCase = "[A-ZÁÉÍÓÚÝÐÞÆÖ]";
-    private String punct = "[\\s.,]+";
+    private String mAlphabetic = "[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ]+";
+    private String mUpperCase = "[A-ZÁÉÍÓÚÝÐÞÆÖ]";
 
     public Tokenizer(Context context) {
         Abbreviations abbr = new Abbreviations(context);
-        abbreviations = abbr.getAbbreviations();
-        abbreviations_nonending = abbr.getNonEndingAbbr();
+        mAbbreviations = abbr.getAbbreviations();
+        mAbbreviationsNonending = abbr.getNonEndingAbbr();
 
     }
 
@@ -32,35 +40,35 @@ public class Tokenizer {
      */
     public List<String> detectSentences(String text) {
         List<String> sentences = new ArrayList<>();
-        String[] tokens_arr = text.split("\\s");
+        String[] tokensArr = text.split("\\s");
         StringBuilder sb = new StringBuilder();
-        String last_token = "";
+        String lastToken = "";
         // loop through all tokens in text and determine sentence boundaries,
-        // store tokens ending with '.' in the 'last_token' variable
-        for (String t : tokens_arr) {
+        // store tokens ending with '.' in the 'lastToken' variable
+        for (String t : tokensArr) {
             String tokenized = t;
             // we don't need to do anything with alphabetic-only tokens
-            if (!t.matches(alphabetic)) {
+            if (!t.matches(mAlphabetic)) {
                 tokenized = processSpecialCharacters(t.trim());
             }
-            if (!last_token.isEmpty()) {
-                if (!isFullStopEOS(tokenized, last_token))
-                    addToSent(sb, last_token);
+            if (!lastToken.isEmpty()) {
+                if (!isFullStopEOS(tokenized, lastToken))
+                    addToSent(sb, lastToken);
                 else {
-                    String sentence = finishSent(sb, last_token);
+                    String sentence = finishSent(sb, lastToken);
                     sentences.add(sentence);
                     sb = new StringBuilder();
                 }
             }
             // keep tokens ending with '.' for the next iteration
             if (endsWithDot(tokenized)) {
-                last_token = tokenized;
+                lastToken = tokenized;
                 continue;
             }
             else
-                last_token = "";
+                lastToken = "";
 
-            sb.append(tokenized + " ");
+            sb.append(tokenized).append(" ");
             if (isEOS(tokenized)) {
                 sentences.add(sb.toString().trim());
                 sb = new StringBuilder();
@@ -68,8 +76,8 @@ public class Tokenizer {
         }
 
         // we might still have a dangling last token
-        if (!last_token.isEmpty()) {
-            String sent = finishSent(sb, last_token);
+        if (!lastToken.isEmpty()) {
+            String sent = finishSent(sb, lastToken);
             sentences.add(sent);
             sb = new StringBuilder();
         }
@@ -81,11 +89,15 @@ public class Tokenizer {
         return sentences;
     }
 
+    // 'token' might end with " .", delete the space, because we are dealing with an
+    // abbreviation or digits, that should not contain a space before the "."
     private void addToSent(StringBuilder sb, String token) {
         token = token.replace(" ", "");
         sb.append(token + " ");
     }
 
+    // finish a sentence, take a look if if the sb content has a correct sentence ending,
+    // if not, add a " ." to the sentence and return.
     private String finishSent(StringBuilder sb, String token) {
         sb.append(token);
         String sent = sb.toString().trim();
@@ -107,7 +119,7 @@ public class Tokenizer {
     // ending abbreviation (like 'Hr.', which should always be followed by a name).
     private boolean isFullStopEOS(String current, String last) {
         if (Character.isUpperCase(current.charAt(0)) || current.charAt(0) == '"') {
-            if (isUpperCaseAbbr(last) || abbreviations_nonending.contains(last.toLowerCase())) {
+            if (isUpperCaseAbbr(last) || mAbbreviationsNonending.contains(last.toLowerCase())) {
                 return false;
             }
             return true;
@@ -123,9 +135,8 @@ public class Tokenizer {
                 || token.endsWith(" :"));
     }
 
-    /*
-    If a token contains some other character(s) than alphabetic characters, we take a closer look.
-     */
+
+    //If a token contains some other character(s) than alphabetic characters, we take a closer look.
     private String processSpecialCharacters(String token) {
 
         // first, check if we need to process the token, several categories do not need
@@ -135,23 +146,27 @@ public class Tokenizer {
 
         // for all kinds of punctuation we need to insert spaces at the correct positions
         // Patterns
-        String processed_token = token;
-        String insert_space_after_anywhere = "(.*)([(\\[{])(.*)";
-        String insert_space_before_anywhere = "(.+)([)\\[}])(.*)";
-        String insert_space_after_if_beginning = "^(\")(.+)";
-        String insert_space_before_if_end = "(.+)([\":,.!?])$";
-        String insert_space_before_if_end_and_punct = "(.+)([\":,.!?])(\\s[\":,.!?])$";
+        String processedToken = token;
+        String insertSpaceAfterAnywhere = "(.*)([(\\[{])(.*)";
+        String insertSpaceBeforeAnywhere = "(.+)([)\\[}])(.*)";
+        String insertSpaceAfterIfBeginning = "^(\")(.+)";
+        String insertSpaceBeforeIfEnd = "(.+)([\":,.!?])$";
+        String insertSpaceBeforeIfEndAndPunct = "(.+)([\":,.!?])(\\s[\":,.!?])$";
 
         // replacements
-        processed_token = processed_token.replaceAll(insert_space_after_anywhere, "$1$2" + " " + "$3");
-        processed_token = processed_token.replaceAll(insert_space_before_anywhere, "$1" + " " + "$2$3");
-        processed_token = processed_token.replaceAll(insert_space_after_if_beginning, "$1" + " " + "$2");
-        processed_token = processed_token.replaceAll(insert_space_before_if_end, "$1" + " " + "$2");
-        processed_token = processed_token.replaceAll(insert_space_before_if_end_and_punct, "$1" + " " + "$2$3");
+        processedToken = processedToken.replaceAll(insertSpaceAfterAnywhere, "$1$2" + " " + "$3");
+        processedToken = processedToken.replaceAll(insertSpaceBeforeAnywhere, "$1" + " " + "$2$3");
+        processedToken = processedToken.replaceAll(insertSpaceAfterIfBeginning, "$1" + " " + "$2");
+        processedToken = processedToken.replaceAll(insertSpaceBeforeIfEnd, "$1" + " " + "$2");
+        processedToken = processedToken.replaceAll(insertSpaceBeforeIfEndAndPunct, "$1" + " " + "$2$3");
 
-        return processed_token;
+        return processedToken;
     }
 
+    // We assume 'token' contains some non-alphabetic characters and we test
+    // if it needs further processing. Tokens of size 0 or 1 do not need processing, and digits (with
+    // or without punctuation) and defined abbreviations are also not to be processed further.
+    // For all other tokens the method returns 'true'.
     private boolean shouldProcess(String token) {
         if (token.length() <= 1)
             return false;
@@ -169,15 +184,15 @@ public class Tokenizer {
     }
 
     private boolean isUpperCaseAbbr(String token) {
-        if (token.matches("(" + upperCase + "\\.)+") && !isAbbreviation(token))
+        if (token.matches("(" + mUpperCase + "\\.)+") && !isAbbreviation(token))
             return true;
         return false;
     }
 
     private boolean isAbbreviation(String token) {
-        if (abbreviations.contains(token.toLowerCase()))
+        if (mAbbreviations.contains(token.toLowerCase()))
             return true;
-        if (abbreviations_nonending.contains(token.toLowerCase()))
+        if (mAbbreviationsNonending.contains(token.toLowerCase()))
             return true;
         return false;
     }

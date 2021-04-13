@@ -1,10 +1,21 @@
 package com.grammatek.simaromur.frontend;
 
-public class TTSTextNormalizer {
+/**
+ * This class handles Unicode cleaning and unicode normalizing of text. To simplify further
+ * processing, text normalizing and grapheme-to-phoneme conversion, we clean the text of most
+ * unicode characters not contained in the Icelandic alphabet, and also delete or substitute a
+ * number of punctuation characters and special symbols.
+ */
+public class TTSUnicodeNormalizer {
 
+    /**
+     * Normalize the unicode encoding of the input text. This includes deleting and substituting
+     * certain characters and symbols, as defined in @UnicodeMaps
+     * @param text raw input text
+     * @return cleaned version of @text as String
+     */
     public String normalize_encoding(String text) {
         String normalized_text = text;
-        int len = text.length();
         for (int i = 0; i < text.length(); i++) {
             String repl = get_replacement(text.charAt(i));
             if (!repl.isEmpty()) {
@@ -21,7 +32,6 @@ public class TTSTextNormalizer {
     }
 
     private String get_replacement(Character c) {
-
         if (UnicodeMaps.insertSpaceMap.containsKey(c))
             return UnicodeMaps.insertSpaceMap.get(c);
         if (UnicodeMaps.otherSubstMap.containsKey(c))

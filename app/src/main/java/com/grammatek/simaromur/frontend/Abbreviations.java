@@ -11,9 +11,13 @@ import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * This class initializes and stores sets of abbreviations from res/raw abbreviation files.
+ */
 public class Abbreviations {
     private Context context;
     private Set<String> abbreviations = new HashSet<>();
+    // nonEndingAbbr are not allowed at the end of a sentence
     private Set<String> nonEndingAbbr = new HashSet<>();
 
     public Abbreviations(Context c) {
@@ -33,7 +37,6 @@ public class Abbreviations {
     }
 
     private Set<String> readAbbrFromFile(int resID) {
-
         Set<String> abbrSet = new HashSet<>();
         Resources res = context.getResources();
         String line = "";
