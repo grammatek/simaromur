@@ -37,6 +37,8 @@
 package com.grammatek.simaromur;
 
 import com.grammatek.simaromur.NativeFliteTTS.SynthReadyCallback;
+import com.grammatek.simaromur.frontend.FrontendManager;
+import com.grammatek.simaromur.frontend.TTSTextNormalizer;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -58,6 +60,8 @@ public class FliteTtsService extends TextToSpeechService {
 	private NativeFliteTTS mEngine;
 	private NativeG2P mG2P;
 
+	private FrontendManager mFrontendManager;
+
 	private static final String DEFAULT_LANGUAGE = "eng";
 	private static final String DEFAULT_COUNTRY = "USA";
 	private static final String DEFAULT_VARIANT = "male,rms";
@@ -72,6 +76,7 @@ public class FliteTtsService extends TextToSpeechService {
 	public void onCreate() {
 		initializeFliteEngine();
 		initializeG2P();
+		initializeFrontendManager(this);
 		// This calls onIsLanguageAvailable() and must run after Initialization
 		super.onCreate();
 	}
@@ -82,6 +87,11 @@ public class FliteTtsService extends TextToSpeechService {
 			mEngine = null;
 		}
 		mEngine = new NativeFliteTTS(this, mSynthCallback);
+	}
+
+	private void initializeFrontendManager(Context context) {
+		if (mFrontendManager == null)
+			mFrontendManager = new FrontendManager(context);
 	}
 
 	private void initializeG2P() {
@@ -133,8 +143,11 @@ public class FliteTtsService extends TextToSpeechService {
 		// @Todo DS: here we test our G2P pipeline. So far, we send the full text without normalization,
 		//           word splitting, etc., but that will of course be changed later. So far, we want
 		//           to see our pipeline work, so watch out in Logcat for the results ...
-		String g2pText = mG2P.process(text);
-		Log.i(LOG_TAG, text + " => " + g2pText);
+		//String unicodeCleaned = mNormalizer.normalize_encoding(text);
+		//String g2pText = mG2P.process(unicodeCleaned);
+		//Log.i(LOG_TAG, text + " => " + g2pText);
+
+		String engineInput = mFrontendManager.process(text);
 
 		if (! ((mLanguage.equals(language)) &&
 				(mCountry.equals(country)) &&
