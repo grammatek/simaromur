@@ -40,7 +40,7 @@ public class FrontendManager {
         String tokenized = getTokens(sentences);
         Log.i(LOG_TAG, text + " => " + tokenized);
         //normalize
-        
+
         //transcribe: a) dictionary look-up b) g2p
         String g2pText = mG2P.process(tokenized);
         Log.i(LOG_TAG, text + " => " + g2pText);
