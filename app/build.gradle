@@ -27,7 +27,8 @@ def get3rdPartyDir() {
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
-    ndkVersion '23.0.7123448'
+    // use specific NDK version
+    //ndkVersion '23.0.7123448'
 
     defaultConfig {
         applicationId "com.grammatek.simaromur"
@@ -68,7 +69,6 @@ android {
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
-            version "3.18.1"
         }
     }
     compileOptions {

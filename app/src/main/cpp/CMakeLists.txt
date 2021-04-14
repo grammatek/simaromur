@@ -31,14 +31,14 @@ add_library(flite_usenglish STATIC IMPORTED)
 # Variable FLITE_DIR is set by build.gradle which again looks for the entry "flite.dir" in file
 # local.properties. That's the way how to pass build variables from outside.
 
-set_target_properties(flite PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/install/${ARCH}/lib/libflite.a)
-set_target_properties(flite_cmu_indic_lex PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/install/${ARCH}/lib/libflite_cmu_indic_lex.a)
-set_target_properties(flite_cmu_indic_lang PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/install/${ARCH}/lib/libflite_cmu_indic_lang.a)
-set_target_properties(flite_cmulex PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/install/${ARCH}/lib/libflite_cmulex.a)
-set_target_properties(flite_usenglish PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/install/${ARCH}/lib/libflite_usenglish.a)
+set_target_properties(flite PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite.a)
+set_target_properties(flite_cmu_indic_lex PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite_cmu_indic_lex.a)
+set_target_properties(flite_cmu_indic_lang PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite_cmu_indic_lang.a)
+set_target_properties(flite_cmulex PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite_cmulex.a)
+set_target_properties(flite_usenglish PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite_usenglish.a)
 
-set_target_properties(flite PROPERTIES INCLUDE_DIRECTORIES ${FLITE_DIR}/include)
-include_directories( ${FLITE_DIR}/include )
+set_target_properties(flite PROPERTIES INCLUDE_DIRECTORIES ${FLITE_DIR}/${ARCH}/include/flite)
+include_directories( ${FLITE_DIR}/${ARCH}/include/flite )
 
 find_library(
         log-lib
