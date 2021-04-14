@@ -136,7 +136,7 @@ Log.e(LOG_TAG, "mVoicePath: " + mVoicePath);
 		}
 
 		byte[] dataBytes = new byte[1024];
-		int nread = 0;
+		int nread;
 		try {
 			while ((nread = fis.read(dataBytes)) != -1) {
 				md.update(dataBytes, 0, nread);
@@ -155,19 +155,17 @@ Log.e(LOG_TAG, "mVoicePath: " + mVoicePath);
 
 		byte[] mdbytes = md.digest();
 
-		StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < mdbytes.length; i++) {
-          sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
-        }
+		StringBuilder sb = new StringBuilder();
+		for (byte mdbyte : mdbytes) {
+			sb.append(Integer.toString((mdbyte & 0xff) + 0x100, 16).substring(1));
+		}
 
 		if (sb.toString().equals(mVoiceMD5)) {
 			mIsVoiceAvailable = true;
-			return;
 		}
 		else {
 			Log.e(LOG_TAG,"Voice file found, but MD5 sum incorrect. Found" +
 					sb.toString() + ". Expected: " + mVoiceMD5);
-			return;
 		}
 	}
 
@@ -185,9 +183,8 @@ Log.e(LOG_TAG, "mVoicePath: " + mVoicePath);
 
 	public String getDisplayName() {
 		Locale loc = new Locale(mVoiceLanguage, mVoiceCountry, mVoiceVariant);
-		String displayName = loc.getDisplayLanguage() +
+		return loc.getDisplayLanguage() +
 				"(" + loc.getDisplayCountry() + "," + loc.getVariant() + ")";
-		return displayName;
 	}
 
 	public String getVariant() {
@@ -196,10 +193,8 @@ Log.e(LOG_TAG, "mVoicePath: " + mVoicePath);
 
 	public String getDisplayLanguage() {
 		Locale loc = new Locale(mVoiceLanguage, mVoiceCountry, mVoiceVariant);
-		String displayLanguage = loc.getDisplayLanguage() +
+		return loc.getDisplayLanguage() +
 				" (" + loc.getDisplayCountry() + ")";
-
-		return displayLanguage;
 	}
 
 	public String getPath() {

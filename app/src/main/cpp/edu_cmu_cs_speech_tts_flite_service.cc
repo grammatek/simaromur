@@ -167,9 +167,6 @@ extern "C" {
                                      TtsSynthDoneCallback, path_string);
 
     env->SetLongField(object, FIELD_mNativeData, reinterpret_cast<jlong>(jni_data));
-    //env->SetLongField(object, FIELD_mNativeData, reinterpret_cast<int64_t>(jni_data));
-    //env->SetIntField(object, FIELD_mNativeData, static_cast<int>(jni_data));
-
     env->ReleaseStringUTFChars(path, path_string);
     return result;
   }

@@ -84,7 +84,6 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 
 	private static final int PERMISSION_REQUEST_CODE = 1;
 
-	//@TargetApi(14)
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -148,14 +147,12 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-		switch (requestCode) {
-			case PERMISSION_REQUEST_CODE:
-				if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					Log.e("value", "Permission Granted, Now you can use local drive .");
-				} else {
-					Log.e("value", "Permission Denied, You cannot use local drive .");
-				}
-				break;
+		if (requestCode == PERMISSION_REQUEST_CODE) {
+			if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+				Log.e("value", "Permission Granted, Now you can use local drive .");
+			} else {
+				Log.e("value", "Permission Denied, You cannot use local drive .");
+			}
 		}
 	}
 
@@ -313,17 +310,14 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 		else {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setMessage("Flite TTS Engine could not be initialized. Check that Flite is enabled on your phone!. In some cases, you may have to select flite as the default engine.");
-			builder.setNegativeButton("Open TTS Settings", new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.cancel();
-					//Open Android Text-To-Speech Settings
-					Intent intent = new Intent();
-					intent.setAction("com.android.settings.TTS_SETTINGS");
-					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-					startActivity(intent);
-					finish();
-				}
+			builder.setNegativeButton("Open TTS Settings", (dialog, which) -> {
+				dialog.cancel();
+				//Open Android Text-To-Speech Settings
+				Intent intent = new Intent();
+				intent.setAction("com.android.settings.TTS_SETTINGS");
+				intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				startActivity(intent);
+				finish();
 			});
 			AlertDialog alert = builder.create();
 			alert.show();

@@ -65,9 +65,6 @@ public class CheckVoiceData extends Activity {
 
 		int result = TextToSpeech.Engine.CHECK_VOICE_DATA_PASS;
 		Intent returnData = new Intent();
-		/// @todo DS: deprecated since Android 18
-		//returnData.putExtra(TextToSpeech.Engine.EXTRA_VOICE_DATA_ROOT_DIRECTORY,
-		//		FLITE_DATA_PATH);
 
 		ArrayList<String> available = new ArrayList<String>();
 		ArrayList<String> unavailable = new ArrayList<String>();
