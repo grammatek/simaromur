@@ -39,8 +39,8 @@ package com.grammatek.simaromur;
 import android.app.Activity;
 import android.os.Bundle;
 
-public class Flite extends Activity {
-    
+public class Simaromur extends Activity {
+
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -49,4 +49,4 @@ public class Flite extends Activity {
     // can be wrapped up inside an apk file.
     finish();
   }
-}  
+}
