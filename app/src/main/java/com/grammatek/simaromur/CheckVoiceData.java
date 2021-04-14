@@ -53,14 +53,14 @@ import android.util.Log;
  */
 
 public class CheckVoiceData extends Activity {
-	private final static String LOG_TAG = "Flite_Java_" + CheckVoiceData.class.getSimpleName();
-	private final static String FLITE_DATA_PATH = App.getDataPath();
-	public final static String VOICE_LIST_FILE = FLITE_DATA_PATH+"cg/voices-20150129.list";
+	private final static String LOG_TAG = "Simaromur_Java_" + CheckVoiceData.class.getSimpleName();
+	private final static String DATA_PATH = App.getDataPath();
+	public final static String VOICE_LIST_FILE = DATA_PATH +"cg/voices-20150129.list";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.e(LOG_TAG, "FLITE_DATA_PATH: " + FLITE_DATA_PATH);
+		Log.e(LOG_TAG, "DATA_PATH: " + DATA_PATH);
 		Log.e(LOG_TAG, "VOICE_LIST_FILE: " + VOICE_LIST_FILE);
 
 		int result = TextToSpeech.Engine.CHECK_VOICE_DATA_PASS;
@@ -70,22 +70,21 @@ public class CheckVoiceData extends Activity {
 		ArrayList<String> unavailable = new ArrayList<String>();
 
 		/* First, make sure that the directory structure we need exists
-		 * There should be a "cg" folder inside the flite data directory
+		 * There should be a "cg" folder inside the data directory
 		 * which will store all the clustergen voice data files.
 		 */
 
-		if(!Utility.pathExists(FLITE_DATA_PATH+"cg")) {
+		if(Utility.pathNotExists(DATA_PATH + "cg")) {
 			// Create the directory.
 			Log.e(LOG_TAG, "Flite data directory missing. Trying to create it.");
 			boolean success = false;
 
 			try {
-				Log.e(LOG_TAG,FLITE_DATA_PATH);
-				success = new File(FLITE_DATA_PATH+"cg").mkdirs();
+				Log.e(LOG_TAG, DATA_PATH);
+				success = new File(DATA_PATH +"cg").mkdirs();
 			}
 			catch (Exception e) {
 				Log.e(LOG_TAG,"Could not create directory structure. "+e.getMessage());
-				success = false;
 			}
 
 			if(!success) {
@@ -101,7 +100,7 @@ public class CheckVoiceData extends Activity {
 		 * if we don't already have a file.
 		 */
 
-		if(!Utility.pathExists(VOICE_LIST_FILE)) {
+		if(Utility.pathNotExists(VOICE_LIST_FILE)) {
 			Log.e(LOG_TAG, "Voice list file doesn't exist. Try getting it from server.");
 
 			DownloadVoiceList(null);
@@ -111,7 +110,7 @@ public class CheckVoiceData extends Activity {
 		 * possibly because Internet connection was not available, we must create a dummy
 		 *
 		 */
-		if(!Utility.pathExists(VOICE_LIST_FILE)) {
+		if(Utility.pathNotExists(VOICE_LIST_FILE)) {
 			try {
 				Log.w(LOG_TAG, "Voice list not found, creating dummy list.");
 				BufferedWriter out = new BufferedWriter(new FileWriter(VOICE_LIST_FILE));
@@ -155,11 +154,9 @@ public class CheckVoiceData extends Activity {
 		// Download the voice list and call back to notify of update
 		String voiceListURL = Voice.getDownloadURLBasePath() + "voices.list?q=1";
 
-		//String FLITE_DATA_PATH = Environment.getExternalStorageDirectory() + "/flite-data/";
-		Log.e(LOG_TAG, "FLITE_DATA_PATH: " + FLITE_DATA_PATH);
+		Log.e(LOG_TAG, "DATA_PATH: " + DATA_PATH);
 
-		//String VOICE_LIST_FILE = FLITE_DATA_PATH + "cg/voices.list";
-		File voiceListFile = new File(FLITE_DATA_PATH);
+		File voiceListFile = new File(DATA_PATH);
 		boolean dirCreated = voiceListFile.mkdir();
 		boolean dirExists = voiceListFile.exists();
 		Log.d("CheckVoiceData", "dirCreated=" + dirCreated + " exists: " + dirExists);
@@ -180,7 +177,7 @@ public class CheckVoiceData extends Activity {
 	}
 
 	public static ArrayList<Voice> getVoices() {
-		Log.e(LOG_TAG, "FLITE_DATA_PATH: " + FLITE_DATA_PATH);
+		Log.e(LOG_TAG, "DATA_PATH: " + DATA_PATH);
 
 		ArrayList<String> voiceList = null;
 		try {

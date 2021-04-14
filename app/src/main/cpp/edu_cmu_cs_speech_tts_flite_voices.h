@@ -50,7 +50,7 @@
 #include <unistd.h>
 #include <dirent.h>
 
-extern char* flite_voxdir_path;  // Path to flite-data directory
+extern char* flite_voxdir_path;  // Path to data directory
 
 namespace FliteEngine {
 

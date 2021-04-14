@@ -68,7 +68,7 @@ import androidx.core.content.ContextCompat;
  */
 public class DownloadVoiceData extends ListActivity {
 	private static final int PERMISSION_REQUEST_CODE = 1;
-	private final static String LOG_TAG = "Flite_Java_" + DownloadVoiceData.class.getSimpleName();
+	private final static String LOG_TAG = "Simaromur_Java_" + DownloadVoiceData.class.getSimpleName();
 	private VoiceListAdapter mListAdapter;
 	private Context mContext;
 

@@ -48,7 +48,7 @@ import java.util.Locale;
  * Returns the sample text string for the language requested
  */
 public class GetSampleText extends Activity {
-	private final static String LOG_TAG = "Flite_Java_" + GetSampleText.class.getSimpleName();
+	private final static String LOG_TAG = "Simaromur_Java_" + GetSampleText.class.getSimpleName();
 
   @Override
   public void onCreate(Bundle savedInstanceState) {

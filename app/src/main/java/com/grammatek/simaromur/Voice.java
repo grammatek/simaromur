@@ -46,8 +46,8 @@ import java.util.Locale;
 import android.util.Log;
 
 public class Voice {
-	private final static String LOG_TAG = "Flite_Java_" + Voice.class.getSimpleName();
-	private final static String VOICE_BASE_URL = "http://festvox.org/flite/voices/cg/voxdata-v2.0.0/";
+	private final static String LOG_TAG = "Simaromur_Java_" + Voice.class.getSimpleName();
+	private final static String FLITE_VOICE_BASE_URL = "http://festvox.org/flite/voices/cg/voxdata-v2.0.0/";
 
 	private String mVoiceName;
 	private String mVoiceMD5;
@@ -59,10 +59,10 @@ public class Voice {
 	private boolean mIsVoiceAvailable;
 
 	/**
-	 * @return base URL to download voices and other flite data
+	 * @return base URL to download voices and other data
 	 */
 	public static String getDownloadURLBasePath() {
-		return VOICE_BASE_URL;
+		return FLITE_VOICE_BASE_URL;
 	}
 
 	/**

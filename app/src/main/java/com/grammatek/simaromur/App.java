@@ -26,7 +26,7 @@ public class App extends Application {
         }
     }
     public static String getDataPath() {
-        return getAbsoluteDirPath("flite-data")+"/";
+        return getAbsoluteDirPath("data")+"/";
     }
 
 

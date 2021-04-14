@@ -180,7 +180,7 @@ android_tts_result_t init(void* engine, android_tts_synth_cb_t synthDoneCBPtr, c
   if ((engineConfig != nullptr) && (strlen(engineConfig) > 0)) {
     flite_voxdir_path = reinterpret_cast<char*>(malloc(strlen(engineConfig) + 12));
     snprintf(flite_voxdir_path, strlen(engineConfig) + 12,
-             "%s/%s", engineConfig, "flite-data");
+             "%s/%s", engineConfig, "data");
   } else {
     LOGE("External storage directory not specified in engineConfig. ERROR.");
     LOGE("TtsEngine::init fail");

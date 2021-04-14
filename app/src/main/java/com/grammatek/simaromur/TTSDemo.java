@@ -67,7 +67,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.app.ActivityCompat;
 
 public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListener, OnInitListener {
-	private final static String LOG_TAG = "Flite_Java_" + TTSDemo.class.getSimpleName();
+	private final static String LOG_TAG = "Simaromur_Java_" + TTSDemo.class.getSimpleName();
 
 	private EditText mUserText;
 	private ImageButton mSendButton;
@@ -119,8 +119,9 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 			alert.show();
 		}
 		else {
-
-			mTts = new TextToSpeech(this, this);
+			if (mTts == null) {
+				mTts = new TextToSpeech(this, this);
+			}
 			mSelectedVoice = -1;
 		}
 	}
@@ -158,9 +159,13 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 
 	@Override
 	public void onDestroy() {
-		super.onDestroy();
 		if (mTts != null)
+		{
+			mTts.stop();
 			mTts.shutdown();
+			mTts = null;
+		}
+		super.onDestroy();
 	}
 
 	private void buildUI() {

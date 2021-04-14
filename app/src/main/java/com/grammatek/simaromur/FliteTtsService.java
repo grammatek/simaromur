@@ -52,10 +52,8 @@ import android.util.Log;
  * Implements the Flite Engine as a TextToSpeechService
  *
  */
-
-//@TargetApi(14)
 public class FliteTtsService extends TextToSpeechService {
-	private final static String LOG_TAG = "Flite_Java_" + FliteTtsService.class.getSimpleName();
+	private final static String LOG_TAG = "Simaromur_Java_" + FliteTtsService.class.getSimpleName();
 	private NativeFliteTTS mEngine;
 	private NativeG2P mG2P;
 
