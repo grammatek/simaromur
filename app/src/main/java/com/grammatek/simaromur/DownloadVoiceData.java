@@ -68,7 +68,7 @@ import androidx.core.content.ContextCompat;
  */
 public class DownloadVoiceData extends ListActivity {
 	private static final int PERMISSION_REQUEST_CODE = 1;
-	private final static String LOG_TAG = "Flite_Java_" + DownloadVoiceData.class.getSimpleName();
+	private final static String LOG_TAG = "Simaromur_Java_" + DownloadVoiceData.class.getSimpleName();
 	private VoiceListAdapter mListAdapter;
 	private Context mContext;
 
@@ -110,29 +110,10 @@ public class DownloadVoiceData extends ListActivity {
 		Toast toast = Toast.makeText(mContext, "Downloading Voice List", Toast.LENGTH_SHORT);
 		toast.show();
 
-		Thread thread = new Thread() {
-			@Override
-			public void run() {
-				CheckVoiceData.DownloadVoiceList(new Runnable() {
-					@Override
-					public void run() {
-						runOnUiThread(new Runnable() {
-
-							@Override
-							public void run() {
-								mListAdapter.refresh();
-
-							}
-						});
-					}
-				});
-
-			}
-		};
+		Thread thread = new Thread(() -> CheckVoiceData.DownloadVoiceList(() -> runOnUiThread(() -> mListAdapter.refresh())));
 
 		thread.start();
 		return true;
-
 	}
 
 	private class VoiceListAdapter extends BaseAdapter {
@@ -185,110 +166,79 @@ public class DownloadVoiceData extends ListActivity {
 			((TextView) convertView.findViewById(R.id.voice_manager_voice_language)).setText(mVoiceList.get(position).getDisplayLanguage());
 			((TextView) convertView.findViewById(R.id.voice_manager_voice_variant)).setText(mVoiceList.get(position).getVariant());
 			final ImageButton actionButton = (ImageButton) convertView.findViewById(R.id.voice_manager_action_image);
-			actionButton.setImageResource(
-					mVoiceList.get(position).isAvailable()?R.drawable.ic_action_delete:R.drawable.ic_action_download);
+			actionButton.setImageResource(mVoiceList.get(position).isAvailable() ?
+					R.drawable.ic_action_delete : R.drawable.ic_action_download);
 			actionButton.setVisibility(View.VISIBLE);
 
-			actionButton.setOnClickListener(new View.OnClickListener() {
+			actionButton.setOnClickListener(v -> {
+				final Voice vox = mVoiceList.get(position);
+				AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+				if (!vox.isAvailable()) {
+					builder.setMessage("Data Alert: Download Size up to 54MB.");
+					builder.setCancelable(false);
+					builder.setPositiveButton("Download Voice", (dialog, which) -> {
+						boolean permission = checkPermission();
+						if (permission) {
+							Log.e("value", "Permission Granted, Now you can use local drive .");
+						}
+						else {
+							Log.e("value", "Permission NOT granted! .");
+						}
+						// Create destination directory
+						File f = new File
+								(vox.getPath());
+						f.mkdirs();
+						f.delete();
+	Log.d("DownloadVoiceData: vox.getPath():", vox.getPath());
+						String url = Voice.getDownloadURLBasePath() + vox.getName() + ".flitevox";
+						DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+						request.setDescription("Downloading Flite Voice: " + vox.getName());
+						request.setTitle("Flite TTS Voice Download");
+						File downLoadFile = new File(vox.getPath());
+	Log.e("DownloadVoiceData: downLoadFile.getPath()", downLoadFile.getPath());
+						request.setDestinationUri(Uri.fromFile(downLoadFile));
 
-				@Override
-				public void onClick(View v) {
-					final Voice vox = mVoiceList.get(position);
-					if (!vox.isAvailable()) {
-						AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-						builder.setMessage("Data Alert: Download Size up to 3MB.");
-						builder.setCancelable(false);
-						builder.setPositiveButton("Download Voice", new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-								boolean permission = checkPermission();
-								if (permission) {
-									Log.e("value", "Permission Granted, Now you can use local drive .");
-								}
-								else {
-									Log.e("value", "Permission NOT granted! .");
-								}
-								// Create destination directory
-								File f = new File
-										(vox.getPath());
-								f.mkdirs();
-								f.delete();
-			Log.d("DownloadVoiceData: vox.getPath():", vox.getPath());
-								String url = Voice.getDownloadURLBasePath() + vox.getName() + ".flitevox";
-								DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-								request.setDescription("Downloading Flite Voice: " + vox.getName());
-								request.setTitle("Flite TTS Voice Download");
-								//request.setDestinationUri(Uri.fromFile(new File(vox.getPath())));
-								File downLoadFile = new File(vox.getPath());
-			Log.e("DownloadVoiceData: downLoadFile.getPath()", downLoadFile.getPath());
-								request.setDestinationUri(Uri.fromFile(downLoadFile));
-
-								DownloadManager manager = (DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
-								manager.enqueue(request);
-								Toast toast = Toast.makeText(mContext, "Download Started", Toast.LENGTH_SHORT);
-								toast.show();
-								actionButton.setVisibility(View.INVISIBLE);
-
-							}
-						});
-						builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-								dialog.cancel();
-							}
-						});
-						AlertDialog alert = builder.create();
-						alert.show();
-					}
-					else {
-						AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-						builder.setMessage("Sure? Deleting " + vox.getDisplayName());
-						builder.setCancelable(false);
-						builder.setPositiveButton("Delete Voice", new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-								File f = new File(vox.getPath());
-								if(f.delete()) {
-									refresh();
-									Toast toast = Toast.makeText(mContext, "Voice Deleted", Toast.LENGTH_SHORT);
-									toast.show();
-								}
-							}
-						});
-						builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-								dialog.cancel();
-							}
-						});
-						AlertDialog alert = builder.create();
-						alert.show();
-					}
+						DownloadManager manager = (DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
+						manager.enqueue(request);
+						Toast toast = Toast.makeText(mContext, "Download Started", Toast.LENGTH_SHORT);
+						toast.show();
+						actionButton.setVisibility(View.INVISIBLE);
+					});
+					builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+					AlertDialog alert = builder.create();
+					alert.show();
+				}
+				else {
+					builder.setMessage("Sure? Deleting " + vox.getDisplayName());
+					builder.setCancelable(false);
+					builder.setPositiveButton("Delete Voice", (dialog, which) -> {
+						File f = new File(vox.getPath());
+						if(f.delete()) {
+							refresh();
+							Toast toast = Toast.makeText(mContext, "Voice Deleted", Toast.LENGTH_SHORT);
+							toast.show();
+						}
+					});
+					builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+					AlertDialog alert = builder.create();
+					alert.show();
 				}
 			});
 
-			convertView.setOnClickListener(new View.OnClickListener() {
-
-				@Override
-				public void onClick(View v) {
-					actionButton.performClick();
-				}
-			});
+			convertView.setOnClickListener(v -> actionButton.performClick());
 
 			return convertView;
 		}
 
 	}
 	@Override
-	public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-		switch (requestCode) {
-			case PERMISSION_REQUEST_CODE:
-				if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					Log.e("value", "Permission Granted, Now you can use local drive .");
-				} else {
-					Log.e("value", "Permission Denied, You cannot use local drive .");
-				}
-				break;
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		if (requestCode == PERMISSION_REQUEST_CODE) {
+			if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+				Log.e("value", "Permission Granted, Now you can use local drive .");
+			} else {
+				Log.e("value", "Permission Denied, You cannot use local drive .");
+			}
 		}
 	}
 	private boolean checkPermission() {

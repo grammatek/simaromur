@@ -46,12 +46,9 @@ import java.util.ArrayList;
 
 public class Utility {
     
-  public static boolean pathExists(String pathname){
+  public static boolean pathNotExists(String pathname){
     File tempFile = new File(pathname);
-    if ((!tempFile.exists()) ){ 
-      return false;
-    }
-    return true;
+    return !tempFile.exists();
   }
     
   public static  ArrayList<String>readLines(String filename) throws IOException {

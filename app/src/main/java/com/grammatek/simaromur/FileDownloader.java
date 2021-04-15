@@ -46,7 +46,7 @@ import java.net.URLConnection;
 import android.util.Log;
 
 public class FileDownloader {
-	private final static String LOG_TAG = "Flite_Java_" + FileDownloader.class.getSimpleName();	
+	private final static String LOG_TAG = "Simaromur_Java_" + FileDownloader.class.getSimpleName();
 	public int totalFileLength = 0;
 	public int finishedFileLength;
 

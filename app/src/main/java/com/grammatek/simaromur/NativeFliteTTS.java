@@ -42,7 +42,7 @@ import android.content.Context;
 import android.util.Log;
 
 public class NativeFliteTTS {
-	private final static String LOG_TAG = "Flite_Java_" + NativeFliteTTS.class.getSimpleName();
+	private final static String LOG_TAG = "Simaromur_Java_" + NativeFliteTTS.class.getSimpleName();
 
 	static {
 		System.loadLibrary("ttsflite");
