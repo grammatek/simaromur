@@ -1,5 +1,8 @@
 # Símarómur
 
+![GitHub Super-Linter](https://github.com/grammatek/simaromur/workflows/Lint%20Code%20Base/badge.svg)](<https://github.com/marketplace/actions/super-linter>)
+
+
 This project is based on [Flite TTS Engine For Android](https://github.com/happyalu/Flite-TTS-Engine-for-Android) and
 adapted to current Android platforms. It uses CMake for integrating the C++ part instead of ndk-build and is now able
 to run on 64Bit platforms.
@@ -13,7 +16,7 @@ screen trying to speak Icelandic.
 We expect to modify the code considerably and making it more mature. Therefore, we started
 with a clean slate and renamed the original project to Símarómur, instead of forking it.
 
-# Prerequisites
+## Prerequisites
 
 This project uses the [FLite library](https://github.com/grammatek/Flite) for TTS. We have adapted it to build
 all necessary binaries in the branch `android-grammatek`. Therefore, you should build this project first and
@@ -24,25 +27,57 @@ Furthermore, you need our versions of [OpenFST](https://github.com/grammatek/ope
 [Thrax](https://github.com/grammatek/thrax) with the appropriate fixes to build for Android inside
 the branch `android`. Please build & install these first, before compiling Símarómur.
 
-# Configuration & Build
+### Using prebuilt libraries from github releases
+
+For our CI jobs, we have already prebuilt all dependent libraries and published as Github release
+assets at their corresponding project site. You can take advantage of these and install them locally
+inside your project directory via the following procedure:
+
+Set environment variables for the used release versions, e.g. :
+
+```bash
+export OPENFST_VER=1.8.1-android
+export THRAX_VER=1.3.6-android
+export FLITE_VER=v2.3-pre1-android
+```
+
+Then run this script:
+
+```bash
+.github/scripts/dl_3rdparty.sh
+```
+
+This should download and extract all necessary binaries to the sub-directory `3rdparty/ndk`.
+
+## Configuration & Build
 
 Create the file `local.properties` if it doesn't already exist and add variables `flite.dir` to
-point to the FLite root directory and `3rdparty.dir` for the installed OpenFST/Thrax libraries, e.g.
+point either to the absolute path of your FLite root directory and `3rdparty.dir` for the installed
+OpenFST/Thrax libraries, e.g.
 
-```
+```text
 flite.dir=/Users/fred/projects/flite
 3rdparty.dir=/Users/fred/install-android
 ```
 
-It might also be necessary, to adapt the variable `ndkVersion` inside [app/build.gradle](app/build.gradle).
-Then build the project inside Android Studio.
+or in case you have downloaded our releases via `dl_3rdparty.sh`, point these variables into your
+project directory `simaromur/3rdparty/ndk`, e.g.:
 
-# Contributing
+```text
+flite.dir=/Users/fred/projects/simaromur/3rdparty/ndk
+3rdparty.dir=/Users/fred/projects/simaromur/3rdparty/ndk
+```
 
-You can contribute to this project by forking it, creating a private branch and opening a new
+It might also be necessary, to adapt/uncomment the variable `ndkVersion` inside
+[app/build.gradle](app/build.gradle) depending on your installed NDK version. Then build the project
+inside Android Studio.
+
+## Contributing
+
+You can contribute to this project by forking it, creating a branch and opening a new
 [pull request](https://github.com/grammatek/simaromur/pulls).
 
-# License
+## License
 
 Original Copyright information can be found in [LICENSE-CMU](LICENSE-CMU.txt).
 

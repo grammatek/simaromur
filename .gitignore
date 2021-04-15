@@ -9,5 +9,6 @@
 .DS_Store
 /build
 /captures
+/3rdparty
 .externalNativeBuild
 .cxx
