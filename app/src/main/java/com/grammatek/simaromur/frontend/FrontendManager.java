@@ -17,14 +17,15 @@ import java.util.List;
 
 public class FrontendManager {
     private final static String LOG_TAG = "Flite_Java_" + FrontendManager.class.getSimpleName();
-    private NativeG2P mG2P;
+
     private TTSUnicodeNormalizer mNormalizer;
     private Tokenizer mTokenizer;
+    private Pronunciation mPronunciation;
 
     public FrontendManager(Context context) {
         mNormalizer = new TTSUnicodeNormalizer();
         initializeTokenizer(context);
-        initializeG2P(context);
+        initializePronunciation(context);
     }
 
     /**
@@ -40,16 +41,16 @@ public class FrontendManager {
         Log.i(LOG_TAG, text + " => " + cleaned);
         //tokenize
         List<String> sentences = mTokenizer.detectSentences(cleaned);
+        // do we need some size restrictions here? don't want to read the bible in one go ...
         String tokenized = getSentencesAsString(sentences);
         Log.i(LOG_TAG, text + " => " + tokenized);
         //normalize
         //TODO
-        //transcribe: a) dictionary look-up b) g2p
-        // TODO: dictionary lookup, only send unknown words to g2p
-        String g2pText = mG2P.process(tokenized);
-        Log.i(LOG_TAG, text + " => " + g2pText);
 
-        processed = g2pText;
+        String transcribedText = mPronunciation.transcribe(tokenized);
+        Log.i(LOG_TAG, text + " => " + transcribedText);
+
+        processed = transcribedText;
         return processed;
     }
 
@@ -69,12 +70,10 @@ public class FrontendManager {
         }
     }
 
-    private void initializeG2P(Context context) {
-        if (mG2P != null) {
-            // @todo: mG2P.stop();
-            mG2P = null;
+    private void initializePronunciation(Context context) {
+        if (mPronunciation == null) {
+            mPronunciation = new Pronunciation(context);
         }
-        mG2P = new NativeG2P(context);
     }
 
 }
