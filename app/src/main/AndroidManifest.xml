@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
+
     <application
         android:name="com.grammatek.simaromur.App"
         android:allowBackup="true"
@@ -14,6 +15,9 @@
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"
         android:networkSecurityConfig="@xml/network_security_config">
+
+        <uses-library android:name="android.test.runner"
+            android:required="false" />
 
         <service
             android:name="com.grammatek.simaromur.FliteTtsService"
