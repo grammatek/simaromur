@@ -3,8 +3,6 @@ package com.grammatek.simaromur.frontend;
 import android.content.Context;
 import android.util.Log;
 
-import com.grammatek.simaromur.NativeG2P;
-
 import java.util.List;
 
 /**
@@ -18,14 +16,17 @@ import java.util.List;
 public class FrontendManager {
     private final static String LOG_TAG = "Flite_Java_" + FrontendManager.class.getSimpleName();
 
-    private TTSUnicodeNormalizer mNormalizer;
+    private TTSUnicodeNormalizer mUnicodeNormalizer;
     private Tokenizer mTokenizer;
     private Pronunciation mPronunciation;
+    private TTSNormalizer mNormalizer;
+
 
     public FrontendManager(Context context) {
-        mNormalizer = new TTSUnicodeNormalizer();
+        mUnicodeNormalizer = new TTSUnicodeNormalizer();
         initializeTokenizer(context);
         initializePronunciation(context);
+        initializeNormalizer(context);
     }
 
     /**
@@ -37,7 +38,7 @@ public class FrontendManager {
      */
     public String process(String text) {
         String processed = text;
-        String cleaned = mNormalizer.normalize_encoding(processed);
+        String cleaned = mUnicodeNormalizer.normalize_encoding(processed);
         Log.i(LOG_TAG, text + " => " + cleaned);
         //tokenize
         List<String> sentences = mTokenizer.detectSentences(cleaned);
@@ -73,6 +74,12 @@ public class FrontendManager {
     private void initializePronunciation(Context context) {
         if (mPronunciation == null) {
             mPronunciation = new Pronunciation(context);
+        }
+    }
+
+    private void initializeNormalizer(Context context) {
+        if (mNormalizer == null) {
+            mNormalizer = new TTSNormalizer();
         }
     }
 
