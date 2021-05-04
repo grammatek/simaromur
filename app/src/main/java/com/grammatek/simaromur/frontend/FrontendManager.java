@@ -3,6 +3,11 @@ package com.grammatek.simaromur.frontend;
 import android.content.Context;
 import android.util.Log;
 
+import opennlp.tools.postag.POSModel;
+import opennlp.tools.postag.POSTaggerME;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -21,12 +26,15 @@ public class FrontendManager {
     private Pronunciation mPronunciation;
     private TTSNormalizer mNormalizer;
 
+    private Context mContext;
+
 
     public FrontendManager(Context context) {
         mUnicodeNormalizer = new TTSUnicodeNormalizer();
         initializeTokenizer(context);
         initializePronunciation(context);
         initializeNormalizer(context);
+        this.mContext = context;
     }
 
     /**
@@ -45,6 +53,8 @@ public class FrontendManager {
         // do we need some size restrictions here? don't want to read the bible in one go ...
         String tokenized = getSentencesAsString(sentences);
         Log.i(LOG_TAG, text + " => " + tokenized);
+
+        String tagged = tagText(tokenized);
         //normalize
         //TODO
 
@@ -53,6 +63,30 @@ public class FrontendManager {
 
         processed = transcribedText;
         return processed;
+    }
+
+    private String tagText(String text) {
+        String tagged = text;
+        try {
+            InputStream is = mContext.getAssets().open("en-pos-maxent.bin");
+            POSModel posModel = new POSModel(is);
+            // initializing the parts-of-speech tagger with model
+            POSTaggerME posTagger = new POSTaggerME(posModel);
+            // Tagger tagging the tokens
+            String[] tokens = text.split(" ");
+            String tags[] = posTagger.tag(tokens);
+            // Getting the probabilities of the tags given to the tokens
+            double probs[] = posTagger.probs();
+
+            System.out.println("Token\t:\tTag\t:\tProbability\n---------------------------------------------");
+            for(int i=0;i<tokens.length;i++){
+                Log.i(LOG_TAG, tokens[i]+"\t:\t"+tags[i]+"\t:\t"+probs[i]);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return tagged;
     }
 
     // Joins the sentences into one string, separated by a white space. No further processing.

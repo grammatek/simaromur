@@ -5,6 +5,8 @@ import android.content.res.Resources;
 
 import com.grammatek.simaromur.R;
 
+import is.iclt.icenlp.core.icetagger.IceTagger;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -26,6 +28,7 @@ public class TTSNormalizer {
     // Possible replacement patterns - INT=group index, STR=string replacement
     private String INT = "INT";
     private String STR = "STR";
+    private String STRINT = "STRINT";
     private String STRINTSTRINT = "STRINTSTRINT";
     private String INTSTRINT = "INTSTRINT";
     private String INTSTRINTINT = "INTSTRINTINT";
@@ -44,14 +47,39 @@ public class TTSNormalizer {
 
     public String normalize(String text) {
         String normalized = text;
+        //IceTagger tagger = new IceTagger();
+
         if (normalized.matches(".*\\d.*")) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.preHelpDict);
         }
         if (normalized.contains("-")) {
+            normalized = replaceFromDict(normalized, NormalizationDictionaries.directionDict);
             normalized = replaceFromDict(normalized, NormalizationDictionaries.hyphenDict);
         }
         if (normalized.contains(".")) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.abbreviationDict);
+        }
+        if (normalized.contains("/")) {
+            normalized = replaceFromDict(normalized, NormalizationDictionaries.denominatorDict);
+        }
+        normalized = replaceFromDict(normalized, NormalizationDictionaries.weightDict);
+        if (normalized.matches(".*\\b([pnµmcsdkN]?m|ft)\\.?\\b.*")) {
+            normalized = replaceFromDict(normalized, NormalizationDictionaries.distanceDict);
+        }
+        if (normalized.matches(".*(\\bha\\.?\\b).*|([pnµmcsdk]?m\\b\\.?)|([pnµmcsdk]?m[²2³3]).*")) {
+            normalized = replaceFromDict(normalized, NormalizationDictionaries.getAreaDict());
+        }
+        if (normalized.matches(".*\\b[dcmµ]?[Ll]\\.?\\b.*")) {
+            normalized = replaceFromDict(normalized, NormalizationDictionaries.getVolumeDict());
+        }
+        if (normalized.matches(".*\\b(klst|mín|m?s(ek)?)\\b.*")) {
+            normalized = replaceFromDict(normalized, NormalizationDictionaries.getTimeDict());
+        }
+        if (normalized.matches(".*(\\W|^)((ma?\\.?)?[Kk]r\\.?-?|C(HF|AD|ZK)|(DK|SE|NO)K|EUR|GBP|I[NS]K|JPY|PTE|(AU|US)D|mlj[óa]\\.?)((\\W|$)|[$£¥])(.*)")) {
+            normalized = replaceFromDict(normalized, NormalizationDictionaries.getCurrencyDict());
+        }
+        if (normalized.matches(".*\\b([kMGT]?(V|Hz|B|W|W\\.?(st|h)))\\.?\\b.*")) {
+            normalized = replaceFromDict(normalized, NormalizationDictionaries.getElectronicDict());
         }
         return normalized;
     }
@@ -70,6 +98,8 @@ public class TTSNormalizer {
         StringBuilder normalized = new StringBuilder();
         Matcher matcher = regex.matcher(text);
         while(matcher.find()) {
+            System.out.println(text);
+            System.out.println(matcher.groupCount());
             normalized.append(text, lastIndex, matcher.start())
                     .append(converter.apply(matcher));
             lastIndex = matcher.end();
@@ -96,8 +126,8 @@ public class TTSNormalizer {
         // extract group indices and replacement strings and
         // build the replacement pattern
         for (int i = 0; i < elements.length; i++) {
-            if (elements[i].matches("\\d+")) {
-                groupMap.put(i, Integer.parseInt(elements[i]));
+            if (elements[i].trim().matches("\\d+")) {
+                groupMap.put(i, Integer.parseInt(elements[i].trim()));
                 replacementPattern.append(INT);
             }
             else {
@@ -107,6 +137,8 @@ public class TTSNormalizer {
         }
         if (replacementPattern.toString().equals(INTSTRINT))
             return match -> match.group(groupMap.get(0)) + replacementMap.get(1) + match.group(groupMap.get(2));
+        if (replacementPattern.toString().equals(STRINT))
+            return match -> replacementMap.get(0) + match.group(groupMap.get(1));
         if (replacementPattern.toString().equals(INTSTRINTINT))
             return match -> match.group(groupMap.get(0)) + replacementMap.get(1)
                     + match.group(groupMap.get(2)) + match.group(groupMap.get(3));
