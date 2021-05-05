@@ -5,7 +5,6 @@ import android.content.res.Resources;
 
 import com.grammatek.simaromur.R;
 
-import is.iclt.icenlp.core.icetagger.IceTagger;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

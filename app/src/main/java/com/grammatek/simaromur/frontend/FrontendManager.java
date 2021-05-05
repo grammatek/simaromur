@@ -6,6 +6,7 @@ import android.util.Log;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -68,10 +69,11 @@ public class FrontendManager {
     private String tagText(String text) {
         String tagged = text;
         try {
-            InputStream is = mContext.getAssets().open("en-pos-maxent.bin");
+            InputStream is = mContext.getAssets().open("is-pos-maxent.bin");
             POSModel posModel = new POSModel(is);
             // initializing the parts-of-speech tagger with model
             POSTaggerME posTagger = new POSTaggerME(posModel);
+
             // Tagger tagging the tokens
             String[] tokens = text.split(" ");
             String tags[] = posTagger.tag(tokens);
