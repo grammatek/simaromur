@@ -40,8 +40,6 @@
 #ifndef JNI_EDU_CMU_CS_SPEECH_TTS_FLITE_VOICES_H_
 #define JNI_EDU_CMU_CS_SPEECH_TTS_FLITE_VOICES_H_
 
-#include "./edu_cmu_cs_speech_tts_string.h"
-
 #include <flite.h>
 #include "tts/tts.h"
 
@@ -49,6 +47,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <string>
 
 extern char* flite_voxdir_path;  // Path to data directory
 
@@ -68,9 +67,9 @@ namespace FliteEngine {
 
   class Voice {
  protected:
-    String language_;  // ISO3 language
-    String country_;   // ISO3 country
-    String variant_;   // Short name of the variant
+    std::string language_;  // ISO3 language
+    std::string country_;   // ISO3 country
+    std::string variant_;   // Short name of the variant
     cst_voice* flite_voice_;  // Pointer to registered flite voice
 
  public:
@@ -84,12 +83,12 @@ namespace FliteEngine {
     // WARNING: This will *NOT* register the voice.
     cst_voice* GetFliteVoice();
 
-    bool IsSameLocaleAs(String flang, String fcountry, String fvar);
+    bool IsSameLocaleAs(std::string flang, std::string fcountry, std::string fvar);
 
     // Returns how far the language request is supported.
-    virtual android_tts_support_result_t GetLocaleSupport(String flang,
-                                                          String fcountry,
-                                                          String fvar) {
+    virtual android_tts_support_result_t GetLocaleSupport(std::string flang,
+                                                          std::string fcountry,
+                                                          std::string fvar) {
       return ANDROID_TTS_LANG_NOT_SUPPORTED;
     }
 
@@ -107,7 +106,7 @@ namespace FliteEngine {
     t_voice_unregister_function voice_unregister_function_;
 
  public:
-    LinkedVoice(String flang, String fcountry, String fvar,
+    LinkedVoice(std::string flang, std::string fcountry, std::string fvar,
                 t_voice_register_function freg,
                 t_voice_unregister_function funreg);
 
@@ -116,8 +115,8 @@ namespace FliteEngine {
     cst_voice* RegisterVoice();
     void UnregisterVoice();
 
-    android_tts_support_result_t GetLocaleSupport(String flang,
-                                                  String fcountry, String fvar);
+    android_tts_support_result_t GetLocaleSupport(std::string flang,
+                                                  std::string fcountry, std::string fvar);
   };
 
   class ClustergenVoice : public Voice {
@@ -125,10 +124,10 @@ namespace FliteEngine {
     ClustergenVoice();
     ~ClustergenVoice();
 
-    android_tts_support_result_t GetLocaleSupport(String flang,
-                                                  String fcountry, String fvar);
-    android_tts_result_t SetLanguage(String flang,
-                                     String fcountry, String fvar);
+    android_tts_support_result_t GetLocaleSupport(std::string flang,
+                                                  std::string fcountry, std::string fvar);
+    android_tts_result_t SetLanguage(std::string flang,
+                                     std::string fcountry, std::string fvar);
     void UnregisterVoice();
   };
 
@@ -147,19 +146,19 @@ namespace FliteEngine {
 
     Voice* GetCurrentVoice();
 
-    void AddLinkedVoice(String flang, String fcountry, String fvar,
+    void AddLinkedVoice(std::string flang, std::string fcountry, std::string fvar,
                         t_voice_register_function freg,
                         t_voice_unregister_function funreg);
 
     void SetDefaultVoice();
 
     // Find out if a particular locale is available.
-    android_tts_support_result_t IsLocaleAvailable(String flang,
-                                                   String fcountry,
-                                                   String fvar);
+    android_tts_support_result_t IsLocaleAvailable(std::string flang,
+                                                   std::string fcountry,
+                                                   std::string fvar);
 
     // Register and set the current voice to the one asked for
-    Voice* GetVoiceForLocale(String flang, String fcountry, String fvar);
+    Voice* GetVoiceForLocale(std::string flang, std::string fcountry, std::string fvar);
   };
 }
 

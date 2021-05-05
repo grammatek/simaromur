@@ -41,6 +41,8 @@
 #include "./edu_cmu_cs_speech_tts_flite_voices.h"
 #include "./edu_cmu_cs_speech_tts_logging.h"
 #include <stdint.h>
+#include <filesystem>
+#include <string>
 
 namespace FliteEngine {
 const char* Voice::GetLanguage() {
@@ -68,17 +70,14 @@ cst_voice* Voice::GetFliteVoice() {
   return flite_voice_;
 }
 
-bool Voice::IsSameLocaleAs(String flang, String fcountry, String fvar) {
-  if ((language_ == flang) &&
-      (country_ == fcountry) &&
-      (variant_ == fvar))
-    return true;
-  else
-    return false;
+bool Voice::IsSameLocaleAs(std::string flang, std::string fcountry, std::string fvar) {
+    return (language_ == flang) &&
+           (country_ == fcountry) &&
+           (variant_ == fvar);
 }
 
-LinkedVoice::LinkedVoice(const String flang, const String fcountry,
-                         const String fvar,
+LinkedVoice::LinkedVoice(const std::string flang, const std::string fcountry,
+                         const std::string fvar,
                          t_voice_register_function freg,
                          t_voice_unregister_function funreg) {
   language_ = flang;
@@ -95,9 +94,9 @@ LinkedVoice::~LinkedVoice() {
   LOGI("Voice::~Voice: voice unregistered");
 }
 
-android_tts_support_result_t LinkedVoice::GetLocaleSupport(String flang,
-                                                           String fcountry,
-                                                           String fvar) {
+android_tts_support_result_t LinkedVoice::GetLocaleSupport(std::string flang,
+                                                           std::string fcountry,
+                                                           std::string fvar) {
   android_tts_support_result_t support = ANDROID_TTS_LANG_NOT_SUPPORTED;
 
   if (language_ == flang) {
@@ -159,86 +158,77 @@ void ClustergenVoice::UnregisterVoice() {
   }
 }
 
-String GetDefaultVariantInCountryDirectory(String dirname) {
-  int return_code;
-  DIR *dir;
-  struct dirent *entry;
-  struct dirent *result;
+std::string GetDefaultVariantInCountryDirectory(std::string dirname)
+{
+    DIR *dir;
+    struct dirent *entry;
 
-  if ((dir = opendir(dirname.c_str())) == NULL) {
-    LOGE("%s could not be opened.\n ", dirname.c_str());
-    return "";
-  } else {
-    entry = (struct dirent *) malloc(
-        pathconf(dirname.c_str(), _PC_NAME_MAX) + 1);
-    for (return_code = readdir_r(dir, entry, &result);
-         result != NULL && return_code == 0;
-         return_code = readdir_r(dir, entry, &result)) {
-      if (entry->d_type == DT_REG) {
-        if (strstr(entry->d_name, "cg.flitevox") ==
-            (entry->d_name + strlen(entry->d_name)-11)) {
-          char *tmp = new char[strlen(entry->d_name) - 11];
-          strncpy(tmp, entry->d_name, strlen(entry->d_name) -12);
-          tmp[strlen(entry->d_name) - 12] = '\0';
-          String ret = String(tmp);
-          delete[] tmp;
-          closedir(dir);
-          return ret;
-        }
-      }
+    if ((dir = opendir(dirname.c_str())) == nullptr)
+    {
+      LOGE("%s could not be opened.\n ", dirname.c_str());
+      return "";
     }
-  }
-  return "";
+    else
+    {
+      // TODO: DS simplify
+        while ((entry = readdir(dir)) != nullptr)
+        {
+            if (entry->d_type == DT_REG)
+            {
+                if (strstr(entry->d_name, "cg.flitevox") == (entry->d_name + strlen(entry->d_name)-11))
+                {
+                    char *tmp = new char[strlen(entry->d_name) - 11];
+                    strncpy(tmp, entry->d_name, strlen(entry->d_name) -12);
+                    tmp[strlen(entry->d_name) - 12] = '\0';
+                    std::string ret = std::string(tmp); // e.g. male;jmk
+                    delete[] tmp;
+                    closedir(dir);
+                    return ret;
+                }
+            }
+        }
+    }
+    return "";
 }
 
-String GetDefaultCountryInLanguageDirectory(String dirname) {
-  int return_code;
-  DIR *dir;
-  struct dirent *entry;
-  struct dirent *result;
-  String default_voice;
-
-  if ((dir = opendir(dirname.c_str())) == NULL) {
-    LOGE("%s could not be opened.\n ", dirname.c_str());
-    return "";
-  } else {
-    entry = (struct dirent *) malloc(
-        pathconf(dirname.c_str(), _PC_NAME_MAX) + 1);
-    for (return_code = readdir_r(dir, entry, &result);
-         result != NULL && return_code == 0;
-         return_code = readdir_r(dir, entry, &result)) {
-      if (strcmp(entry->d_name, ".") == 0 ||
-         strcmp(entry->d_name, "..") == 0 )
-        continue;
-      if (entry->d_type == DT_DIR) {
-        String newdir = dirname + "/" + String(entry->d_name);
-        default_voice = GetDefaultVariantInCountryDirectory(newdir);
-        if (!(default_voice == "")) {
-          String ret = String(entry->d_name);
-          closedir(dir);
-          return ret;
-        }
-      }
+std::string GetDefaultCountryInLanguageDirectory(std::string dirname)
+{
+    struct dirent *entry;
+    std::string default_voice;
+    DIR* dir = opendir(dirname.c_str());
+    if (dir  == nullptr)
+    {
+        LOGE("%s could not be opened.\n ", dirname.c_str());
+        return "";
     }
-  }
-  return "";
-}
-
-bool FileExists(String filename) {
-  int fd;
-  fd = open(filename.c_str(), O_RDONLY);
-  if (fd < 0)
-    return false;
-  close(fd);
-  return true;
+    else
+    {
+        while ((entry = readdir(dir)) != nullptr)
+        {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                continue;
+            if (entry->d_type == DT_DIR)
+            {
+                std::string newdir = dirname + "/" + std::string(entry->d_name);
+                default_voice = GetDefaultVariantInCountryDirectory(newdir);
+                if (!(default_voice == ""))
+                {
+                    std::string ret = std::string(entry->d_name); // e.g. CAN
+                    closedir(dir);
+                    return ret;
+                }
+            }
+        }
+    }
+    return "";
 }
 
 // Check that the required clustergen file is present on disk and
 // return the information.
 
-android_tts_support_result_t ClustergenVoice::GetLocaleSupport(String flang,
-                                                               String fcountry,
-                                                               String fvar) {
+android_tts_support_result_t ClustergenVoice::GetLocaleSupport(std::string flang,
+                                                               std::string fcountry,
+                                                               std::string fvar) {
   LOGI("ClustergenVoice::GetLocaleSupport for lang=%s country=%s var=%s",
        flang.c_str(),
        fcountry.c_str(),
@@ -247,7 +237,7 @@ android_tts_support_result_t ClustergenVoice::GetLocaleSupport(String flang,
   android_tts_support_result_t
       language_support = ANDROID_TTS_LANG_NOT_SUPPORTED;
 
-  String path = flite_voxdir_path;
+  std::string path = flite_voxdir_path;
   path = path + "/cg/" + flang;
   LOGV("Path: %s", path.c_str());
   if (!(GetDefaultCountryInLanguageDirectory(path)== "")) {
@@ -261,7 +251,7 @@ android_tts_support_result_t ClustergenVoice::GetLocaleSupport(String flang,
       language_support = ANDROID_TTS_LANG_COUNTRY_AVAILABLE;
       path = path + "/" + fvar + ".cg.flitevox";
       LOGV("Path: %s", path.c_str());
-      if (FileExists(path)) {
+      if (std::filesystem::exists(path)) {
         language_support = ANDROID_TTS_LANG_COUNTRY_VAR_AVAILABLE;
         LOGV("%s is available", path.c_str());
       }
@@ -270,9 +260,9 @@ android_tts_support_result_t ClustergenVoice::GetLocaleSupport(String flang,
   return language_support;
 }
 
-android_tts_result_t ClustergenVoice::SetLanguage(String flang,
-                                                  String fcountry,
-                                                  String fvar) {
+android_tts_result_t ClustergenVoice::SetLanguage(std::string flang,
+                                                  std::string fcountry,
+                                                  std::string fvar) {
   LOGI("ClustergenVoice::SetLanguage: lang=%s country=%s variant=%s",
        flang.c_str(),
        fcountry.c_str(),
@@ -292,7 +282,7 @@ android_tts_result_t ClustergenVoice::SetLanguage(String flang,
 
   android_tts_support_result_t language_support;
   language_support = GetLocaleSupport(flang, fcountry, fvar);
-  String path = flite_voxdir_path;
+  std::string path = flite_voxdir_path;
 
   if (language_support == ANDROID_TTS_LANG_COUNTRY_VAR_AVAILABLE) {
     path = path + "/cg/" + flang + "/" + fcountry + "/" + fvar + ".cg.flitevox";
@@ -305,7 +295,7 @@ android_tts_result_t ClustergenVoice::SetLanguage(String flang,
     LOGW("ClustergenVoice::SetLanguage: %s",
          "Exact voice not found. Only Language and country available.");
     path = path + "/cg/" + flang + "/" + fcountry;
-    String var = GetDefaultVariantInCountryDirectory(path);
+    std::string var = GetDefaultVariantInCountryDirectory(path);
     path = path + "/" + var + ".cg.flitevox";
 
     language_ = flang;
@@ -315,9 +305,9 @@ android_tts_result_t ClustergenVoice::SetLanguage(String flang,
     LOGW("ClustergenVoice::SetLanguage: %s",
          "Exact voice not found. Only Language available.");
     path = path + "/cg/" + flang;
-    String country = GetDefaultCountryInLanguageDirectory(path);
+    std::string country = GetDefaultCountryInLanguageDirectory(path);
     path = path + "/" + country;
-    String var = GetDefaultVariantInCountryDirectory(path);
+    std::string var = GetDefaultVariantInCountryDirectory(path);
     path = path + "/" + var + ".cg.flitevox";
     language_ = flang;
     country_ = country;
@@ -392,7 +382,7 @@ Voice* Voices::GetCurrentVoice() {
   return current_voice_;
 }
 
-void Voices::AddLinkedVoice(String flang, String fcountry, String fvar,
+void Voices::AddLinkedVoice(std::string flang, std::string fcountry, std::string fvar,
                             t_voice_register_function freg,
                             t_voice_unregister_function funreg) {
   LOGI("Voices::AddLinkedVoice adding %s", fvar.c_str());
@@ -442,9 +432,9 @@ void Voices::SetDefaultVoice() {
   }
 }
 
-android_tts_support_result_t Voices::IsLocaleAvailable(String flang,
-                                                       String fcountry,
-                                                       String fvar) {
+android_tts_support_result_t Voices::IsLocaleAvailable(std::string flang,
+                                                       std::string fcountry,
+                                                       std::string fvar) {
   LOGI("Voices::IsLocaleAvailable");
 
   // First loop over the linked-in voices to see the locale match.
@@ -476,8 +466,8 @@ android_tts_support_result_t Voices::IsLocaleAvailable(String flang,
   return language_support;
 }
 
-Voice* Voices::GetVoiceForLocale(String flang,
-                                 String fcountry, String fvar) {
+Voice* Voices::GetVoiceForLocale(std::string flang,
+                                 std::string fcountry, std::string fvar) {
   LOGI("Voices::GetVoiceForLocale: language=%s country=%s variant=%s",
        flang.c_str(), fcountry.c_str(), fvar.c_str());
 

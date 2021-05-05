@@ -46,7 +46,6 @@
 
 // Local headers
 #include "./edu_cmu_cs_speech_tts_logging.h"
-#include "./edu_cmu_cs_speech_tts_string.h"
 #include "./tts/tts.h"
 
 // Have a different logging tag for the JNI service
