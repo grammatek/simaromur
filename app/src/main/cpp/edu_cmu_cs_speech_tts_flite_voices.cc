@@ -59,7 +59,7 @@ const char* Voice::GetVariant() {
 
 const int Voice::GetSampleRate() {
   int rate = 16000;
-  if (flite_voice_ != NULL) {
+  if (flite_voice_ != nullptr) {
     rate = flite_get_param_int(flite_voice_->features, "sample_rate", rate);
   }
 
@@ -83,7 +83,7 @@ LinkedVoice::LinkedVoice(const std::string flang, const std::string fcountry,
   language_ = flang;
   country_ = fcountry;
   variant_ = fvar;
-  flite_voice_ = NULL;
+  flite_voice_ = nullptr;
   voice_register_function_ = freg;
   voice_unregister_function_ = funreg;
 }
@@ -122,28 +122,28 @@ cst_voice* LinkedVoice::RegisterVoice() {
 
 void LinkedVoice::UnregisterVoice() {
   LOGI("Calling flite unregister for %s", variant_.c_str());
-  if (flite_voice_ == NULL) return;  // Voice not registered
+  if (flite_voice_ == nullptr) return;  // Voice not registered
   voice_unregister_function_(flite_voice_);
   LOGI("Done unregistering voice in flite");
-  flite_voice_ = NULL;
+  flite_voice_ = nullptr;
 }
 
 ClustergenVoice::ClustergenVoice() {
   LOGI("Creating a generic clustergen voice loader.");
-  flite_voice_ = NULL;
+  flite_voice_ = nullptr;
 }
 
 ClustergenVoice::~ClustergenVoice() {
   LOGI("Unloading generic clustergen voice.");
 
-  if (flite_voice_ != NULL) {
+  if (flite_voice_ != nullptr) {
     // We have something loaded in there. Let's unregister it.
     UnregisterVoice();
   }
 }
 
 void ClustergenVoice::UnregisterVoice() {
-  if (flite_voice_ != NULL) {
+  if (flite_voice_ != nullptr) {
     // TODO(aup): Flite 1.5.6 does not support unregistering a linked voice.
     // We do nothing here, but there is potential memory issue.
 
@@ -151,7 +151,7 @@ void ClustergenVoice::UnregisterVoice() {
 
     // cst_cg_unload_voice(flite_voice_);
     // LOGD("Flite voice unregistered.");
-    flite_voice_ = NULL;
+    flite_voice_ = nullptr;
     language_ = "";
     country_ = "";
     variant_ = "";
@@ -322,7 +322,7 @@ android_tts_result_t ClustergenVoice::SetLanguage(std::string flang,
   // new since fLite 1.5.6
   flite_voice_ = flite_voice_load(path.c_str());
 
-  if (flite_voice_ == NULL) {
+  if (flite_voice_ == nullptr) {
     LOGE("ClustergenVoice::SetLanguage: %s",
          "Could not set language. File found but could not be loaded");
     return ANDROID_TTS_FAILURE;
@@ -357,22 +357,22 @@ Voices::Voices(int max_count, VoiceRegistrationMode registration_mode) {
   LOGI("Voices being loaded. Maximum Linked voices: %d. Registration mode: %d",
        max_count, registration_mode);
   voice_registration_mode_ = registration_mode;
-  current_voice_ = NULL;
+  current_voice_ = nullptr;
   voice_list_ = new LinkedVoice*[max_count];
   max_voice_count_ = max_count;
   for (int i = 0; i < max_voice_count_; i++)
-    voice_list_[i]=NULL;
+    voice_list_[i]=nullptr;
   current_voice_count_ = 0;
 }
 
 Voices::~Voices() {
   LOGI("Voices::~Voices Deleting voice list");
-  if (voice_list_ != NULL) {
+  if (voice_list_ != nullptr) {
     for (int i = 0; i < current_voice_count_; i++)
-      if (voice_list_[i] != NULL)
+      if (voice_list_[i] != nullptr)
         delete voice_list_[i];  // Delete the individual voices
     delete[] voice_list_;
-    voice_list_ = NULL;
+    voice_list_ = nullptr;
   }
   // clustergen voice will be destroyed automatically.
   LOGI("Voices::~Voices voice list deleted");
@@ -405,10 +405,10 @@ void Voices::AddLinkedVoice(std::string flang, std::string fcountry, std::string
 }
 
 void Voices::SetDefaultVoice() {
-  if (current_voice_ != NULL)
+  if (current_voice_ != nullptr)
     if (voice_registration_mode_ == ONLY_ONE_VOICE_REGISTERED) {
       current_voice_->UnregisterVoice();
-      current_voice_ = NULL;
+      current_voice_ = nullptr;
     }
 
   // Try to load CMU_US_RMS. If it doesn't exist,
@@ -423,7 +423,7 @@ void Voices::SetDefaultVoice() {
   }
 
   for (int i = 0; i < current_voice_count_; i++) {
-    if (voice_list_[i] != NULL) {
+    if (voice_list_[i] != nullptr) {
       if (voice_registration_mode_ == ONLY_ONE_VOICE_REGISTERED)
         voice_list_[i]->RegisterVoice();
       current_voice_ = voice_list_[i];
@@ -444,7 +444,7 @@ android_tts_support_result_t Voices::IsLocaleAvailable(std::string flang,
   android_tts_support_result_t current_support;
 
   for (int i = 0; i < current_voice_count_; i++)  {
-    if (voice_list_[i] == NULL) continue;
+    if (voice_list_[i] == nullptr) continue;
     current_support = voice_list_[i]->GetLocaleSupport(flang, fcountry, fvar);
     if (current_support == ANDROID_TTS_LANG_COUNTRY_VAR_AVAILABLE) {
       // We found a match, no need to loop any more.
@@ -474,7 +474,7 @@ Voice* Voices::GetVoiceForLocale(std::string flang,
   /* Check that the voice we currently have set doesn't already
      provide what is requested.
   */
-  if ((current_voice_ != NULL)
+  if ((current_voice_ != nullptr)
       && (current_voice_->IsSameLocaleAs(flang, fcountry, fvar))) {
     LOGW("Voices::GetVoiceForLocale: %s",
          "Requested voice is already loaded. Doing nothing.");
@@ -484,15 +484,15 @@ Voice* Voices::GetVoiceForLocale(std::string flang,
   /* If registration mode dictatas that only one voice can be set,
      this is the right time to unregister currently loaded voice.
   */
-  if ((current_voice_ != NULL)
+  if ((current_voice_ != nullptr)
       && (voice_registration_mode_ == ONLY_ONE_VOICE_REGISTERED)) {
     LOGI("Voices::GetVoiceForLocale: %s",
          "Request for new voice. Unregistering current voice");
     current_voice_->UnregisterVoice();
   }
-  current_voice_ = NULL;
+  current_voice_ = nullptr;
 
-  Voice* newVoice = NULL;
+  Voice* newVoice = nullptr;
   android_tts_support_result_t
       language_support = ANDROID_TTS_LANG_NOT_SUPPORTED;
 
@@ -501,7 +501,7 @@ Voice* Voices::GetVoiceForLocale(std::string flang,
   /* First loop over the linked-in voices to gather best available voice. */
 
   for (int i = 0; i < current_voice_count_; i++) {
-    if (voice_list_[i] == NULL) continue;
+    if (voice_list_[i] == nullptr) continue;
     current_support = voice_list_[i]->GetLocaleSupport(flang, fcountry, fvar);
     if (language_support < current_support) {
       // We found a better support for language than we previously had.
@@ -536,7 +536,7 @@ Voice* Voices::GetVoiceForLocale(std::string flang,
       } else {
         LOGE("Voices::GetVoiceForLocale: CG voice could not be used. %s",
              "NO VOICE SET. Synthesis is NOT possible.");
-        current_voice_ = NULL;  // Requested voice not available!
+        current_voice_ = nullptr;  // Requested voice not available!
         return current_voice_;
       }
     } else {
@@ -546,7 +546,7 @@ Voice* Voices::GetVoiceForLocale(std::string flang,
     }
   }
 
-  if (newVoice != NULL) {
+  if (newVoice != nullptr) {
     // Something was found in the linked voices.
     current_voice_ = newVoice;
     if (voice_registration_mode_ == ONLY_ONE_VOICE_REGISTERED)
@@ -555,7 +555,7 @@ Voice* Voices::GetVoiceForLocale(std::string flang,
   } else {
     LOGE("Voices::GetVoiceForLocale: %s",
          "No voice could be used. Synthesis is NOT possible.");
-    current_voice_ = NULL;
+    current_voice_ = nullptr;
     return current_voice_;
   }
 }

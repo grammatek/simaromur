@@ -56,8 +56,8 @@ static android_tts_synth_cb_t ttsSynthDoneCBPointer;
 static int ttsAbort = 0;
 static int ttsStream = 1;
 char* flite_voxdir_path;
-FliteEngine::Voices* loadedVoices;
-FliteEngine::Voice* currentVoice;
+FliteEngine::Voices* loadedVoices = nullptr;
+FliteEngine::Voice* currentVoice = nullptr;
 
 /* BEGIN VOICE SPECIFIC CODE */
 
@@ -216,7 +216,7 @@ android_tts_result_t init(void* engine, android_tts_synth_cb_t synthDoneCBPtr, c
     }
 
     LOGI("TtsEngine::shutdown");
-    if(loadedVoices != nullptr)
+    if(loadedVoices)
       delete loadedVoices;
     loadedVoices = nullptr;
     return ANDROID_TTS_SUCCESS;
