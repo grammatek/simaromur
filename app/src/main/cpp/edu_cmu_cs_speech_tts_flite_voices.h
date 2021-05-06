@@ -83,12 +83,12 @@ namespace FliteEngine {
     // WARNING: This will *NOT* register the voice.
     cst_voice* GetFliteVoice();
 
-    bool IsSameLocaleAs(std::string flang, std::string fcountry, std::string fvar);
+    bool IsSameLocaleAs(const std::string &flang, const std::string &fcountry, const std::string &fvar);
 
     // Returns how far the language request is supported.
-    virtual android_tts_support_result_t GetLocaleSupport(std::string flang,
-                                                          std::string fcountry,
-                                                          std::string fvar) {
+    virtual android_tts_support_result_t GetLocaleSupport(const std::string &flang,
+                                                          const std::string &fcountry,
+                                                          const std::string &fvar) {
       return ANDROID_TTS_LANG_NOT_SUPPORTED;
     }
 
@@ -106,7 +106,7 @@ namespace FliteEngine {
     t_voice_unregister_function voice_unregister_function_;
 
  public:
-    LinkedVoice(std::string flang, std::string fcountry, std::string fvar,
+    LinkedVoice(const std::string &flang, const std::string &fcountry, const std::string &fvar,
                 t_voice_register_function freg,
                 t_voice_unregister_function funreg);
 
@@ -115,8 +115,8 @@ namespace FliteEngine {
     cst_voice* RegisterVoice();
     void UnregisterVoice();
 
-    android_tts_support_result_t GetLocaleSupport(std::string flang,
-                                                  std::string fcountry, std::string fvar);
+    android_tts_support_result_t GetLocaleSupport(const std::string &flang,
+                                                  const std::string &fcountry, const std::string &fvar);
   };
 
   class ClustergenVoice : public Voice {
@@ -124,10 +124,10 @@ namespace FliteEngine {
     ClustergenVoice();
     ~ClustergenVoice();
 
-    android_tts_support_result_t GetLocaleSupport(std::string flang,
-                                                  std::string fcountry, std::string fvar);
-    android_tts_result_t SetLanguage(std::string flang,
-                                     std::string fcountry, std::string fvar);
+    android_tts_support_result_t GetLocaleSupport(const std::string &flang,
+                                                  const std::string &fcountry, const std::string &fvar);
+    android_tts_result_t SetLanguage(const std::string &flang,
+                                     const std::string &fcountry, const std::string &fvar);
     void UnregisterVoice();
   };
 
@@ -146,19 +146,19 @@ namespace FliteEngine {
 
     Voice* GetCurrentVoice();
 
-    void AddLinkedVoice(std::string flang, std::string fcountry, std::string fvar,
+    void AddLinkedVoice(const std::string &flang, const std::string &fcountry, const std::string &fvar,
                         t_voice_register_function freg,
                         t_voice_unregister_function funreg);
 
     void SetDefaultVoice();
 
     // Find out if a particular locale is available.
-    android_tts_support_result_t IsLocaleAvailable(std::string flang,
-                                                   std::string fcountry,
-                                                   std::string fvar);
+    android_tts_support_result_t IsLocaleAvailable(const std::string &flang,
+                                                   const std::string &fcountry,
+                                                   const std::string &fvar);
 
     // Register and set the current voice to the one asked for
-    Voice* GetVoiceForLocale(std::string flang, std::string fcountry, std::string fvar);
+    Voice* GetVoiceForLocale(const std::string &flang, const std::string &fcountry, const std::string &fvar);
   };
 }
 

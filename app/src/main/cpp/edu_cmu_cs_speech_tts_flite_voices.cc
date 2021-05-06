@@ -70,14 +70,14 @@ cst_voice* Voice::GetFliteVoice() {
   return flite_voice_;
 }
 
-bool Voice::IsSameLocaleAs(std::string flang, std::string fcountry, std::string fvar) {
+bool Voice::IsSameLocaleAs(const std::string &flang, const std::string &fcountry, const std::string &fvar) {
     return (language_ == flang) &&
            (country_ == fcountry) &&
            (variant_ == fvar);
 }
 
-LinkedVoice::LinkedVoice(const std::string flang, const std::string fcountry,
-                         const std::string fvar,
+LinkedVoice::LinkedVoice(const std::string &flang, const std::string &fcountry,
+                         const std::string &fvar,
                          t_voice_register_function freg,
                          t_voice_unregister_function funreg) {
   language_ = flang;
@@ -94,9 +94,9 @@ LinkedVoice::~LinkedVoice() {
   LOGI("Voice::~Voice: voice unregistered");
 }
 
-android_tts_support_result_t LinkedVoice::GetLocaleSupport(std::string flang,
-                                                           std::string fcountry,
-                                                           std::string fvar) {
+android_tts_support_result_t LinkedVoice::GetLocaleSupport(const std::string &flang,
+                                                           const std::string &fcountry,
+                                                           const std::string &fvar) {
   android_tts_support_result_t support = ANDROID_TTS_LANG_NOT_SUPPORTED;
 
   if (language_ == flang) {
@@ -158,7 +158,7 @@ void ClustergenVoice::UnregisterVoice() {
   }
 }
 
-std::string GetDefaultVariantInCountryDirectory(std::string dirname)
+std::string GetDefaultVariantInCountryDirectory(const std::string &dirname)
 {
     DIR *dir;
     struct dirent *entry;
@@ -191,7 +191,7 @@ std::string GetDefaultVariantInCountryDirectory(std::string dirname)
     return "";
 }
 
-std::string GetDefaultCountryInLanguageDirectory(std::string dirname)
+std::string GetDefaultCountryInLanguageDirectory(const std::string &dirname)
 {
     struct dirent *entry;
     std::string default_voice;
@@ -226,9 +226,9 @@ std::string GetDefaultCountryInLanguageDirectory(std::string dirname)
 // Check that the required clustergen file is present on disk and
 // return the information.
 
-android_tts_support_result_t ClustergenVoice::GetLocaleSupport(std::string flang,
-                                                               std::string fcountry,
-                                                               std::string fvar) {
+android_tts_support_result_t ClustergenVoice::GetLocaleSupport(const std::string &flang,
+                                                               const std::string &fcountry,
+                                                               const std::string &fvar) {
   LOGI("ClustergenVoice::GetLocaleSupport for lang=%s country=%s var=%s",
        flang.c_str(),
        fcountry.c_str(),
@@ -260,9 +260,9 @@ android_tts_support_result_t ClustergenVoice::GetLocaleSupport(std::string flang
   return language_support;
 }
 
-android_tts_result_t ClustergenVoice::SetLanguage(std::string flang,
-                                                  std::string fcountry,
-                                                  std::string fvar) {
+android_tts_result_t ClustergenVoice::SetLanguage(const std::string &flang,
+                                                  const std::string &fcountry,
+                                                  const std::string &fvar) {
   LOGI("ClustergenVoice::SetLanguage: lang=%s country=%s variant=%s",
        flang.c_str(),
        fcountry.c_str(),
@@ -382,7 +382,7 @@ Voice* Voices::GetCurrentVoice() {
   return current_voice_;
 }
 
-void Voices::AddLinkedVoice(std::string flang, std::string fcountry, std::string fvar,
+void Voices::AddLinkedVoice(const std::string &flang, const std::string &fcountry, const std::string &fvar,
                             t_voice_register_function freg,
                             t_voice_unregister_function funreg) {
   LOGI("Voices::AddLinkedVoice adding %s", fvar.c_str());
@@ -432,9 +432,9 @@ void Voices::SetDefaultVoice() {
   }
 }
 
-android_tts_support_result_t Voices::IsLocaleAvailable(std::string flang,
-                                                       std::string fcountry,
-                                                       std::string fvar) {
+android_tts_support_result_t Voices::IsLocaleAvailable(const std::string &flang,
+                                                       const std::string &fcountry,
+                                                       const std::string &fvar) {
   LOGI("Voices::IsLocaleAvailable");
 
   // First loop over the linked-in voices to see the locale match.
@@ -466,8 +466,8 @@ android_tts_support_result_t Voices::IsLocaleAvailable(std::string flang,
   return language_support;
 }
 
-Voice* Voices::GetVoiceForLocale(std::string flang,
-                                 std::string fcountry, std::string fvar) {
+Voice* Voices::GetVoiceForLocale(const std::string &flang,
+                                 const std::string &fcountry, const std::string &fvar) {
   LOGI("Voices::GetVoiceForLocale: language=%s country=%s variant=%s",
        flang.c_str(), fcountry.c_str(), fvar.c_str());
 
