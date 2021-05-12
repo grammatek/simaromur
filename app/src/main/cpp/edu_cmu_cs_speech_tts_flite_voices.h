@@ -53,102 +53,114 @@ extern char flite_voxdir_path[2048];  // Path to data directory
 
 namespace FliteEngine {
 
-  // Function pointer type for flite_register_voice
-  typedef cst_voice* (*t_voice_register_function)(const char*);
+// Function pointer type for flite_register_voice
+typedef cst_voice *(*t_voice_register_function)(const char *);
 
-  // Function pointer type for flite_unregister_voice
-  typedef void (*t_voice_unregister_function)(cst_voice* v);
+// Function pointer type for flite_unregister_voice
+typedef void (*t_voice_unregister_function)(cst_voice *v);
 
-  enum VoiceRegistrationMode {
+enum VoiceRegistrationMode
+{
     ONLY_ONE_VOICE_REGISTERED = 0,
     ALL_VOICES_REGISTERED = 1
-  };
+};
 
 
-  class Voice {
- protected:
+class Voice
+{
+protected:
     std::string language_;  // ISO3 language
     std::string country_;   // ISO3 country
     std::string variant_;   // Short name of the variant
-    cst_voice* flite_voice_;  // Pointer to registered flite voice
+    cst_voice *flite_voice_;  // Pointer to registered flite voice
 
- public:
+public:
     virtual ~Voice() {}
-    const char* GetLanguage();
-    const char* GetCountry();
-    const char* GetVariant();
+
+    const char *GetLanguage();
+    const char *GetCountry();
+    const char *GetVariant();
     const int GetSampleRate();
 
     // Returns the currently set flite voice.
     // WARNING: This will *NOT* register the voice.
-    cst_voice* GetFliteVoice();
+    cst_voice *GetFliteVoice();
 
-    bool IsSameLocaleAs(const std::string &flang, const std::string &fcountry, const std::string &fvar);
+    bool
+    IsSameLocaleAs(const std::string &flang, const std::string &fcountry, const std::string &fvar);
 
     // Returns how far the language request is supported.
     virtual android_tts_support_result_t GetLocaleSupport(const std::string &flang,
                                                           const std::string &fcountry,
-                                                          const std::string &fvar) {
-      return ANDROID_TTS_LANG_NOT_SUPPORTED;
+                                                          const std::string &fvar)
+    {
+        return ANDROID_TTS_LANG_NOT_SUPPORTED;
     }
 
-    virtual void UnregisterVoice() {}
-  };
+    virtual void UnregisterVoice()
+    {}
+};
 
 
-  // Voices that are linked into the library
-  class LinkedVoice : public Voice {
- private:
+// Voices that are linked into the library
+class LinkedVoice : public Voice
+{
+private:
     // Flite function: register voice
     t_voice_register_function voice_register_function_;
 
     // Flite function: unregister voice
     t_voice_unregister_function voice_unregister_function_;
 
- public:
+public:
     LinkedVoice(const std::string &flang, const std::string &fcountry, const std::string &fvar,
                 t_voice_register_function freg,
                 t_voice_unregister_function funreg);
-
     ~LinkedVoice();
 
-    cst_voice* RegisterVoice();
+    cst_voice *RegisterVoice();
     void UnregisterVoice();
-
     android_tts_support_result_t GetLocaleSupport(const std::string &flang,
-                                                  const std::string &fcountry, const std::string &fvar);
-  };
+                                                  const std::string &fcountry,
+                                                  const std::string &fvar);
+};
 
-  class ClustergenVoice : public Voice {
- public:
+class ClustergenVoice : public Voice
+{
+public:
     ClustergenVoice();
     ~ClustergenVoice();
 
     android_tts_support_result_t GetLocaleSupport(const std::string &flang,
-                                                  const std::string &fcountry, const std::string &fvar);
+                                                  const std::string &fcountry,
+                                                  const std::string &fvar);
+
     android_tts_result_t SetLanguage(const std::string &flang,
                                      const std::string &fcountry, const std::string &fvar);
-    void UnregisterVoice();
-  };
 
-  class Voices {
- private:
-    LinkedVoice** voice_list_;
-    Voice* current_voice_;
+    void UnregisterVoice();
+};
+
+class Voices
+{
+private:
+    LinkedVoice **voice_list_;
+    Voice *current_voice_;
     ClustergenVoice clustergen_voice_;
     VoiceRegistrationMode voice_registration_mode_;
     int max_voice_count_;  // Maximum voice list size
     int current_voice_count_;  // Current occupancy of voice list
 
- public:
+public:
     Voices(int max_count, VoiceRegistrationMode registration_mode);
     ~Voices();
 
-    Voice* GetCurrentVoice();
+    Voice *GetCurrentVoice();
 
-    void AddLinkedVoice(const std::string &flang, const std::string &fcountry, const std::string &fvar,
-                        t_voice_register_function freg,
-                        t_voice_unregister_function funreg);
+    void
+    AddLinkedVoice(const std::string &flang, const std::string &fcountry, const std::string &fvar,
+                   t_voice_register_function freg,
+                   t_voice_unregister_function funreg);
 
     void SetDefaultVoice();
 
@@ -158,8 +170,10 @@ namespace FliteEngine {
                                                    const std::string &fvar);
 
     // Register and set the current voice to the one asked for
-    Voice* GetVoiceForLocale(const std::string &flang, const std::string &fcountry, const std::string &fvar);
-  };
+    Voice *GetVoiceForLocale(const std::string &flang, const std::string &fcountry,
+                             const std::string &fvar);
+};
+
 }
 
 #endif  // JNI_EDU_CMU_CS_SPEECH_TTS_FLITE_VOICES_H_
