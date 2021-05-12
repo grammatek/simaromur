@@ -55,7 +55,7 @@
 static android_tts_synth_cb_t ttsSynthDoneCBPointer;
 static int ttsAbort = 0;
 static int ttsStream = 1;
-char* flite_voxdir_path;
+char flite_voxdir_path[2048];
 FliteEngine::Voices* loadedVoices = nullptr;
 FliteEngine::Voice* currentVoice = nullptr;
 
@@ -175,16 +175,17 @@ android_tts_result_t init(void* engine, android_tts_synth_cb_t synthDoneCBPtr, c
 
   LOGI("Compilation Build Date: %s %s", __DATE__, __TIME__);
 
-  // First make sure we receive the data directory. That's very crucial.
-  if ((engineConfig != nullptr) && (strlen(engineConfig) > 0)) {
-    flite_voxdir_path = reinterpret_cast<char*>(malloc(strlen(engineConfig) + 12));
-    snprintf(flite_voxdir_path, strlen(engineConfig) + 12,
-             "%s/%s", engineConfig, "data");
-  } else {
-    LOGE("External storage directory not specified in engineConfig. ERROR.");
-    LOGE("TtsEngine::init fail");
-    return ANDROID_TTS_FAILURE;
-  }
+    // First make sure we receive the data directory. That's very crucial.
+    if ((engineConfig != nullptr) && (strlen(engineConfig) > 0))
+    {
+        snprintf(flite_voxdir_path, sizeof(flite_voxdir_path),"%s/%s", engineConfig, "data");
+    }
+    else
+    {
+        LOGE("External storage directory not specified in engineConfig. ERROR.");
+        LOGE("TtsEngine::init fail");
+        return ANDROID_TTS_FAILURE;
+    }
 
   ttsSynthDoneCBPointer = synthDoneCBPtr;
   flite_init();
@@ -211,10 +212,6 @@ android_tts_result_t init(void* engine, android_tts_synth_cb_t synthDoneCBPtr, c
   // Shutsdown the TTS engine. Unload all voices
   android_tts_result_t shutdown(void* engine )
   {
-    if (flite_voxdir_path != nullptr) {
-      free(flite_voxdir_path);
-    }
-
     LOGI("TtsEngine::shutdown");
     if(loadedVoices)
       delete loadedVoices;
@@ -298,6 +295,12 @@ android_tts_result_t init(void* engine, android_tts_synth_cb_t synthDoneCBPtr, c
                                                     const char *variant)
   {
     LOGI("TtsEngine::isLanguageAvailable: lang=%s, country=%s, variant=%s", lang, country, variant);
+
+    if (loadedVoices == nullptr)
+    {
+        LOGE("No languages available ?!");
+        return ANDROID_TTS_LANG_MISSING_DATA;
+    }
 
     // The hack for java to make sure flite is available.
     // Only flite can respond "YES" to the language "eng-USA-is_flite_available"
@@ -482,21 +485,19 @@ android_tts_result_t init(void* engine, android_tts_synth_cb_t synthDoneCBPtr, c
 
 	cst_tokenstream *ts;
 
-	char* padded_text = reinterpret_cast<char*>(malloc(strlen(text) + 2));
-	snprintf(padded_text, strlen(text)+2, "%s\n\n", text);
+    std::string paddedText(text);
+    paddedText.append("\n\n");
 
-	if ((ts=ts_open_string(padded_text,
+	if ((ts=ts_open_string(paddedText.c_str(),
 			       get_param_string(flite_voice->features, "text_whitespace", cst_ts_default_whitespacesymbols),
 			       get_param_string(flite_voice->features, "text_singlecharsymbols", cst_ts_default_singlecharsymbols),
 			       get_param_string(flite_voice->features, "text_prepunctuation", cst_ts_default_prepunctuationsymbols),
 			       get_param_string(flite_voice->features, "text_postpunctuation", cst_ts_default_postpunctuationsymbols)))==nullptr) {
 
 	  LOGE("Unable to open tokenstream");
-	  free(padded_text);
 	  return ANDROID_TTS_FAILURE;
 	}
 
-	free(padded_text);
 	flite_ts_to_speech(ts,
 			   flite_voice,
 			   "stream");
@@ -576,12 +577,13 @@ android_tts_result_t init(void* engine, android_tts_synth_cb_t synthDoneCBPtr, c
   }
 
   // Function to get TTS Engine
-android_tts_engine_t *getTtsEngine()
+std::unique_ptr<android_tts_engine_t> getTtsEngine()
 {
   LOGI("TtsEngine::getTtsEngine");
 
-  android_tts_engine_t* engine;
-  engine = (android_tts_engine_t*) malloc(sizeof(android_tts_engine_t));
+  std::unique_ptr<android_tts_engine_t> engine;
+  // TODO(DS): where is the corresponding free ?
+  engine = std::unique_ptr<android_tts_engine_t>(new android_tts_engine_t);
   auto* functable = (android_tts_engine_funcs_t*) malloc(sizeof(android_tts_engine_funcs_t));
   functable->init = &init;
   functable->shutdown = &shutdown;
@@ -600,7 +602,7 @@ android_tts_engine_t *getTtsEngine()
   return engine;
 }
 
-android_tts_engine_t *android_getTtsEngine()
+std::unique_ptr<android_tts_engine_t> android_getTtsEngine()
 {
   return getTtsEngine();
 }

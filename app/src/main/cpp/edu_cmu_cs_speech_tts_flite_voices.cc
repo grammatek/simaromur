@@ -116,6 +116,7 @@ android_tts_support_result_t LinkedVoice::GetLocaleSupport(const std::string &fl
 cst_voice* LinkedVoice::RegisterVoice() {
   LOGI("Voice::RegisterVoice for %s", variant_.c_str());
   flite_voice_ = voice_register_function_(flite_voxdir_path);
+  LOGI("flite_voxdir_path: %s", flite_voxdir_path);
   LOGI("Voice::RegisterVoice done");
   return flite_voice_;
 }

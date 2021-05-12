@@ -49,7 +49,7 @@
 #include <dirent.h>
 #include <string>
 
-extern char* flite_voxdir_path;  // Path to data directory
+extern char flite_voxdir_path[2048];  // Path to data directory
 
 namespace FliteEngine {
 

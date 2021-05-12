@@ -38,6 +38,8 @@
 /*                                                                       */
 /*************************************************************************/
 
+#include <vector>
+
 // Standard headers
 #include <jni.h>
 
@@ -56,37 +58,41 @@
 
 #define DEBUG_LOG_FUNCTION if (FLITE_DEBUG_ENABLED) LOGV("%s", __FUNCTION__)
 
+// globals
+
 jmethodID METHOD_nativeSynthCallback;
 jfieldID FIELD_mNativeData;
 
-class SynthJNIData {
- public:
-  JNIEnv*                         env_;
-  jobject                         tts_ref_;
-  android_tts_engine_funcs_t*     flite_engine_;
-  int8_t*                         audio_buffer_;
-  size_t                          audio_buffer_size_;
+// forward declarations
 
-  SynthJNIData() {
-    DEBUG_LOG_FUNCTION;
-    env_ = NULL;
-    tts_ref_ = NULL;
-    flite_engine_ = NULL;
-    audio_buffer_size_ = 2048;
-    audio_buffer_ = new int8_t[audio_buffer_size_];
-    memset(audio_buffer_, 0, audio_buffer_size_);
-  }
-
-  ~SynthJNIData() {
-    DEBUG_LOG_FUNCTION;
-
-    if (flite_engine_) {
-      flite_engine_->shutdown(flite_engine_);
-      flite_engine_ = NULL;
+class SynthJNIData
+{
+public:
+    SynthJNIData()
+    {
+        DEBUG_LOG_FUNCTION;
+        env_ = nullptr;
+        tts_ref_ = nullptr;
+        flite_engine_ = nullptr;
+        audio_buffer_.resize(2048, 0);
     }
 
-    delete audio_buffer_;
-  }
+    ~SynthJNIData()
+    {
+        DEBUG_LOG_FUNCTION;
+        if (flite_engine_)
+        {
+            flite_engine_->shutdown(flite_engine_);
+            free(flite_engine_);
+            flite_engine_ = nullptr;
+        }
+    }
+public:
+    JNIEnv*                         env_;
+    jobject                         tts_ref_;
+    android_tts_engine_funcs_t*     flite_engine_;
+    std::unique_ptr<android_tts_engine_t> engine_ptr_;
+    std::vector<int8_t>             audio_buffer_;
 };
 
 /* Callback from flite.  Should call back to the TTS API */
@@ -120,6 +126,14 @@ static android_tts_callback_status_t TtsSynthDoneCallback(
   return ANDROID_TTS_CALLBACK_CONTINUE;
 }
 
+void clearField(JNIEnv *env, jobject obj, jfieldID fieldId)
+{
+    env->SetLongField(obj, fieldId, reinterpret_cast<intptr_t>(nullptr));
+    if (env->ExceptionCheck())
+    {
+        throw std::runtime_error("JNI exception");
+    }
+}
 
 #ifdef __cplusplus
 extern "C" {
@@ -154,18 +168,20 @@ extern "C" {
   JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeCreate(
       JNIEnv *env, jobject object, jstring path) {
     DEBUG_LOG_FUNCTION;
-
+    clearField(env, object, FIELD_mNativeData);
     const char *path_string = env->GetStringUTFChars(path, 0);
 
-    SynthJNIData* jni_data = new SynthJNIData();
-    jni_data->flite_engine_ = android_getTtsEngine()->funcs;
+    std::unique_ptr<SynthJNIData> jni_data(new SynthJNIData);
+    jni_data->engine_ptr_ = android_getTtsEngine();
+    jni_data->flite_engine_ = jni_data->engine_ptr_->funcs;
 
     android_tts_result_t result =
         jni_data->flite_engine_->init(jni_data->flite_engine_,
                                      TtsSynthDoneCallback, path_string);
 
-    env->SetLongField(object, FIELD_mNativeData, reinterpret_cast<jlong>(jni_data));
+    env->SetLongField(object, FIELD_mNativeData, reinterpret_cast<jlong>(jni_data.get()));
     env->ReleaseStringUTFChars(path, path_string);
+    jni_data.release();
     return result;
   }
 
@@ -275,8 +291,8 @@ LOGV("%s: 3", __FUNCTION__);
 
     android_tts_result_t result =
         flite_engine->synthesizeText(flite_engine, c_text,
-                                     jni_data->audio_buffer_,
-                                     jni_data->audio_buffer_size_,
+                                     jni_data->audio_buffer_.data(),
+                                     jni_data->audio_buffer_.size(),
                                      jni_data);
 
     env->ReleaseStringUTFChars(text, c_text);
