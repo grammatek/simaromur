@@ -68,7 +68,11 @@ extern "C" cst_lexicon *cmulex_init(void);
 extern "C" void cmu_indic_lang_init(cst_voice *v);
 extern "C" cst_lexicon *cmu_indic_lex_init(void);
 
-void setVoiceList() {
+static float getTimeDiff(const timespec &start, const timespec &end);
+
+// methods
+void setVoiceList()
+{
     if(loadedVoices != nullptr)
       {
 	LOGW("Voices already initialized!");
@@ -522,41 +526,26 @@ android_tts_result_t init(void* engine, android_tts_synth_cb_t synthDoneCBPtr, c
         return ANDROID_TTS_SUCCESS;
       }
     else
-      {
-	// AUP: This doesn't do the right thing: It will treat all the text as one utterance.
-	// The streaming code goes through tokenstreams, therefore does the right thing.
+    {
+        // AUP: This doesn't do the right thing: It will treat all the text as one utterance.
+        // The streaming code goes through tokenstreams, therefore does the right thing.
 
-	LOGI("TtsEngine::synthesizeText: streaming is DISABLED");
+	    LOGI("TtsEngine::synthesizeText: streaming is DISABLED");
         LOGI("Starting Synthesis");
 
-        timespec start, end;
+        timespec start{}, end{};
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-
         cst_wave* w = flite_text_to_wave(text, flite_voice);
-
-	compress(w->samples, w->num_samples, 5);
-	LOGV("Compressing with 5");
-
+	    compress(w->samples, w->num_samples, 5);
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
 
-        // Calculate time difference
-        timespec temp;
-        if ((end.tv_nsec-start.tv_nsec)<0)
-          {
-            temp.tv_sec = end.tv_sec-start.tv_sec-1;
-            temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
-          }
-        else
-          {
-            temp.tv_sec = end.tv_sec-start.tv_sec;
-            temp.tv_nsec = end.tv_nsec-start.tv_nsec;
-          }
+        LOGV("Compressing with 5");
 
-        float diffmilliseconds = 1000*temp.tv_sec + (temp.tv_nsec)/1000000;
-
-        float wavlen = 1000*((float)w->num_samples / w->sample_rate);
-        float timesrealtime = wavlen/diffmilliseconds;
-        LOGW("A %1.2f ms file synthesized in %1.2f ms: synthesis is %1.2f times faster than real time.", wavlen, diffmilliseconds, timesrealtime);
+        float wavlen = 1000 * ((float) w->num_samples / w->sample_rate);
+        float diffmilliseconds = getTimeDiff(start, end);
+        float timesrealtime = wavlen / diffmilliseconds;
+        LOGW("A %1.2f ms file synthesized in %1.2f ms: synthesis is %1.2f times faster than real time.",
+             wavlen, diffmilliseconds, timesrealtime);
 
         LOGI("Done flite synthesis.");
 
@@ -576,7 +565,24 @@ android_tts_result_t init(void* engine, android_tts_synth_cb_t synthDoneCBPtr, c
       }
   }
 
-  // Function to get TTS Engine
+// Calculate time difference
+static float getTimeDiff(const timespec &start, const timespec &end)
+{
+    timespec temp;
+    if ((end.tv_nsec-start.tv_nsec) < 0)
+    {
+        temp.tv_sec = end.tv_sec-start.tv_sec - 1;
+        temp.tv_nsec = 1000000000 + end.tv_nsec-start.tv_nsec;
+    }
+    else
+    {
+        temp.tv_sec = end.tv_sec-start.tv_sec;
+        temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+    }
+    return 1000 * temp.tv_sec + (temp.tv_nsec) / 1000000;
+}
+
+// Function to get TTS Engine
 std::unique_ptr<android_tts_engine_t> getTtsEngine()
 {
   LOGI("TtsEngine::getTtsEngine");
@@ -626,34 +632,21 @@ float getBenchmark() {
 
   LOGI("TtsEngine Running Benchmark");
 
-  timespec start, end{};
+  timespec start{};
+  timespec end{};
   float totalmilliseconds = 0;
-  float wavlen;
+  float wavlen = 0;
   int num_trials = 3;
 
-  const char* text =
-      "This sentence is the being synthesized for a benchmark computation.";
+  const char* text = "This sentence is being synthesized for a benchmark computation.";
 
-  for (int i = 0; i < num_trials; i++) {
+  for (int i = 0; i < num_trials; i++)
+  {
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
     cst_wave* w = flite_text_to_wave(text, flite_voice);
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
 
-    // Calculate time difference
-    timespec temp;
-    if ((end.tv_nsec-start.tv_nsec)<0)
-    {
-      temp.tv_sec = end.tv_sec-start.tv_sec-1;
-      temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
-    }
-    else
-    {
-      temp.tv_sec = end.tv_sec-start.tv_sec;
-      temp.tv_nsec = end.tv_nsec-start.tv_nsec;
-    }
-
-    float diffmilliseconds = 1000*temp.tv_sec + (temp.tv_nsec)/1000000;
-    totalmilliseconds += diffmilliseconds;
+    totalmilliseconds += getTimeDiff(start, end);
     wavlen = 1000*((float)w->num_samples / w->sample_rate);
     delete_wave(w);
   }
