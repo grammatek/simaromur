@@ -28,7 +28,7 @@ public class UnitTestSampleJava {
     //        like Tokenizer/TTSUnicodeNormalizer, etc. can be tested here.
 
     /**
-     * Test Frontend Manager
+     * Test Frontend Manager.
      */
     @Test
     public void testFrontendManager() {
@@ -37,7 +37,7 @@ public class UnitTestSampleJava {
     }
 
     /**
-     * Test Unicode Normalization
+     * Test Unicode Normalization.
      */
     @Test
     public void testUnicodeNormalization1() {

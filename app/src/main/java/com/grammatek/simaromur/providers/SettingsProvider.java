@@ -47,11 +47,10 @@ import android.net.Uri;
 import android.os.Environment;
 
 /**
- * Provides the "engineConfig" parameter for the legacy (pre-ICS) TTS API.
+ * Provides the "engineConfig" parameter for the legacy (pre-ICS-IceCreamSandwich) TTS API.
  * This string basically stores the path to ExternalStorage
  * This path gets used in the flite JNI code.
  */
-
 public class SettingsProvider extends ContentProvider {
 	private class SettingsCursor extends MatrixCursor {
         private String settings;
@@ -79,7 +78,7 @@ public class SettingsProvider extends ContentProvider {
   public int delete(Uri uri, String selection, String[] selectionArgs) {
     return 0;
   }
-  
+
   @Override
   public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
     return 0;
