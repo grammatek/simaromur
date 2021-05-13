@@ -97,8 +97,7 @@ public:
         return ANDROID_TTS_LANG_NOT_SUPPORTED;
     }
 
-    virtual void UnregisterVoice()
-    {}
+    virtual void UnregisterVoice() = 0;
 };
 
 

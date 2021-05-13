@@ -100,12 +100,10 @@ public:
 static android_tts_callback_status_t TtsSynthDoneCallback(
         void **user_data, uint32_t rate,
         android_tts_audio_format_t format, int channel_count,
-        int8_t **wave_data, size_t *buffer_size,
+        int8_t *wave_data, size_t buffer_size,
         android_tts_synth_status_t status)
 {
     DEBUG_LOG_FUNCTION;
-
-
     if (user_data == nullptr)
     {
         LOGE("TtsSynthDoneCallback: userdata == nullptr");
@@ -115,9 +113,9 @@ static android_tts_callback_status_t TtsSynthDoneCallback(
     SynthJNIData *pJNIData = reinterpret_cast<SynthJNIData *>(*user_data);
     JNIEnv *env = pJNIData->env_;
 
-    jbyteArray audio_data = env->NewByteArray(*buffer_size);
-    env->SetByteArrayRegion(audio_data, 0, *buffer_size,
-                            reinterpret_cast<jbyte *>(*wave_data));
+    jbyteArray audio_data = env->NewByteArray(buffer_size);
+    env->SetByteArrayRegion(audio_data, 0, buffer_size,
+                            reinterpret_cast<jbyte *>(wave_data));
     env->CallVoidMethod(pJNIData->tts_ref_,
                         METHOD_nativeSynthCallback, audio_data);
 
@@ -359,8 +357,6 @@ JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeGetSampleRate(
     uint64_t jni_data_address = env->GetLongField(object, FIELD_mNativeData);
     SynthJNIData *jni_data = reinterpret_cast<SynthJNIData *>(jni_data_address);
     android_tts_engine_funcs_t *flite_engine = jni_data->flite_engine_;
-
-    LOGV("HERE: %d", flite_engine->getSampleRate(flite_engine));
     return (jint) flite_engine->getSampleRate(flite_engine);
 }
 

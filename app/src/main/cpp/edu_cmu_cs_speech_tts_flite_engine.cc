@@ -44,13 +44,14 @@
 #include <unistd.h>
 #include <time.h>
 #include <math.h>
+#include <vector>
 
 // Flite headers
 #include <flite.h>
 
 // Local headers
-#include "./edu_cmu_cs_speech_tts_logging.h"
-#include "./edu_cmu_cs_speech_tts_flite_voices.h"
+#include "edu_cmu_cs_speech_tts_logging.h"
+#include "edu_cmu_cs_speech_tts_flite_voices.h"
 
 static android_tts_synth_cb_t ttsSynthDoneCBPointer;
 static int ttsAbort = 0;
@@ -98,6 +99,7 @@ void setVoiceList()
 
 void compress(short *samples, int num_samples, float mu)
 {
+    //LOGV("Compressing with %d", num_samples);
     int i = 0;
     short limit = 30000;
     short x;
@@ -112,10 +114,8 @@ void compress(short *samples, int num_samples, float mu)
 static int fliteCallback(const cst_wave *w, int start, int size,
                          int last, cst_audio_streaming_info_struct *asi)
 {
-
     short *waveSamples = (short *) &w->samples[start];
     compress(waveSamples, size, 5);
-    //LOGV("Compressing with 5");
 
     int8_t *castedWave = (int8_t *) &w->samples[start];
     size_t bufferSize = size * sizeof(short);
@@ -136,14 +136,19 @@ static int fliteCallback(const cst_wave *w, int start, int size,
             if (dur < 0.8)
             {
                 // create padding
+                static std::vector<int8_t> paddingVec(16000, 0);
+
                 size_t padding_length = num_channels * (sample_rate / 2);
-                int8_t *paddingWave = new int8_t[padding_length]; // Half a second
+                if (padding_length > paddingVec.capacity())
+                {
+                    paddingVec.resize(padding_length);
+                }
                 for (int i = 0; i < (int) padding_length; i++)
-                    paddingWave[i] = 0;
+                    paddingVec[i] = 0;
                 LOGE("Utterance too short. Adding padding to the output to workaround audio rendering bug.");
                 ttsSynthDoneCBPointer(&asi->userdata, sample_rate,
                                       ANDROID_TTS_AUDIO_FORMAT_PCM_16_BIT, num_channels,
-                                      &castedWave, &bufferSize, ANDROID_TTS_SYNTH_PENDING);
+                                      castedWave, bufferSize, ANDROID_TTS_SYNTH_PENDING);
                 // Changed by Alok to still be pending, because in the new
                 // streaming mode (via tokenstream), utterance end isn't the end
                 // of TTS. There could be more utterances
@@ -154,9 +159,8 @@ static int fliteCallback(const cst_wave *w, int start, int size,
                 */
                 ttsSynthDoneCBPointer(&asi->userdata, sample_rate,
                                       ANDROID_TTS_AUDIO_FORMAT_PCM_16_BIT, num_channels,
-                                      &paddingWave, &padding_length,
+                                      paddingVec.data(), padding_length,
                                       ANDROID_TTS_SYNTH_PENDING);
-                delete[] paddingWave;
             }
             else
             {
@@ -166,14 +170,14 @@ static int fliteCallback(const cst_wave *w, int start, int size,
                ANDROID_TTS_SYNTH_DONE); */
                 ttsSynthDoneCBPointer(&asi->userdata, sample_rate,
                                       ANDROID_TTS_AUDIO_FORMAT_PCM_16_BIT, num_channels,
-                                      &castedWave, &bufferSize,
+                                      castedWave, bufferSize,
                                       ANDROID_TTS_SYNTH_PENDING);
             }
         }
         else
         {
             ttsSynthDoneCBPointer(&asi->userdata, sample_rate, ANDROID_TTS_AUDIO_FORMAT_PCM_16_BIT,
-                                  num_channels, &castedWave, &bufferSize,
+                                  num_channels, castedWave, bufferSize,
                                   ANDROID_TTS_SYNTH_PENDING);
             //	LOGV("flite callback processed!");
         }
@@ -569,8 +573,6 @@ synthesizeText(void *engine, const char *text, int8_t *buffer, size_t bufferSize
         compress(w->samples, w->num_samples, 5);
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
 
-        LOGV("Compressing with 5");
-
         float wavlen = 1000 * ((float) w->num_samples / w->sample_rate);
         float diffmilliseconds = getTimeDiff(start, end);
         float timesrealtime = wavlen / diffmilliseconds;
@@ -585,7 +587,7 @@ synthesizeText(void *engine, const char *text, int8_t *buffer, size_t bufferSize
         if (ttsSynthDoneCBPointer != nullptr)
         {
             ttsSynthDoneCBPointer(&userdata, w->sample_rate, ANDROID_TTS_AUDIO_FORMAT_PCM_16_BIT,
-                                  w->num_channels, &castedWave, &bufSize, ANDROID_TTS_SYNTH_DONE);
+                                  w->num_channels, castedWave, bufSize, ANDROID_TTS_SYNTH_DONE);
         }
         else
         {

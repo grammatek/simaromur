@@ -44,6 +44,9 @@
 #include <filesystem>
 #include <string>
 
+// DS: this is defined in libflite.a, but not exported in the header file ...
+extern "C" { void cst_cg_unload_voice(cst_voice *vox,cst_val *voice_list); }
+
 namespace FliteEngine {
 const char *Voice::GetLanguage()
 {
@@ -165,17 +168,13 @@ void ClustergenVoice::UnregisterVoice()
 {
     if (flite_voice_ != nullptr)
     {
-        // TODO(aup): Flite 1.5.6 does not support unregistering a linked voice.
-        // We do nothing here, but there is potential memory issue.
+        cst_cg_unload_voice(flite_voice_, nullptr);
+        LOGD("Flite voice unregistered.");
 
-        LOGW("Not calling unregister for clustergen voice");
-
-        // cst_cg_unload_voice(flite_voice_);
-        // LOGD("Flite voice unregistered.");
         flite_voice_ = nullptr;
-        language_ = "";
-        country_ = "";
-        variant_ = "";
+        language_.clear();
+        country_.clear();
+        variant_.clear();
     }
 }
 
@@ -555,7 +554,7 @@ Voice *Voices::GetVoiceForLocale(const std::string &flang,
         return current_voice_;
     }
 
-    /* If registration mode dictatas that only one voice can be set,
+    /* If registration mode dictates that only one voice can be set,
        this is the right time to unregister currently loaded voice.
     */
     if ((current_voice_ != nullptr)

@@ -112,8 +112,8 @@ typedef android_tts_callback_status_t (*android_tts_synth_cb_t)
              uint32_t trackSamplingHz,
              android_tts_audio_format_t audioFormat,
              int channelCount,
-             int8_t **pAudioBuffer,
-             size_t *pBufferSize,
+             int8_t *pAudioBuffer,
+             size_t pBufferSize,
              android_tts_synth_status_t status);
 
 
