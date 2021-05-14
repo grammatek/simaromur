@@ -57,18 +57,14 @@ public class FileDownloader {
 	public void saveUrlAsFile(final String url, final String filename) {
 		finished = false;
 		success = false;
-		new Thread() {
-			public void run() {
-				save(url, filename);
-			}
-		}.start();
+		new Thread(() -> save(url, filename)).start();
 	}
 
 	private boolean save(String url, String filename) {
 		try {
 			//TODO (aup): Improve the exception handling. This is cruel.
-
 			abortDownload = false;
+			final int chunkSize = 2048;
 
 			Log.v(LOG_TAG,"Trying to save "+url+" as "+filename);
 			URL u = new URL(url);
@@ -84,16 +80,14 @@ public class FileDownloader {
 			finishedFileLength = 0;
 
 			InputStream raw = uc.getInputStream();
-			InputStream in = new BufferedInputStream(raw,1024);
+			InputStream in = new BufferedInputStream(raw,chunkSize);
 			FileOutputStream out = new FileOutputStream(filename);
 
-			int bytesRead = 0;
-			byte[] data = new byte[1024];
-
-			while (bytesRead != -1) {
-				bytesRead = in.read(data, 0, 1024);
+			byte[] data = new byte[chunkSize];
+			while (true) {
+				int bytesRead = in.read(data, 0, chunkSize);
 				if (bytesRead == -1)
-					break;    			
+					break;
 				finishedFileLength += bytesRead;
 				out.write(data, 0, bytesRead);
 				if(abortDownload)
