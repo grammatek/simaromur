@@ -619,12 +619,11 @@ static float getTimeDiff(const timespec &start, const timespec &end)
 }
 
 // Function to get TTS Engine
-std::unique_ptr<android_tts_engine_t> getTtsEngine()
+std::unique_ptr<android_tts_engine_t> android_getTtsEngine()
 {
-    LOGI("TtsEngine::getTtsEngine");
+    LOGI("TtsEngine::android_getTtsEngine");
 
     std::unique_ptr<android_tts_engine_t> engine;
-    // TODO(DS): where is the corresponding free ?
     engine = std::unique_ptr<android_tts_engine_t>(new android_tts_engine_t);
     auto *functable = (android_tts_engine_funcs_t *) malloc(sizeof(android_tts_engine_funcs_t));
     functable->init = &init;
@@ -643,12 +642,6 @@ std::unique_ptr<android_tts_engine_t> getTtsEngine()
     engine->funcs = functable;
     return engine;
 }
-
-std::unique_ptr<android_tts_engine_t> android_getTtsEngine()
-{
-    return getTtsEngine();
-}
-
 
 // This function generates a benchmark of how fast the current voice is
 // in comparison to realtime.

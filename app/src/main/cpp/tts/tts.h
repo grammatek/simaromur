@@ -25,7 +25,7 @@
 // that returns an 'android_tts_engine_t' instance.
 
 #include <memory>
-
+ 
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -314,10 +314,5 @@ struct android_tts_engine_funcs_t {
  * and must return the address of an android_tts_engine_t library.
  */
 extern std::unique_ptr<android_tts_engine_t> android_getTtsEngine();
-
-/* Including the old version for legacy support.
- * This should return the same thing as android_getTtsEngine.
- */
-extern std::unique_ptr<android_tts_engine_t> getTtsEngine();
 
 #endif /* ANDROID_TTS_H */

@@ -241,16 +241,12 @@ Java_com_grammatek_simaromur_NativeFliteTTS_nativeSetLanguage(
         jstring country, jstring variant)
 {
     DEBUG_LOG_FUNCTION;
-    LOGV("%s: 0", __FUNCTION__);
     const char *c_language = env->GetStringUTFChars(language, nullptr);
-    LOGV("%s: 0.1", __FUNCTION__);
     const char *c_country = env->GetStringUTFChars(country, nullptr);
     const char *c_variant = env->GetStringUTFChars(variant, nullptr);
-    LOGV("%s: 1", __FUNCTION__);
     uint64_t jni_data_address = env->GetLongField(object, FIELD_mNativeData);
     SynthJNIData *jni_data = reinterpret_cast<SynthJNIData *>(jni_data_address);
     android_tts_engine_funcs_t *flite_engine = jni_data->flite_engine_;
-    LOGV("%s: 2", __FUNCTION__);
     android_tts_result_t result =
             flite_engine->setLanguage(flite_engine, c_language,
                                       c_country, c_variant);
@@ -258,7 +254,6 @@ Java_com_grammatek_simaromur_NativeFliteTTS_nativeSetLanguage(
     env->ReleaseStringUTFChars(language, c_language);
     env->ReleaseStringUTFChars(country, c_country);
     env->ReleaseStringUTFChars(variant, c_variant);
-    LOGV("%s: 3", __FUNCTION__);
     if (result == ANDROID_TTS_SUCCESS)
     {
         return JNI_TRUE;
