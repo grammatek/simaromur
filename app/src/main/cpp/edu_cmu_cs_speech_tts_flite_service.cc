@@ -113,18 +113,19 @@ static android_tts_callback_status_t TtsSynthDoneCallback(
     SynthJNIData *pJNIData = reinterpret_cast<SynthJNIData *>(*user_data);
     JNIEnv *env = pJNIData->env_;
 
-    jbyteArray audio_data = env->NewByteArray(buffer_size);
-    env->SetByteArrayRegion(audio_data, 0, buffer_size,
-                            reinterpret_cast<jbyte *>(wave_data));
-    env->CallVoidMethod(pJNIData->tts_ref_,
-                        METHOD_nativeSynthCallback, audio_data);
-
-    // TODO(DS): Should this check not be placed before executing the previous callback ?
+    // TODO(DS): due to streaming mode implementation details, this is currently
+    //           never executed
     if (status == ANDROID_TTS_SYNTH_DONE)
     {
         env->CallVoidMethod(pJNIData->tts_ref_, METHOD_nativeSynthCallback, nullptr);
         return ANDROID_TTS_CALLBACK_HALT;
     }
+
+    jbyteArray audio_data = env->NewByteArray(buffer_size);
+    env->SetByteArrayRegion(audio_data, 0, buffer_size,
+                            reinterpret_cast<jbyte *>(wave_data));
+    env->CallVoidMethod(pJNIData->tts_ref_,
+                        METHOD_nativeSynthCallback, audio_data);
 
     return ANDROID_TTS_CALLBACK_CONTINUE;
 }

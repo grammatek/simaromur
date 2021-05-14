@@ -152,26 +152,28 @@ static int fliteCallback(const cst_wave *w, int start, int size,
                 // Changed by Alok to still be pending, because in the new
                 // streaming mode (via tokenstream), utterance end isn't the end
                 // of TTS. There could be more utterances
-
-                /*
-                  ttsSynthDoneCBPointer(&asi->userdata, sample_rate, ANDROID_TTS_AUDIO_FORMAT_PCM_16_BIT,
-                        num_channels, &paddingWave, &padding_length, ANDROID_TTS_SYNTH_DONE);
-                */
+#if 0
+                constexpr android_tts_synth_status_t synthStatus = ANDROID_TTS_SYNTH_DONE;
+#else
+                constexpr android_tts_synth_status_t synthStatus = ANDROID_TTS_SYNTH_PENDING;
+#endif
                 ttsSynthDoneCBPointer(&asi->userdata, sample_rate,
                                       ANDROID_TTS_AUDIO_FORMAT_PCM_16_BIT, num_channels,
                                       paddingVec.data(), padding_length,
-                                      ANDROID_TTS_SYNTH_PENDING);
+                                      synthStatus);
             }
             else
             {
                 // See comment above on why this has been changed.
-
-                /* ttsSynthDoneCBPointer(&asi->userdata, sample_rate, ANDROID_TTS_AUDIO_FORMAT_PCM_16_BIT, num_channels, &castedWave, &bufferSize,
-               ANDROID_TTS_SYNTH_DONE); */
+#if 0
+                constexpr android_tts_synth_status_t synthStatus = ANDROID_TTS_SYNTH_DONE;
+#else
+                constexpr android_tts_synth_status_t synthStatus = ANDROID_TTS_SYNTH_PENDING;
+#endif
                 ttsSynthDoneCBPointer(&asi->userdata, sample_rate,
                                       ANDROID_TTS_AUDIO_FORMAT_PCM_16_BIT, num_channels,
                                       castedWave, bufferSize,
-                                      ANDROID_TTS_SYNTH_PENDING);
+                                      synthStatus);
             }
         }
         else
