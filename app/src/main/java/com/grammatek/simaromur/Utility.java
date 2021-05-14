@@ -43,26 +43,40 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import android.os.Environment;
 
 public class Utility {
-    
+
   public static boolean pathNotExists(String pathname){
     File tempFile = new File(pathname);
     return !tempFile.exists();
   }
-    
-  public static  ArrayList<String>readLines(String filename) throws IOException {
-    ArrayList<String> strLines = new ArrayList<String>();
+
+  public static  ArrayList<String> readLines(String filename) throws IOException {
+    ArrayList<String> strLines = new ArrayList<>();
     FileInputStream fstream = new FileInputStream(filename);
     DataInputStream in = new DataInputStream(fstream);
     BufferedReader br = new BufferedReader(new InputStreamReader(in),1024);
     String strLine;
-    while ((strLine = br.readLine()) != null)   {
-      strLines.add(strLine);				
+    while ((strLine = br.readLine()) != null) {
+      strLines.add(strLine);
     }
-    in.close();		
+    in.close();
     return strLines;
-  }    
+  }
+
+  /* Checks if external storage is available for read and write */
+  public static boolean isExternalStorageWritable() {
+    String state = Environment.getExternalStorageState();
+    return Environment.MEDIA_MOUNTED.equals(state);
+  }
+
+  /* Checks if external storage is available to at least reading */
+  public static boolean isExternalStorageReadable() {
+    String state = Environment.getExternalStorageState();
+    return Environment.MEDIA_MOUNTED.equals(state) ||
+            Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
+  }
 }
 
 

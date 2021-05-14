@@ -120,6 +120,7 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 		}
 		else {
 			if (mTts == null) {
+				Log.d("mTts", "new TextToSpeech");
 				mTts = new TextToSpeech(this, this);
 			}
 			mSelectedVoice = -1;
@@ -159,13 +160,15 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 
 	@Override
 	public void onDestroy() {
+		super.onDestroy();
 		if (mTts != null)
 		{
 			mTts.stop();
 			mTts.shutdown();
 			mTts = null;
+			Log.e("mTts", "delete TextToSpeech");
 		}
-		super.onDestroy();
+
 	}
 
 	private void buildUI() {

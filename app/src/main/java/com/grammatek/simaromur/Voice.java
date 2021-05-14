@@ -78,7 +78,6 @@ public class Voice {
 		}
 		else {
 			mVoiceName = voiceInfo[0];
-Log.e(LOG_TAG, "Voice file name in List: " + mVoiceName);
 			mVoiceMD5 = voiceInfo[1];
 
 			String[] voiceParams = mVoiceName.split("-");
@@ -97,9 +96,8 @@ Log.e(LOG_TAG, "Voice file name in List: " + mVoiceName);
 			mIsValidVoice = true;
 			mVoicePath = App.getDataPath() + "cg/" + mVoiceLanguage +
 					"/" + mVoiceCountry + "/" + mVoiceVariant + ".cg.flitevox";
-Log.e(LOG_TAG, "mVoiceName: " + mVoiceName);
-Log.e(LOG_TAG, "mVoicePath: " + mVoicePath);
-			checkVoiceAvailability();
+Log.d(LOG_TAG, "mVoicePath: " + mVoicePath);
+			mIsVoiceAvailable = checkVoiceAvailability();
 		}
 		else {
 			mIsValidVoice = false;
@@ -107,43 +105,61 @@ Log.e(LOG_TAG, "mVoicePath: " + mVoicePath);
 
 	}
 
-	private void checkVoiceAvailability() {
-		Log.v(LOG_TAG, "Checking for Voice Available: " + mVoiceName);
+	/**
+	 * Check validity of voice. Read file, calc MD5 checksum and throw exception in case voice file
+	 * doesn't exist or is inconsistent.
+	 *
+	 * TODO(DS): this whole procedure is done every time for the whole voice list. This is very
+	 * 			 inefficient and needs only to be done once at startup and can be done iteratively,
+	 * 			 as soon as the voices are updated (i.e. deleted/downloaded). This inefficiency causes
+	 * 			 the user to wait each time TTS demo is loaded
+	 *
+	 * @return	true in case voice is available, false otherwise
+	 */
+	private boolean checkVoiceAvailability() {
+		boolean rv = false;
 
-		mIsVoiceAvailable = false;
+		String md5String = getMD5SumOfFile(mVoicePath);
+		if ((md5String != null) && md5String.equals(mVoiceMD5)) {
+			Log.v(LOG_TAG, "Voice is valid: " + mVoiceName);
+			rv = true;
+		}
+		else {
+			Log.e(LOG_TAG,"Voice MD5 sum incorrect. Found: " +
+					md5String + ", expected: " + mVoiceMD5);
+		}
+		return rv;
+	}
 
-		// The file should exist, as well as the MD5 sum should match.
-		// Only then do we mark a voice as available.
-		//
-		// We can attempt getting an MD5sum, and an IOException will
-		// tell us if the file didn't exist at all.
+	/**
+	 * Calculate MD5 message digest of given file and return it as string
+	 */
+	private static String getMD5SumOfFile(String filePath) {
+		FileInputStream fis;
+		try {
+			fis = new FileInputStream(filePath);
+		}
+		catch (FileNotFoundException e) {
+			Log.e(LOG_TAG, "File not found: " + filePath);
+			return null;
+		}
 
+		byte[] dataBytes = new byte[1024];
+		int nread;
 		MessageDigest md;
 		try {
 			md = MessageDigest.getInstance("MD5");
 		} catch (NoSuchAlgorithmException e) {
 			Log.e(LOG_TAG, "MD5 could not be computed");
-			return;
+			return null;
 		}
-
-		FileInputStream fis;
-		try {
-			fis = new FileInputStream(mVoicePath);
-		}
-		catch (FileNotFoundException e) {
-			Log.e(LOG_TAG, "Voice File not found: " + mVoicePath);
-			return;
-		}
-
-		byte[] dataBytes = new byte[1024];
-		int nread;
 		try {
 			while ((nread = fis.read(dataBytes)) != -1) {
 				md.update(dataBytes, 0, nread);
 			}
 		} catch (IOException e) {
-			Log.e(LOG_TAG, "Could not read voice file: " + mVoicePath);
-			return;
+			Log.e(LOG_TAG, "Could not read file: " + filePath);
+			return null;
 		}
 		finally {
 			try {
@@ -153,20 +169,13 @@ Log.e(LOG_TAG, "mVoicePath: " + mVoicePath);
 			}
 		}
 
-		byte[] mdbytes = md.digest();
-
 		StringBuilder sb = new StringBuilder();
-		for (byte mdbyte : mdbytes) {
-			sb.append(Integer.toString((mdbyte & 0xff) + 0x100, 16).substring(1));
+		byte[] mdBytes = md.digest();
+		for (byte mdByte : mdBytes) {
+			sb.append(Integer.toString((mdByte & 0xff) + 0x100, 16).substring(1));
 		}
 
-		if (sb.toString().equals(mVoiceMD5)) {
-			mIsVoiceAvailable = true;
-		}
-		else {
-			Log.e(LOG_TAG,"Voice file found, but MD5 sum incorrect. Found" +
-					sb.toString() + ". Expected: " + mVoiceMD5);
-		}
+		return sb.toString();
 	}
 
 	public boolean isValid() {

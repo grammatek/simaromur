@@ -55,8 +55,6 @@ import android.util.Log;
 public class FliteTtsService extends TextToSpeechService {
 	private final static String LOG_TAG = "Simaromur_Java_" + FliteTtsService.class.getSimpleName();
 	private NativeFliteTTS mEngine;
-	private NativeG2P mG2P;
-
 	private FrontendManager mFrontendManager;
 
 	private static final String DEFAULT_LANGUAGE = "eng";
@@ -91,7 +89,8 @@ public class FliteTtsService extends TextToSpeechService {
 	}
 
 	@Override
-	protected String[] onGetLanguage() {
+	protected String[] onGetLanguage()
+	{
 		Log.v(LOG_TAG, "onGetLanguage");
 		return new String[] {
 				mLanguage, mCountry, mVariant
@@ -100,13 +99,13 @@ public class FliteTtsService extends TextToSpeechService {
 
 	@Override
 	protected int onIsLanguageAvailable(String language, String country, String variant) {
-		Log.v(LOG_TAG, "onIsLanguageAvailable");
+		Log.v(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+")");
 		return mEngine.isLanguageAvailable(language, country, variant);
 	}
 
 	@Override
 	protected int onLoadLanguage(String language, String country, String variant) {
-		Log.v(LOG_TAG, "onLoadLanguage");
+		Log.v(LOG_TAG, "onLoadLanguage("+language+","+country+","+variant+")");
 		return mEngine.isLanguageAvailable(language, country, variant);
 	}
 
@@ -119,7 +118,7 @@ public class FliteTtsService extends TextToSpeechService {
 	@Override
 	protected synchronized void onSynthesizeText(
 			SynthesisRequest request, SynthesisCallback callback) {
-		Log.v(LOG_TAG, "onSynthesize");
+		Log.v(LOG_TAG, "onSynthesizeText");
 
 		String language = request.getLanguage();
 		String country = request.getCountry();
@@ -149,7 +148,7 @@ public class FliteTtsService extends TextToSpeechService {
 
 		int speechrate = request.getSpeechRate();
 		mEngine.setSpeechRate(speechrate);
-		
+
 		mCallback = callback;
         Integer rate = mEngine.getSampleRate();
         Log.e(LOG_TAG, rate.toString());

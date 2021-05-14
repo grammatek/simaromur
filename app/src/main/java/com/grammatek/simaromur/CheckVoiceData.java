@@ -60,14 +60,14 @@ public class CheckVoiceData extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.e(LOG_TAG, "DATA_PATH: " + DATA_PATH);
-		Log.e(LOG_TAG, "VOICE_LIST_FILE: " + VOICE_LIST_FILE);
+		Log.d(LOG_TAG, "DATA_PATH: " + DATA_PATH);
+		Log.d(LOG_TAG, "VOICE_LIST_FILE: " + VOICE_LIST_FILE);
 
 		int result = TextToSpeech.Engine.CHECK_VOICE_DATA_PASS;
 		Intent returnData = new Intent();
 
-		ArrayList<String> available = new ArrayList<String>();
-		ArrayList<String> unavailable = new ArrayList<String>();
+		ArrayList<String> available = new ArrayList<>();
+		ArrayList<String> unavailable = new ArrayList<>();
 
 		/* First, make sure that the directory structure we need exists
 		 * There should be a "cg" folder inside the data directory
@@ -99,16 +99,13 @@ public class CheckVoiceData extends Activity {
 		/* Connect to CMU TTS server and get the list of voices available,
 		 * if we don't already have a file.
 		 */
-
 		if(Utility.pathNotExists(VOICE_LIST_FILE)) {
 			Log.e(LOG_TAG, "Voice list file doesn't exist. Try getting it from server.");
-
 			DownloadVoiceList(null);
 		}
 
 		/* At this point, we MUST have a voices.list file. If this file is not there,
 		 * possibly because Internet connection was not available, we must create a dummy
-		 *
 		 */
 		if(Utility.pathNotExists(VOICE_LIST_FILE)) {
 			try {
@@ -150,11 +147,10 @@ public class CheckVoiceData extends Activity {
 	}
 
 	public static void DownloadVoiceList(Runnable callback) {
+		Log.d(LOG_TAG, "Download voice list to: " + VOICE_LIST_FILE);
 
 		// Download the voice list and call back to notify of update
 		String voiceListURL = Voice.getDownloadURLBasePath() + "voices.list?q=1";
-
-		Log.e(LOG_TAG, "DATA_PATH: " + DATA_PATH);
 
 		File voiceListFile = new File(DATA_PATH);
 		boolean dirCreated = voiceListFile.mkdir();
@@ -173,11 +169,10 @@ public class CheckVoiceData extends Activity {
 		if (callback != null) {
 			callback.run();
 		}
-
 	}
 
 	public static ArrayList<Voice> getVoices() {
-		Log.e(LOG_TAG, "DATA_PATH: " + DATA_PATH);
+		Log.d(LOG_TAG, "DATA_PATH: " + DATA_PATH);
 
 		ArrayList<String> voiceList = null;
 		try {
@@ -186,10 +181,10 @@ public class CheckVoiceData extends Activity {
 			// Ignore exception, since we will return empty anyway.
 		}
 		if (voiceList == null) {
-			voiceList = new ArrayList<String>();
+			voiceList = new ArrayList<>();
 		}
 
-		ArrayList<Voice> voices = new ArrayList<Voice>();
+		ArrayList<Voice> voices = new ArrayList<>();
 
 		for(String strLine:voiceList) {
 			Voice vox = new Voice(strLine);

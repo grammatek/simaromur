@@ -28,7 +28,7 @@ android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
     // use specific NDK version
-    //ndkVersion '23.0.7123448'
+    ndkVersion '22.1.7171670'
 
     defaultConfig {
         applicationId "com.grammatek.simaromur"

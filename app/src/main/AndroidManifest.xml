@@ -86,25 +86,6 @@
             android:configChanges="keyboardHidden|orientation" >
         </activity>
 
-        <!-- Legacy Code for pre-ICS compatibility -->
-
-        <activity
-            android:name="com.grammatek.simaromur.Simaromur"
-            android:enabled="true"
-            android:label="@string/app_name"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
-            <intent-filter>
-                <action android:name="android.intent.action.START_TTS_ENGINE" />
-
-                <category android:name="android.intent.category.tts_engine.FLITE" />
-                <category android:name="android.intent.category.tts_lang.eng.USA" />
-            </intent-filter>
-        </activity>
-
-        <provider
-            android:name="com.grammatek.simaromur.providers.SettingsProvider"
-            android:authorities="com.grammatek.simaromur.providers.SettingsProvider"
-        />
     </application>
 
 </manifest>

@@ -19,7 +19,7 @@ public class App extends Application {
     }
 
     public static String getAbsoluteFilePath(String relativePath) {
-        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+        if (Utility.isExternalStorageWritable()) {
             return new File(getContext().getExternalFilesDir(null), relativePath).getPath();
         } else {
             return new File(getContext().getFilesDir(), relativePath).getPath();
@@ -31,7 +31,7 @@ public class App extends Application {
 
 
     public static String getAbsoluteDirPath(String relativePath) {
-        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+        if (Utility.isExternalStorageWritable()) {
             return new File(getContext().getExternalFilesDir(null), relativePath).getPath();
         } else {
             return new File(getContext().getFilesDir(), relativePath).getParent();

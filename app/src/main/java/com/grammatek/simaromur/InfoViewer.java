@@ -56,7 +56,7 @@ public class InfoViewer extends ListActivity {
     }
 
     private void populateInformation() {
-        if (mBenchmark <0) {
+        if (mBenchmark < 0) {
             mBenchmark = mFliteEngine.getNativeBenchmark();
         }
         final String[] Info = new String[] {
@@ -107,7 +107,7 @@ public class InfoViewer extends ListActivity {
 
         @Override
         public int getItemViewType(int position) {
-            if (values[position] == "RUNTIME_HEADER") {
+            if (values[position].equals("RUNTIME_HEADER")) {
                 return 0;
             }
             else return 1;
@@ -125,7 +125,7 @@ public class InfoViewer extends ListActivity {
             TextView infoType = (TextView) convertView.findViewById(R.id.infotitle);
             TextView infoDetail = (TextView) convertView.findViewById(R.id.infodetail);
 
-            if (values[position] == "RUNTIME_HEADER") {
+            if (values[position].equals("RUNTIME_HEADER")) {
                 infoType.setText("Runtime Information");
                 infoType.setClickable(false);
 
