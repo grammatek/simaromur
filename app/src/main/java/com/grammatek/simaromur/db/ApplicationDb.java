@@ -49,8 +49,8 @@ public abstract class ApplicationDb extends RoomDatabase {
     };
 
     /**
-     * Populate the database in the background.
-     * If you want to start with more words, just add them.
+     * Populate the database with initial voices in the background.
+     * TODO(DS): this should be based on voice auto detection at the various URL's
      */
     private static class PopulateDbAsync extends AsyncTask<Void, Void, Void> {
 

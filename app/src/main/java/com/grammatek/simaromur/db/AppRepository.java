@@ -18,8 +18,8 @@ public class AppRepository {
     private AppData mAppData;
     private LiveData<List<Voice>> mAllVoices;
 
-    // Note that in order to unit test the WordRepository, you have to remove the Application
-    // dependency. This adds complexity and much more code.
+    // Note that in order to unit test the AppRepository, you have to remove the Application
+    // dependency.
     public AppRepository(Application application) {
         ApplicationDb db = ApplicationDb.getDatabase(application);
         mAppDataDao = db.appDataDao();
