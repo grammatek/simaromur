@@ -9,7 +9,7 @@ import java.util.Date;
 
 @Entity(tableName = "app_data_table")
 public class AppData {
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     public long appDataId;
 
     // Version string of the database schema

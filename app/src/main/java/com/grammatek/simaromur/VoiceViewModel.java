@@ -17,19 +17,28 @@ import java.util.List;
  */
 public class VoiceViewModel extends AndroidViewModel {
     private AppRepository mRepository;
+    // these variables are for data caching
     private AppData mAppData;
     private LiveData<List<Voice>> mAllVoices;
 
     public VoiceViewModel(Application application) {
         super(application);
         mRepository = new AppRepository(application);
-        mAppData = mRepository.getAppData();
-        mAllVoices = mRepository.getAllVoices();
     }
 
     // model accessors
-    public AppData getAppData() { return mAppData; }
-    public LiveData<List<Voice>> getAllVoices() { return mAllVoices; }
+    public AppData getAppData() {
+        if (mAppData == null) {
+            mAppData = mRepository.getAppData();
+        }
+        return mAppData;
+    }
+    public LiveData<List<Voice>> getAllVoices() {
+        if (mAllVoices == null) {
+            mAllVoices = mRepository.getAllVoices();
+        }
+        return mAllVoices;
+    }
 
     // TODO(DS): To be continued ....
 }
