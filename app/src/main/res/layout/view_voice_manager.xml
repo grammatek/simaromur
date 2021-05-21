@@ -28,11 +28,12 @@
         android:id="@+id/voice_manager_action_image"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:layout_centerInParent="true"
         android:background="@drawable/voice_imagebutton_background"
         android:scaleType="fitXY"
-        android:src="@android:drawable/ic_input_add" />
+        android:src="@android:drawable/ic_input_add"
+        android:contentDescription="@string/todo" />
 
 </RelativeLayout>
