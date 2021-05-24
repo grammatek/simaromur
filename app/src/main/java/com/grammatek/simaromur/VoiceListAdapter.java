@@ -14,17 +14,24 @@ import com.grammatek.simaromur.db.Voice;
 import java.util.List;
 
 public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.VoiceViewHolder> {
+    private final LayoutInflater mInflater;
+    private List<Voice> mVoices; // Cached copy of voices
+    private static ClickListener clickListener;
+
     class VoiceViewHolder extends RecyclerView.ViewHolder {
         private final TextView voiceItemView;
 
         private VoiceViewHolder(View itemView) {
             super(itemView);
             voiceItemView = itemView.findViewById(R.id.textView);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    clickListener.onItemClick(view, getAdapterPosition());
+                }
+            });
         }
     }
-
-    private final LayoutInflater mInflater;
-    private List<Voice> mVoices; // Cached copy of voices
 
     VoiceListAdapter(Context context) { mInflater = LayoutInflater.from(context); }
 
@@ -52,5 +59,23 @@ public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.Voic
         if (mVoices != null)
             return mVoices.size();
         else return 0;
+    }
+
+    /**
+     * Gets voice entry at given position.
+     *
+     * @param position Position of the voice in the View
+     * @return Voice at the given position
+     */
+    public Voice getVoiceAtPosition(int position) {
+        return mVoices.get(position);
+    }
+
+    public interface ClickListener {
+        void onItemClick(View v, int position);
+    }
+
+    public void setOnItemClickListener(ClickListener clickListener) {
+        VoiceListAdapter.clickListener = clickListener;
     }
 }
