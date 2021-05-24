@@ -5,8 +5,11 @@ import android.content.Context;
 import android.os.Environment;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class App extends Application {
+    ExecutorService executorService = Executors.newFixedThreadPool(4);
 
     private static Application sApplication;
 
