@@ -12,11 +12,10 @@ import java.util.Date;
 
 // Create unique index on name, language, country, variant
 @Entity(tableName = "voice_table",
-        indices = {@Index(value = {"mName", "mLanguage", "mCountry", "mVariant"},
-        unique = true)})
+        indices = {@Index(value = {"mName", "mLanguage", "mCountry", "mVariant"}, unique = true)})
 public class Voice {
 
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     public long voiceId;
 
     // Voice name (mandatory)

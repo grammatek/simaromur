@@ -6,5 +6,7 @@
     <string name="simaromur_manager">Símarómur</string>
     <string name="simaromur_voice_manager">Símarómur Voices</string>
     <string name="voice_list_update">Download Voice List</string>
+    <string name="todo">TODO</string>
+    <string name="speak_button">TODO</string>
 
 </resources>

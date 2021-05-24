@@ -2,6 +2,7 @@ package com.grammatek.simaromur.db;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
@@ -10,17 +11,21 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.grammatek.simaromur.App;
+
 import java.util.List;
 
 @Database(entities = {Voice.class, AppData.class},
-        version = 1, exportSchema = false)
+        version = 1, exportSchema = true)
 public abstract class ApplicationDb extends RoomDatabase {
+    private final static String LOG_TAG = "Simaromur_" + ApplicationDb.class.getSimpleName();
     private static ApplicationDb INSTANCE;
 
     public abstract AppDataDao appDataDao();
     public abstract VoiceDao voiceDao();
 
     public static ApplicationDb getDatabase(final Context context) {
+        Log.v(LOG_TAG, "getDatabase");
         if (INSTANCE == null) {
             synchronized (ApplicationDb.class) {
                 if (INSTANCE == null) {
@@ -43,6 +48,7 @@ public abstract class ApplicationDb extends RoomDatabase {
 
         @Override
         public void onOpen (@NonNull SupportSQLiteDatabase db){
+            Log.v(LOG_TAG, "onOpen");
             super.onOpen(db);
             new PopulateDbAsync(INSTANCE).execute();
         }
@@ -65,18 +71,30 @@ public abstract class ApplicationDb extends RoomDatabase {
         @Override
         protected Void doInBackground(final Void... params) {
 
-            List<Voice> voices = mVoiceDao.getAllVoices().getValue();
+            AppData appData = mAppDataDao.getAppData();
+            if (appData == null)
+            {
+                appData = new AppData();
+                appData.fliteVoiceListPath = App.getDataPath();
+                appData.simVoiceListPath = App.getVoiceDataPath();
+                mAppDataDao.insert(appData);
+            }
+
+            List<Voice> voices = mVoiceDao.getAnyVoices();
             if (voices == null || voices.isEmpty())
             {
+                Log.v(LOG_TAG, "PopulateDbAsync:  voices == null");
                 // fill in initial list of voices, currently via Tíro TTS web service only
-                Voice tiroDoraVoice = new Voice("Dóra", "Dora",
+                Voice v1 = new Voice("Dóra", "Dora",
                         "is.IS", "is","clear", "tiro", "");
-                Voice tiroKarlVoice = new Voice("Karl", "Karl",
+                Voice v2 = new Voice("Karl", "Karl",
                         "is.IS", "is", "clear", "tiro", "");
-                Voice tiroNeuroVoice = new Voice("Neural 1", "other",
+                Voice v3 = new Voice("Neural 1", "other",
                         "is.IS", "is", "clear", "tiro", "");
-
-                mAppDataDao.selectCurrentVoice(tiroDoraVoice);
+                mVoiceDao.insertVoices(v1, v2, v3);
+                Voice selectedVoice = mVoiceDao.findVoice(v1.mName, v1.mInternalName, v1.mLanguage,
+                        v1.mCountry, v1.mVariant);
+                mAppDataDao.selectCurrentVoice(selectedVoice);
             }
             return null;
         }

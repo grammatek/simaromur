@@ -5,8 +5,11 @@ import android.content.Context;
 import android.os.Environment;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class App extends Application {
+    ExecutorService executorService = Executors.newFixedThreadPool(4);
 
     private static Application sApplication;
 
@@ -29,6 +32,9 @@ public class App extends Application {
         return getAbsoluteDirPath("data")+"/";
     }
 
+    public static String getVoiceDataPath() {
+        return getAbsoluteDirPath("voices")+"/";
+    }
 
     public static String getAbsoluteDirPath(String relativePath) {
         if (Utility.isExternalStorageWritable()) {

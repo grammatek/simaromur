@@ -2,8 +2,11 @@ package com.grammatek.simaromur.db;
 
 import android.app.Application;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
+
+import com.grammatek.simaromur.VoiceManager;
 
 import java.util.List;
 
@@ -12,7 +15,7 @@ import java.util.List;
  * https://developer.android.com/topic/libraries/architecture/guide.html
  */
 public class AppRepository {
-
+    private final static String LOG_TAG = "Simaromur_" + AppRepository.class.getSimpleName();
     private AppDataDao mAppDataDao;
     private VoiceDao mVoiceDao;
     private AppData mAppData;
@@ -23,8 +26,7 @@ public class AppRepository {
     public AppRepository(Application application) {
         ApplicationDb db = ApplicationDb.getDatabase(application);
         mAppDataDao = db.appDataDao();
-        mAppData = mAppDataDao.getAppData();
-        mAllVoices = mVoiceDao.getAllVoices();
+        mVoiceDao = db.voiceDao();
     }
 
     /**
@@ -32,21 +34,36 @@ public class AppRepository {
      *
      * @return  single instance of the AppData
      */
-    public AppData getAppData() { return mAppData; }
+    public AppData getAppData() {
+        Log.v(LOG_TAG, "getAppData");
+        if (mAppData == null) {
+            mAppData = mAppDataDao.getAppData();
+        }
+        return mAppData;
+    }
 
     /**
      * Returns list of all voices.
      *
      * @return  list of all persisted voices as LiveData
      */
-    public LiveData<List<Voice>> getAllVoices() { return mAllVoices; }
+    public LiveData<List<Voice>> getAllVoices() {
+        Log.v(LOG_TAG, "getAllVoices");
+        if (mAllVoices == null) {
+            mAllVoices = mVoiceDao.getAllVoices();
+        }
+        return mAllVoices;
+    }
 
     /**
      * Insert a voice into the db.
      *
      * @param voice Voice to be saved into db
      */
-    public void insertVoice(Voice voice) { new insertVoiceAsyncTask(mVoiceDao).execute(voice); }
+    public void insertVoice(Voice voice) {
+        Log.v(LOG_TAG, "insertVoice");
+        new insertVoiceAsyncTask(mVoiceDao).execute(voice);
+    }
 
     private static class insertVoiceAsyncTask extends AsyncTask<Voice, Void, Void> {
         private VoiceDao mAsyncTaskDao;
