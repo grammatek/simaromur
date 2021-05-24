@@ -39,6 +39,11 @@ public interface VoiceDao {
     @Query("SELECT * FROM voice_table WHERE mName LIKE :name ")
     public List<Voice> findVoiceWithName(String name);
 
+    @Query("SELECT * FROM voice_table WHERE mName IS :name AND mInternalName IS :internalName" +
+            " AND mLanguage IS :language AND mCountry IS :country AND mVariant IS :variant")
+    public Voice findVoice(String name, String internalName, String language,  String country,
+                           String variant);
+
     @Query("SELECT * FROM voice_table WHERE mType LIKE 'tiro' ")
     public List<Voice> findNetworkVoices();
 

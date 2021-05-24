@@ -25,9 +25,11 @@ public abstract class AppDataDao {
     /**
      * Updates current voice in AppData table.
      *
-     * @param voice the current voice to select
+     * @param voice the current voice to select, it needs to already exist in db
      */
     public void selectCurrentVoice(Voice voice) {
+        if ((voice.voiceId == 0))
+            throw new AssertionError("selectCurrentVoice: voiceId == 0");
         AppData appData = getAppData();
         appData.currentVoiceId = voice.voiceId;
         update(appData);

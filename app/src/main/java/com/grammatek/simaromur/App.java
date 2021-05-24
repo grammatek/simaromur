@@ -29,6 +29,9 @@ public class App extends Application {
         return getAbsoluteDirPath("data")+"/";
     }
 
+    public static String getVoiceDataPath() {
+        return getAbsoluteDirPath("voices")+"/";
+    }
 
     public static String getAbsoluteDirPath(String relativePath) {
         if (Utility.isExternalStorageWritable()) {
