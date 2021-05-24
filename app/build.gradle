@@ -49,6 +49,11 @@ android {
                 cppFlags "-std=c++17"
             }
         }
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
     }
 
     buildTypes {
