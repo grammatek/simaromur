@@ -69,7 +69,7 @@ public abstract class ApplicationDb extends RoomDatabase {
         @Override
         protected Void doInBackground(final Void... params) {
 
-            List<Voice> voices = mVoiceDao.getAllVoices().getValue();
+            List<Voice> voices = mVoiceDao.getAnyVoices();
             if (voices == null || voices.isEmpty())
             {
                 Log.v(LOG_TAG, "PopulateDbAsync:  voices == null");
