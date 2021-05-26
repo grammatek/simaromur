@@ -131,7 +131,7 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
             mVoiceListObserver.update(voicesList);
         }
         else {
-            Log.e(LOG_TAG, "API Error: " + response.errorBody());
+            Log.e(LOG_TAG, "API Error: " + response.code() + " " + response.errorBody());
             mVoiceListObserver.error(response.message());
         }
     }

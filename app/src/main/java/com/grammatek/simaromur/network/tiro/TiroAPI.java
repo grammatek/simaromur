@@ -15,9 +15,9 @@ import retrofit2.http.Query;
 public interface TiroAPI {
     public static final String URL = "https://tts.tiro.is/v0/";
 
-    @GET("voices/")
+    @GET("voices")
     Call<List<VoiceResponse>> queryVoices(@Query("LanguageCode") String languageCode);
 
-    @POST("speak/")
+    @POST("speak")
     Call<ResponseBody> postSpeakRequest(@Body SpeakRequest request);
 }

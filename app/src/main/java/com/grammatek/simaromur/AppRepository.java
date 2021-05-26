@@ -13,7 +13,9 @@ import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
 import com.grammatek.simaromur.network.tiro.SpeakController;
 import com.grammatek.simaromur.network.tiro.VoiceController;
+import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -28,6 +30,25 @@ public class AppRepository {
     private LiveData<List<com.grammatek.simaromur.db.Voice>> mAllVoices;
     private VoiceController mTiroVoiceController;
     private SpeakController mTiroSpeakController;
+    private List<VoiceResponse> mTiroVoices;
+
+    /**
+     * Observer for Tiro voice query results.
+     */
+    class TiroVoiceQueryObserver implements VoiceController.VoiceObserver {
+        public TiroVoiceQueryObserver() {}
+        public void update(List<VoiceResponse> voices) {
+            for (VoiceResponse voice: voices) {
+                Log.v(LOG_TAG, "Tiro API returned: " + voice.VoiceId);
+            }
+            mTiroVoices = voices;
+            // @todo: update the DB Voice list, add new voices to the Model, update
+            //        the AppData model about when this list was last updated ... etc.
+        }
+        public void error(String errorMsg) {
+            Log.e(LOG_TAG, "TiroVoiceQueryObserver()::error: " + errorMsg);
+        }
+    }
 
     // Note that in order to unit test the AppRepository, you have to remove the Application
     // dependency.
@@ -63,6 +84,34 @@ public class AppRepository {
             mAllVoices = mVoiceDao.getAllVoices();
         }
         return mAllVoices;
+    }
+
+    /**
+     * Returns list of all Tiro voices from its API endpoint.
+     *
+     * @return  list of all cached Tiro API voices.
+     */
+    public List<VoiceResponse> queryTiroVoices(String languageCode) throws IOException {
+        Log.v(LOG_TAG, "queryTiroVoices");
+        if (mTiroVoices == null) {
+            streamTiroVoices(languageCode);
+        }
+        return mTiroVoices;
+    }
+
+    /**
+     * Returns list of all Tiro voices from its API endpoint.
+     *
+     * @return  list of all cached Tiro API voices.
+     *
+     * @todo Update list regularly via a timer
+     */
+    public void streamTiroVoices(String languageCode) {
+        Log.v(LOG_TAG, "streamTiroVoices");
+        if (mTiroVoices == null) {
+
+            mTiroVoiceController.streamQueryVoices(languageCode, new TiroVoiceQueryObserver());
+        }
     }
 
     /**

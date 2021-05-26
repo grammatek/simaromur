@@ -46,6 +46,8 @@ public class VoiceManager extends AppCompatActivity {
                 Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
                 // Update cached voices
                 adapter.setVoices(voices);
+                // query Network voices
+                mVoiceViewModel.startFetchingNetworkVoices("");
             }
         });
 
