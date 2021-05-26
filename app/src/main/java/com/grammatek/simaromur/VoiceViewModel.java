@@ -6,7 +6,6 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
 import com.grammatek.simaromur.db.AppData;
-import com.grammatek.simaromur.db.AppRepository;
 import com.grammatek.simaromur.db.Voice;
 
 import java.util.List;

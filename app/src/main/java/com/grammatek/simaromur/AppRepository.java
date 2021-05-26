@@ -1,4 +1,4 @@
-package com.grammatek.simaromur.db;
+package com.grammatek.simaromur;
 
 import android.app.Application;
 import android.os.AsyncTask;
@@ -6,7 +6,13 @@ import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 
-import com.grammatek.simaromur.VoiceManager;
+import com.grammatek.simaromur.db.AppData;
+import com.grammatek.simaromur.db.AppDataDao;
+import com.grammatek.simaromur.db.ApplicationDb;
+import com.grammatek.simaromur.db.Voice;
+import com.grammatek.simaromur.db.VoiceDao;
+import com.grammatek.simaromur.network.tiro.SpeakController;
+import com.grammatek.simaromur.network.tiro.VoiceController;
 
 import java.util.List;
 
@@ -19,7 +25,9 @@ public class AppRepository {
     private AppDataDao mAppDataDao;
     private VoiceDao mVoiceDao;
     private AppData mAppData;
-    private LiveData<List<Voice>> mAllVoices;
+    private LiveData<List<com.grammatek.simaromur.db.Voice>> mAllVoices;
+    private VoiceController mTiroVoiceController;
+    private SpeakController mTiroSpeakController;
 
     // Note that in order to unit test the AppRepository, you have to remove the Application
     // dependency.
@@ -27,6 +35,8 @@ public class AppRepository {
         ApplicationDb db = ApplicationDb.getDatabase(application);
         mAppDataDao = db.appDataDao();
         mVoiceDao = db.voiceDao();
+        mTiroSpeakController = new SpeakController();
+        mTiroVoiceController = new VoiceController();
     }
 
     /**
@@ -47,7 +57,7 @@ public class AppRepository {
      *
      * @return  list of all persisted voices as LiveData
      */
-    public LiveData<List<Voice>> getAllVoices() {
+    public LiveData<List<com.grammatek.simaromur.db.Voice>> getAllVoices() {
         Log.v(LOG_TAG, "getAllVoices");
         if (mAllVoices == null) {
             mAllVoices = mVoiceDao.getAllVoices();
@@ -60,12 +70,12 @@ public class AppRepository {
      *
      * @param voice Voice to be saved into db
      */
-    public void insertVoice(Voice voice) {
+    public void insertVoice(com.grammatek.simaromur.db.Voice voice) {
         Log.v(LOG_TAG, "insertVoice");
         new insertVoiceAsyncTask(mVoiceDao).execute(voice);
     }
 
-    private static class insertVoiceAsyncTask extends AsyncTask<Voice, Void, Void> {
+    private static class insertVoiceAsyncTask extends AsyncTask<com.grammatek.simaromur.db.Voice, Void, Void> {
         private VoiceDao mAsyncTaskDao;
 
         insertVoiceAsyncTask(VoiceDao dao) {
