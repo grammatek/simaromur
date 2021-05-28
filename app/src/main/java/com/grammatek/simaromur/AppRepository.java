@@ -16,7 +16,9 @@ import com.grammatek.simaromur.network.tiro.VoiceController;
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Abstracted application repository as promoted by the Architecture Guide.
@@ -31,6 +33,7 @@ public class AppRepository {
     private VoiceController mTiroVoiceController;
     private SpeakController mTiroSpeakController;
     private List<VoiceResponse> mTiroVoices;
+    private ApiDbUtil mApiDbUtil;
 
     /**
      * Observer for Tiro voice query results.
@@ -42,8 +45,7 @@ public class AppRepository {
                 Log.v(LOG_TAG, "Tiro API returned: " + voice.VoiceId);
             }
             mTiroVoices = voices;
-            // @todo: update the DB Voice list, add new voices to the Model, update
-            //        the AppData model about when this list was last updated ... etc.
+            new updateVoicesAsyncTask(mApiDbUtil).execute(voices);
         }
         public void error(String errorMsg) {
             Log.e(LOG_TAG, "TiroVoiceQueryObserver()::error: " + errorMsg);
@@ -56,6 +58,7 @@ public class AppRepository {
         ApplicationDb db = ApplicationDb.getDatabase(application);
         mAppDataDao = db.appDataDao();
         mVoiceDao = db.voiceDao();
+        mApiDbUtil = new ApiDbUtil(mVoiceDao);
         mTiroSpeakController = new SpeakController();
         mTiroVoiceController = new VoiceController();
     }
@@ -100,16 +103,13 @@ public class AppRepository {
     }
 
     /**
-     * Returns list of all Tiro voices from its API endpoint.
+     * Request Tiro voices from its API endpoint.
      *
-     * @return  list of all cached Tiro API voices.
-     *
-     * @todo Update list regularly via a timer
+     * @todo Do this regularly via a timer
      */
     public void streamTiroVoices(String languageCode) {
         Log.v(LOG_TAG, "streamTiroVoices");
         if (mTiroVoices == null) {
-
             mTiroVoiceController.streamQueryVoices(languageCode, new TiroVoiceQueryObserver());
         }
     }
@@ -134,6 +134,18 @@ public class AppRepository {
         @Override
         protected Void doInBackground(final Voice... params) {
             mAsyncTaskDao.insertVoice(params[0]);
+            return null;
+        }
+    }
+
+    private static class updateVoicesAsyncTask extends AsyncTask<List<VoiceResponse>, Void, Void> {
+        private ApiDbUtil mApiDbUtil;
+
+        updateVoicesAsyncTask(ApiDbUtil apiDbUtil) {  mApiDbUtil = apiDbUtil;  }
+
+        @Override
+        protected Void doInBackground(final List<VoiceResponse>... voices) {
+            mApiDbUtil.updateModelVoices(voices[0]);
             return null;
         }
     }
