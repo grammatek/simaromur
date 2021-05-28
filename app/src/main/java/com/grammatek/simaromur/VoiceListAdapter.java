@@ -44,7 +44,7 @@ public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.Voic
     @Override
     public void onBindViewHolder(VoiceViewHolder holder, int position) {
         Voice current = mVoices.get(position);
-        holder.voiceItemView.setText(current.mName);
+        holder.voiceItemView.setText(current.name);
     }
 
     void setVoices(List<com.grammatek.simaromur.db.Voice> words){

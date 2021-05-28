@@ -29,5 +29,17 @@ public class VoiceResponse {
     public List<String> SupportedEngines = null;
     @SerializedName("VoiceId")
     public String VoiceId;
+/**
+    @Override
+    public String toString() {
+        return "VoiceResponse{" +
+                "Gender='" + Gender + '\'' +
+                ", LanguageCode='" + LanguageCode + '\'' +
+                ", LanguageName='" + LanguageName + '\'' +
+                ", SupportedEngines=" + SupportedEngines +
+                ", VoiceId='" + VoiceId + '\'' +
+                '}';
+    }
+*/
 }
 

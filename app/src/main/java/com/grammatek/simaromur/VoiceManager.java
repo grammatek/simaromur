@@ -56,7 +56,7 @@ public class VoiceManager extends AppCompatActivity {
             @Override
             public void onItemClick(View v, int position) {
                 Voice voice = adapter.getVoiceAtPosition(position);
-                Log.v(LOG_TAG, "onItemClick - Selected Voice: " + voice.mName);
+                Log.v(LOG_TAG, "onItemClick - Selected Voice: " + voice.name);
 
                 // TODO: do sth. with the clicked voice:
                 //      - show an extra Activity with details and to try it out

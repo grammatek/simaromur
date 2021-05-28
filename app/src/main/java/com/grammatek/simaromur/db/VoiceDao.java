@@ -36,18 +36,18 @@ public interface VoiceDao {
     @Query("SELECT * FROM voice_table")
     public List<Voice> getAnyVoices();
 
-    @Query("SELECT * FROM voice_table WHERE mName LIKE :name ")
+    @Query("SELECT * FROM voice_table WHERE name LIKE :name ")
     public List<Voice> findVoiceWithName(String name);
 
-    @Query("SELECT * FROM voice_table WHERE mName IS :name AND mInternalName IS :internalName" +
-            " AND mLanguage IS :language AND mCountry IS :country AND mVariant IS :variant")
-    public Voice findVoice(String name, String internalName, String language,  String country,
+    @Query("SELECT * FROM voice_table WHERE name IS :name AND internal_name IS :internalName" +
+            " AND language_code IS :languageCode AND language_name IS :languageName AND variant IS :variant")
+    public Voice findVoice(String name, String internalName, String languageCode,  String languageName,
                            String variant);
 
-    @Query("SELECT * FROM voice_table WHERE mType LIKE 'tiro' ")
+    @Query("SELECT * FROM voice_table WHERE type LIKE 'tiro' ")
     public List<Voice> findNetworkVoices();
 
-    @Query("SELECT * FROM voice_table WHERE mType in ('clustergen', 'clunit', 'neural') ")
+    @Query("SELECT * FROM voice_table WHERE type in ('clustergen', 'clunit', 'neural') ")
     public List<Voice> findLocalVoices();
 
     // TODO(DS): To be continued ....

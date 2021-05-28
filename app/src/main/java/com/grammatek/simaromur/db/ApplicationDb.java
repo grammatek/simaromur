@@ -5,7 +5,6 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.LiveData;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -92,8 +91,8 @@ public abstract class ApplicationDb extends RoomDatabase {
                 Voice v3 = new Voice("Neural 1", "other",
                         "is.IS", "is", "clear", "tiro", "");
                 mVoiceDao.insertVoices(v1, v2, v3);
-                Voice selectedVoice = mVoiceDao.findVoice(v1.mName, v1.mInternalName, v1.mLanguage,
-                        v1.mCountry, v1.mVariant);
+                Voice selectedVoice = mVoiceDao.findVoice(v1.name, v1.internalName, v1.languageCode,
+                        v1.languageName, v1.variant);
                 mAppDataDao.selectCurrentVoice(selectedVoice);
             }
             return null;
