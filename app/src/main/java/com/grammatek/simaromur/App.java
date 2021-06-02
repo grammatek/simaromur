@@ -16,9 +16,9 @@ import java.util.concurrent.Executors;
 public class App extends Application {
     ExecutorService executorService = Executors.newFixedThreadPool(4);
 
-    private static Application sApplication;
+    private static App sApplication;
 
-    public static Application getApplication() {
+    public static App getApplication() {
         return sApplication;
     }
 
