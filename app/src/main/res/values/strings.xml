@@ -8,7 +8,7 @@
     <string name="voice_list_update">Download Voice List</string>
     <string name="todo">TODO</string>
     <string name="speak_button">TODO</string>
-    <string name="voice_test_text">Innanlandssmitið sem greindist utan sóttkvíar í gær sýnir að veiran er ekki horfin úr íslensku samfélagi</string>
+    <string name="voice_test_text">Innanlandssmitið sem greindist utan sóttkvíar í gær sýnir að veiran er ekki horfin úr samfélagi</string>
     <string name="voice_name_title">Name</string>
     <string name="voice_gender_title">Gender</string>
     <string name="voice_availability_title">Status</string>
