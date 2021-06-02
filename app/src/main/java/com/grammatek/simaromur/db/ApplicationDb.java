@@ -84,11 +84,11 @@ public abstract class ApplicationDb extends RoomDatabase {
             {
                 Log.v(LOG_TAG, "PopulateDbAsync:  voices == null");
                 // fill in initial list of voices, currently via Tíro TTS web service only
-                Voice v1 = new Voice("Dóra", "Dora",
+                Voice v1 = new Voice("Dóra", "Dora", "female",
                         "is.IS", "is","clear", "tiro", "");
-                Voice v2 = new Voice("Karl", "Karl",
+                Voice v2 = new Voice("Karl", "Karl","male",
                         "is.IS", "is", "clear", "tiro", "");
-                Voice v3 = new Voice("Neural 1", "other",
+                Voice v3 = new Voice("Neural 1", "other", "other",
                         "is.IS", "is", "clear", "tiro", "");
                 mVoiceDao.insertVoices(v1, v2, v3);
                 Voice selectedVoice = mVoiceDao.findVoice(v1.name, v1.internalName, v1.languageCode,

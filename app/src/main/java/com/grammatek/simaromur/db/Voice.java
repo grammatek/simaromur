@@ -96,6 +96,7 @@ public class Voice {
     // Constructor for NonNull parameters
     public Voice(@NonNull String name,
                  @NonNull String internalName,
+                 @NonNull String gender,
                  @NonNull String languageCode,
                  @NonNull String languageName,
                  @NonNull String variant,
@@ -103,6 +104,7 @@ public class Voice {
                  @NonNull String url) {
         this.name = name;
         this.internalName = internalName;
+        this.gender = gender;
         this.languageCode = languageCode;
         this.languageName = languageName;
         this.variant = variant;

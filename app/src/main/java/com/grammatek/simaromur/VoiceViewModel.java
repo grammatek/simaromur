@@ -12,6 +12,7 @@ import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * View Model to keep a reference to the App repository and
@@ -38,6 +39,8 @@ public class VoiceViewModel extends AndroidViewModel {
         }
         return mAppData;
     }
+
+    // Return all voices
     public LiveData<List<Voice>> getAllVoices() {
         if (mAllVoices == null) {
             mAllVoices = mRepository.getAllVoices();
@@ -45,6 +48,19 @@ public class VoiceViewModel extends AndroidViewModel {
         return mAllVoices;
     }
 
+    // Return all voices
+    public Voice getVoiceWithId(long voiceId) {
+        if (mAllVoices == null) {
+            return null;
+        }
+        for(Voice voice: Objects.requireNonNull(mAllVoices.getValue())) {
+            if (voice.voiceId == voiceId)
+                return voice;
+        }
+        return null;
+    }
+
+    // Query Tiro Voices: either return cashed version of voices or make a synchronous request
     public List<VoiceResponse> queryTiroVoices(String languageCode) {
         Log.v(LOG_TAG, "queryTiroVoices");
         if (mTiroVoices == null) {
@@ -57,6 +73,8 @@ public class VoiceViewModel extends AndroidViewModel {
         }
         return mTiroVoices;
     }
+
+    // Start fetching new voices from api, if any updates are available, the voice model is updated
     public void startFetchingNetworkVoices(String languageCode) {
         mRepository.streamTiroVoices(languageCode);
     }

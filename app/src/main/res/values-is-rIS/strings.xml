@@ -9,10 +9,10 @@
     <string name="todo">TODO</string>
     <string name="speak_button">TODO</string>
     <string name="voice_test_text">Innanlandssmitið sem greindist utan sóttkvíar í gær sýnir að veiran er ekki horfin úr íslensku samfélagi</string>
+    <string name="voice_lang_title">Language</string>
     <string name="voice_name_title">Name</string>
     <string name="voice_gender_title">Gender</string>
     <string name="voice_availability_title">Status</string>
     <string name="speak_voice_title">Play</string>
     <string name="play_voice_title_description">Speak the shown text</string>
-    <string name="voice_lang_title">Language</string>
 </resources>
