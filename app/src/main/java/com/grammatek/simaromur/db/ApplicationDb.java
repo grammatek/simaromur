@@ -88,9 +88,7 @@ public abstract class ApplicationDb extends RoomDatabase {
                         "is.IS", "is","clear", "tiro", "");
                 Voice v2 = new Voice("Karl", "Karl","male",
                         "is.IS", "is", "clear", "tiro", "");
-                Voice v3 = new Voice("Neural 1", "other", "other",
-                        "is.IS", "is", "clear", "tiro", "");
-                mVoiceDao.insertVoices(v1, v2, v3);
+                mVoiceDao.insertVoices(v1, v2);
                 Voice selectedVoice = mVoiceDao.findVoice(v1.name, v1.internalName, v1.languageCode,
                         v1.languageName, v1.variant);
                 mAppDataDao.selectCurrentVoice(selectedVoice);
