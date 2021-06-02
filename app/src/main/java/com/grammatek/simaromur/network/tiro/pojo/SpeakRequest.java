@@ -28,7 +28,7 @@ public class SpeakRequest {
     @SerializedName("OutputFormat")
     public String OutputFormat;
     @SerializedName("SampleRate")
-    public Integer SampleRate;
+    public String SampleRate;
     @SerializedName("Text")
     public String Text;
     @SerializedName("TextType")
@@ -47,7 +47,7 @@ public class SpeakRequest {
      * @param textType      Type of text, one of ["ssml", "text", ...]
      * @param voiceId       The voice to use for TTS, e.g. "Karl", "Dora", "Bjartur", "Joanna", ...
      */
-    public SpeakRequest(String engine, String languageCode, String outputFormat, Integer sampleRate,
+    public SpeakRequest(String engine, String languageCode, String outputFormat, String sampleRate,
                         String text, String textType, String voiceId) {
         this.Engine = engine;
         this.LanguageCode = languageCode;

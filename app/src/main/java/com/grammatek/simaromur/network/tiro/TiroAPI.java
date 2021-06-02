@@ -18,6 +18,6 @@ public interface TiroAPI {
     @GET("voices")
     Call<List<VoiceResponse>> queryVoices(@Query("LanguageCode") String languageCode);
 
-    @POST("speak")
+    @POST("speech")
     Call<ResponseBody> postSpeakRequest(@Body SpeakRequest request);
 }
