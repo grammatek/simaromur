@@ -54,7 +54,7 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
 
         // setup button
         final Button button = findViewById(R.id.speak_button);
-        // setup network status
+        // setup network status, @todo: this is very rough and doesn't do anything dynamic
         final ImageView networkAvailabilityIcon = findViewById(R.id.imageStatus);
         if (App.getApplication().hasNetwork()) {
             button.setEnabled(true);
@@ -87,7 +87,7 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mVoiceViewModel.stopSpeaking();
+        mVoiceViewModel.stopSpeaking(mVoice);
     }
 
     // speak_button is pressed
@@ -96,6 +96,6 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
         Log.v(LOG_TAG, "onClick");
         String text = mUserText.getText().toString();
         Log.v(LOG_TAG, "Text to speak: " + text);
-        mVoiceViewModel.startSpeaking(mVoice.internalName, text, 1.0f, 1.0f);
+        mVoiceViewModel.startSpeaking(mVoice, text, 1.0f, 1.0f);
     }
 }

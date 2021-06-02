@@ -150,6 +150,8 @@ public class AppRepository {
     /**
      * Returns list of all Tiro voices from its API endpoint.
      *
+     * @param languageCode  language code, e.g. "is-IS"
+     *
      * @return  list of all cached Tiro API voices.
      */
     public List<VoiceResponse> queryTiroVoices(String languageCode) throws IOException {
@@ -163,6 +165,8 @@ public class AppRepository {
     /**
      * Request Tiro voices from its API endpoint.
      *
+     * @param languageCode  language code, e.g. "is-IS"
+     *
      * @todo Do this regularly via a timer
      */
     public void streamTiroVoices(String languageCode) {
@@ -172,14 +176,26 @@ public class AppRepository {
         }
     }
 
-    public void streamTiroVoice(String voiceId, String text, float speed, float pitch) {
+    /**
+     * Request to Tiro TTS to speak given text and return Audio asynchronously.
+     *
+     * @param voiceId   the voice name identifier of the TTS API
+     * @param text      text to speak
+     * @param langCode  language code, e.g. "is-IS"
+     * @param speed     speed to use for the voice audio
+     * @param pitch     pitch to use for the voice audio
+     */
+    public void startTiroSpeak(String voiceId, String text, String langCode, float speed, float pitch) {
         final String KHZ_22 = "22050";
-        SpeakRequest request = new SpeakRequest("standard", "is-IS",
+        SpeakRequest request = new SpeakRequest("standard", langCode,
                 "mp3", KHZ_22, text, "text", voiceId);
         mTiroSpeakController.streamAudio(request , new TiroAudioPlayObserver());
     }
 
-    public void stopTiroVoice() {
+    /**
+     * Stops speaking current voice, if playing.
+     */
+    public void stopTiroSpeak() {
         if (mMediaPlayer.isPlaying())
             mMediaPlayer.stop();
     }
