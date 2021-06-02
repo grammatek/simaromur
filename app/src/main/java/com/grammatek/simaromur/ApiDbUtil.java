@@ -30,6 +30,7 @@ public class ApiDbUtil {
         Log.v(LOG_TAG, "Updating voice: " + modelVoice);
         Log.v(LOG_TAG, "With: " + apiVoice);
         assert (modelVoice.voiceId != 0);   // the modelVoice should already be inside db
+        modelVoice.name = apiVoice.Name;
         modelVoice.internalName = apiVoice.VoiceId;
         modelVoice.languageCode = apiVoice.LanguageCode;
         modelVoice.languageName = apiVoice.LanguageName;
