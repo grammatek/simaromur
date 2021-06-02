@@ -73,6 +73,10 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
             mVoice = mVoiceViewModel.getVoiceWithId(mVoiceId);
             if (mVoice != null)
             {
+                // change english voices default text
+                if (mVoice.languageCode.startsWith("en")) {
+                    mUserText.setText(getResources().getString(R.string.eng_sample));
+                }
                 nameTextView.setText(mVoice.name);
                 langTextView.setText(mVoice.languageName);
                 genderTextView.setText(mVoice.gender);
