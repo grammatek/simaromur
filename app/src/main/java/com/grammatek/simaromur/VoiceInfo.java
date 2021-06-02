@@ -5,15 +5,13 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_GENDER;
 import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_ID;
-import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_LANG;
-import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_NAME;
 
 /**
  * This class displays an info screen for a voice.
@@ -21,9 +19,6 @@ import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_NAME;
 public class VoiceInfo  extends AppCompatActivity implements View.OnClickListener {
     private final static String LOG_TAG = "Simaromur_" + VoiceInfo.class.getSimpleName();
 
-    private String mName;
-    private String mLanguage;
-    private String mGender;
     private long mVoiceId;
     private EditText mUserText;
     private com.grammatek.simaromur.db.Voice mVoice;
@@ -37,9 +32,6 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
 
         final Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            mName = extras.getString(EXTRA_DATA_VOICE_NAME, "N/A");
-            mLanguage = extras.getString(EXTRA_DATA_VOICE_LANG, "N/A");
-            mGender = extras.getString(EXTRA_DATA_VOICE_GENDER, "N/A");
             mVoiceId = extras.getLong(EXTRA_DATA_VOICE_ID);
         }
         else {
@@ -62,25 +54,44 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
 
         // setup button
         final Button button = findViewById(R.id.speak_button);
-        button.setEnabled(false);
+        // setup network status
+        final ImageView networkAvailabilityIcon = findViewById(R.id.imageStatus);
+        if (App.getApplication().hasNetwork()) {
+            button.setEnabled(true);
+            networkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
+        }
+        else {
+            button.setEnabled(false);
+            networkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
+        }
+
         button.setOnClickListener(this);
 
-        // query DB for given voice id
-        mVoiceViewModel.getAllVoices();
-        mVoice = mVoiceViewModel.getVoiceWithId(mVoiceId);
-        if (mVoice != null)
-        {
-            nameTextView.setText(mVoice.name);
-            langTextView.setText(mVoice.languageName);
-            genderTextView.setText(mVoice.gender);
-        }
+        // query DB for given voice id. On completion set appropriate UI attributes
+        mVoiceViewModel.getAllVoices().observe(this, voices -> {
+            Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
+            mVoice = mVoiceViewModel.getVoiceWithId(mVoiceId);
+            if (mVoice != null)
+            {
+                nameTextView.setText(mVoice.name);
+                langTextView.setText(mVoice.languageName);
+                genderTextView.setText(mVoice.gender);
+            }
+        });
     }
 
-    // Called, when speak_button is pressed
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mVoiceViewModel.stopSpeaking();
+    }
+
+    // speak_button is pressed
     @Override
     public void onClick(View v) {
-        Log.v(LOG_TAG, "onCreate");
+        Log.v(LOG_TAG, "onClick");
         String text = mUserText.getText().toString();
         Log.v(LOG_TAG, "Text to speak: " + text);
+        mVoiceViewModel.startSpeaking(mVoice.internalName, text, 1.0f, 1.0f);
     }
 }

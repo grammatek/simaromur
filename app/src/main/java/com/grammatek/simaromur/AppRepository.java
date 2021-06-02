@@ -1,6 +1,8 @@
 package com.grammatek.simaromur;
 
 import android.app.Application;
+import android.media.MediaDataSource;
+import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -13,12 +15,11 @@ import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
 import com.grammatek.simaromur.network.tiro.SpeakController;
 import com.grammatek.simaromur.network.tiro.VoiceController;
+import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Abstracted application repository as promoted by the Architecture Guide.
@@ -34,6 +35,7 @@ public class AppRepository {
     private SpeakController mTiroSpeakController;
     private List<VoiceResponse> mTiroVoices;
     private ApiDbUtil mApiDbUtil;
+    private MediaPlayer mMediaPlayer;
 
     /**
      * Observer for Tiro voice query results.
@@ -52,6 +54,61 @@ public class AppRepository {
         }
     }
 
+    /**
+     * This class transforms a byte array into a MediaDataSource consumable by the Media Player
+     */
+    public static class ByteArrayMediaDataSource extends MediaDataSource {
+        private final byte[] data;
+
+        public ByteArrayMediaDataSource(byte []data) {
+            assert data != null;
+            this.data = data;
+        }
+        @Override
+        public int readAt(long position, byte[] buffer, int offset, int size) throws IOException {
+            if (position > getSize()) {
+                return 0;
+            }
+            int adaptedSize = size;
+            if (position + (long) size > getSize()) {
+                adaptedSize = (int) getSize() - (int) position;
+            }
+            System.arraycopy(data, (int)position, buffer, offset, adaptedSize);
+            return adaptedSize;
+        }
+
+        @Override
+        public long getSize() throws IOException {
+            return data.length;
+        }
+
+        @Override
+        public void close() throws IOException {
+            // Nothing to do here
+        }
+    }
+
+    class TiroAudioPlayObserver implements SpeakController.AudioObserver {
+        public TiroAudioPlayObserver() {}
+        public void update(byte[] audioData) {
+            Log.v(LOG_TAG, "Tiro API returned: " + audioData.length + "bytes");
+
+            ByteArrayMediaDataSource dataSource = new ByteArrayMediaDataSource(audioData);
+                try {
+                    // resetting mediaplayer instance to evade problems
+                    mMediaPlayer.reset();
+                    mMediaPlayer.setDataSource(dataSource);
+                    mMediaPlayer.prepare();
+                    mMediaPlayer.start();
+                } catch (IOException ex) {
+                    String s = ex.toString();
+                    ex.printStackTrace();
+                }
+        }
+        public void error(String errorMsg) {
+            Log.e(LOG_TAG, "TiroAudioPlayObserver()::error: " + errorMsg);
+        }
+    }
     // Note that in order to unit test the AppRepository, you have to remove the Application
     // dependency.
     public AppRepository(Application application) {
@@ -61,6 +118,7 @@ public class AppRepository {
         mApiDbUtil = new ApiDbUtil(mVoiceDao);
         mTiroSpeakController = new SpeakController();
         mTiroVoiceController = new VoiceController();
+        mMediaPlayer = new MediaPlayer();
     }
 
     /**
@@ -112,6 +170,18 @@ public class AppRepository {
         if (mTiroVoices == null) {
             mTiroVoiceController.streamQueryVoices(languageCode, new TiroVoiceQueryObserver());
         }
+    }
+
+    public void streamTiroVoice(String voiceId, String text, float speed, float pitch) {
+        final String KHZ_22 = "22050";
+        SpeakRequest request = new SpeakRequest("standard", "is-IS",
+                "mp3", KHZ_22, text, "text", voiceId);
+        mTiroSpeakController.streamAudio(request , new TiroAudioPlayObserver());
+    }
+
+    public void stopTiroVoice() {
+        if (mMediaPlayer.isPlaying())
+            mMediaPlayer.stop();
     }
 
     /**

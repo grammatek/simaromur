@@ -79,5 +79,18 @@ public class VoiceViewModel extends AndroidViewModel {
         mRepository.streamTiroVoices(languageCode);
     }
 
+    // Start fetching new voices from api, if any updates are available, the voice model is updated
+    public void startSpeaking(String voiceId, String text, float speed, float pitch) {
+        // voice id, text, speed, pitch
+        mRepository.streamTiroVoice(voiceId, text, speed, pitch);
+    }
+
+    /**
+     * Stops any ongoing speak activity
+     */
+    public void stopSpeaking() {
+        mRepository.stopTiroVoice();
+    }
+
     // TODO(DS): To be continued ....
 }

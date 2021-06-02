@@ -18,9 +18,6 @@ import java.util.List;
 
 public class VoiceManager extends AppCompatActivity {
     private final static String LOG_TAG = "Simaromur_" + VoiceManager.class.getSimpleName();
-    public static final String EXTRA_DATA_VOICE_NAME = "voice_model_name";
-    public static final String EXTRA_DATA_VOICE_LANG = "voice_model_language";
-    public static final String EXTRA_DATA_VOICE_GENDER = "voice_model_gender";
     public static final String EXTRA_DATA_VOICE_ID = "voice_model_id";
 
     private VoiceViewModel mVoiceViewModel;
@@ -70,9 +67,6 @@ public class VoiceManager extends AppCompatActivity {
         Log.v(LOG_TAG, "launchVoiceInfoActivity for voice: " + voice);
         Intent intent = new Intent(this, VoiceInfo.class);
         intent.putExtra(EXTRA_DATA_VOICE_ID, voice.voiceId);
-        intent.putExtra(EXTRA_DATA_VOICE_NAME, voice.name);
-        intent.putExtra(EXTRA_DATA_VOICE_LANG, voice.languageName);
-        intent.putExtra(EXTRA_DATA_VOICE_GENDER, voice.gender);
         startActivity(intent);
     }
 }
