@@ -1,6 +1,5 @@
 package com.grammatek.simaromur;
 
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider ;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,11 +9,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 
 import com.grammatek.simaromur.db.Voice;
-
-import java.util.List;
 
 public class VoiceManager extends AppCompatActivity {
     private final static String LOG_TAG = "Simaromur_" + VoiceManager.class.getSimpleName();
@@ -41,25 +37,18 @@ public class VoiceManager extends AppCompatActivity {
         // Add an observer on the LiveData returned by getAllVoices.
         // The onChanged() method fires when the observed data changes and the activity is
         // in the foreground.
-        mVoiceViewModel.getAllVoices().observe(this, new Observer<List<Voice>>() {
-            @Override
-            public void onChanged(final List<Voice> voices) {
-                Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
-                // Update cached voices
-                adapter.setVoices(voices);
-                // query Network voices
-                mVoiceViewModel.startFetchingNetworkVoices("");
-            }
+        mVoiceViewModel.getAllVoices().observe(this, voices -> {
+            Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
+            // Update cached voices
+            adapter.setVoices(voices);
+            // query Network voices
+            mVoiceViewModel.startFetchingNetworkVoices("");
         });
 
-        adapter.setOnItemClickListener(new VoiceListAdapter.ClickListener()  {
-
-            @Override
-            public void onItemClick(View v, int position) {
-                Voice voice = adapter.getVoiceAtPosition(position);
-                Log.v(LOG_TAG, "onItemClick - Selected Voice: " + voice.name);
-                launchVoiceInfoActivity(voice);
-            }
+        adapter.setOnItemClickListener((v, position) -> {
+            Voice voice = adapter.getVoiceAtPosition(position);
+            Log.v(LOG_TAG, "onItemClick - Selected Voice: " + voice.name);
+            launchVoiceInfoActivity(voice);
         });
     }
 
