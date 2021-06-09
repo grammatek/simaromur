@@ -1,24 +1,32 @@
 # Símarómur
 
-![GitHub Super-Linter](https://github.com/grammatek/simaromur/workflows/Lint%20Code%20Base/badge.svg)](<https://github.com/marketplace/actions/super-linter>)
+This project provides an Icelandic TTS application for the Android TTS service. It is planned to
+provide local voices on the device as well as access to network voices over a network API.
 
+Handling of local voices is based on [Flite TTS Engine For Android](https://github.com/happyalu/Flite-TTS-Engine-for-Android) and is
+adapted to current Android platforms. It uses CMake for integrating the C++ part instead of ndk-build and is able
+to run on 64Bit platforms. We expect to modify the code considerably and making it more mature. Therefore, we started
+with a clean slate instead of forking it.
 
-This project is based on [Flite TTS Engine For Android](https://github.com/happyalu/Flite-TTS-Engine-for-Android) and
-adapted to current Android platforms. It uses CMake for integrating the C++ part instead of ndk-build and is now able
-to run on 64Bit platforms.
+Currently, Símarómur is more a tech-demo, than a fully functional TTS service, but we can already access
+and demo Icelandic network voices inside the "SIM Voices" activity.
 
-Currently, it's only a tech-demo, but provides already an Icelandic G2P module based on Thrax. If you
-navigate on your phone to the `TTS Demo` screen and press on an Icelandic text, Logcat will show you
-an appropriate G2P output of that text from our G2P Thrax model. We have no Icelandic voice yet,
-so don't be surprised to listen to the crappy default voice you have selected in your `Manage Voices`
-screen trying to speak Icelandic.
+I. So far, the local voice UI provides nothing more than the original Flite TTS Engine for Android
+project - basically English & Indian voices, just in a less buggy way :)
 
-We expect to modify the code considerably and making it more mature. Therefore, we started
-with a clean slate and renamed the original project to Símarómur, instead of forking it.
+But we are working actively on the implementation of a new device-based Icelandic voice. Stay tuned
+for project updates ...
 
-## Prerequisites
+## Text Normalization & G2P
 
-This project uses the [FLite library](https://github.com/grammatek/Flite) for TTS. We have adapted it to build
+Icelandic text normalization is always done on the Phone itself before the text enters G2P.
+Local voice G2P is [rule-based](https://github.com/grammatek/g2p-thrax), implemented using the C++
+frameworks Thrax & OpenFST, which are accessed via JNI. The network voices use somewhat better but
+computationally more demanding [LSTM g2p-models](https://github.com/grammatek/g2p-lstm).
+
+## Build Prerequisites
+
+This project uses the [FLite library](https://github.com/grammatek/Flite) for local TTS. We have adapted it to build
 all necessary binaries in the branch `android-grammatek`. Therefore, you should build this project first and
 use the appropriate path in file `local.properties` as explained further down. This is necessary, so that
 linking the C++ native library `libttsflite.so` succeeds.

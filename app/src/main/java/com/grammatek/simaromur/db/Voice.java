@@ -3,17 +3,20 @@ package com.grammatek.simaromur.db;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
-import androidx.room.Fts4;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 // Create unique index on name, language, country, variant
 @Entity(tableName = "voice_table",
-        indices = {@Index(value = {"mName", "mLanguage", "mCountry", "mVariant"}, unique = true)})
+        indices = {@Index(value = {"name", "gender", "language_code", "type"}, unique = true)})
 public class Voice {
+
+    static final List<String> voiceTypes = Arrays.asList("tiro", "clustergen", "clunits", "neural");
 
     @PrimaryKey(autoGenerate = true)
     public long voiceId;
@@ -21,29 +24,43 @@ public class Voice {
     // Voice name (mandatory)
     //  e.g. Karl, Dóra
     @NonNull
-    public String mName;
+    @ColumnInfo(name = "name")
+    public String name;
+
+    // Voice Gender (mandatory)
+    //  e.g. Male, Female
+    @NonNull
+    @ColumnInfo(name = "gender")
+    public String gender;
 
     // Internal voice name (mandatory)
-    //  e.g. "other", ""
+    //  e.g. "other", "Dora",
     @NonNull
-    public String mInternalName;
+    @ColumnInfo(name = "internal_name")
+    public String internalName;
 
-    // ISO-3 language code (not verified)
+    // language code (mandatory)
+    //  e.g. "is-IS"
     @NonNull
-    public String mLanguage;
+    @ColumnInfo(name = "language_code")
+    public String languageCode;
 
-    // ISO-3 country code (not verified)
+    // language name (mandatory)
+    //  e.g. "Íslenska"
     @NonNull
-    public String mCountry;
+    @ColumnInfo(name = "language_name")
+    public String languageName;
 
-    // language variant, e.g. "north-clear" (not verified)
+    // language variant, e.g. "north-clear" (optional, not used for network voices)
     @NonNull
-    public String mVariant;
+    @ColumnInfo(name = "variant")
+    public String variant;
 
     // Voice type (verified)
     // local voices: "clustergen", "clunits", "neural"
     // network voices: "tiro"
-    public String mType;
+    @ColumnInfo(name = "type")
+    public String type;
 
     // creation date of DB entry
     @ColumnInfo(name = "update_time")
@@ -56,13 +73,16 @@ public class Voice {
     public Date downloadTime;
 
     // the http URL of a downloadable voice, empty for a network voice
-    public String mUrl;
+    @ColumnInfo(name = "url")
+    public String url;
 
     // For local voices, the fully qualified local filename, or empty in case it's not yet
     // downloaded. For network voices: empty
-    @ColumnInfo(name = "download_path") public String downloadPath;
+    @ColumnInfo(name = "download_path")
+    public String downloadPath;
 
     // Version of the voice, if available. Should be semantically versioned (major, minor, patch)
+    @ColumnInfo(name = "version")
     public String version;
 
     // MD5 checksum of downloaded voice as String, empty if not yet downloaded or in case of a
@@ -70,22 +90,52 @@ public class Voice {
     @ColumnInfo(name = "md5_sum") public String md5Sum;
 
     // file size if local voice file, 0 means not yet downloaded or network voice
+    @ColumnInfo(name = "local_size")
     public long size;
 
     // Constructor for NonNull parameters
     public Voice(@NonNull String name,
                  @NonNull String internalName,
-                 @NonNull String language,
-                 @NonNull String country,
+                 @NonNull String gender,
+                 @NonNull String languageCode,
+                 @NonNull String languageName,
                  @NonNull String variant,
                  @NonNull String type,
                  @NonNull String url) {
-        mName = name;
-        mInternalName = internalName;
-        mLanguage = language;
-        mCountry = country;
-        mVariant = variant;
-        mType = type;
-        mUrl = url;
+        this.name = name;
+        this.internalName = internalName;
+        this.gender = gender;
+        this.languageCode = languageCode;
+        this.languageName = languageName;
+        this.variant = variant;
+        // @todo: check correctness of type
+        if (voiceTypes.contains(type)) {
+            this.type = type;
+        }
+        else {
+            throw new AssertionError("Given type not valid !");
+        }
+        this.url = url;
+        this.updateTime = new Date();
+    }
+
+    @Override
+    public String toString() {
+        return "Voice{" +
+                "voiceId=" + voiceId +
+                ", name='" + name + '\'' +
+                ", internalName='" + internalName + '\'' +
+                ", languageCode='" + languageCode + '\'' +
+                ", languageName='" + languageName + '\'' +
+                ", variant='" + variant + '\'' +
+                ", type='" + type + '\'' +
+                ", updateTime=" + updateTime +
+                ", downloadTime=" + downloadTime +
+                ", url='" + url + '\'' +
+                ", downloadPath='" + downloadPath + '\'' +
+                ", version='" + version + '\'' +
+                ", md5Sum='" + md5Sum + '\'' +
+                ", size=" + size +
+                '}';
     }
 }

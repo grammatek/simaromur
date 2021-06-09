@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4e26ec612b6901466469e27920dbeb2e",
+    "identityHash": "570cd2638a931d1e25d725fdabf7c72e",
     "entities": [
       {
         "tableName": "voice_table",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`voiceId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mName` TEXT NOT NULL, `mInternalName` TEXT NOT NULL, `mLanguage` TEXT NOT NULL, `mCountry` TEXT NOT NULL, `mVariant` TEXT NOT NULL, `mType` TEXT, `update_time` TEXT, `download_time` TEXT, `mUrl` TEXT, `download_path` TEXT, `version` TEXT, `md5_sum` TEXT, `size` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`voiceId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `gender` TEXT NOT NULL, `internal_name` TEXT NOT NULL, `language_code` TEXT NOT NULL, `language_name` TEXT NOT NULL, `variant` TEXT NOT NULL, `type` TEXT, `update_time` TEXT, `download_time` TEXT, `url` TEXT, `download_path` TEXT, `version` TEXT, `md5_sum` TEXT, `local_size` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "voiceId",
@@ -15,38 +15,44 @@
             "notNull": true
           },
           {
-            "fieldPath": "mName",
-            "columnName": "mName",
+            "fieldPath": "name",
+            "columnName": "name",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "mInternalName",
-            "columnName": "mInternalName",
+            "fieldPath": "gender",
+            "columnName": "gender",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "mLanguage",
-            "columnName": "mLanguage",
+            "fieldPath": "internalName",
+            "columnName": "internal_name",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "mCountry",
-            "columnName": "mCountry",
+            "fieldPath": "languageCode",
+            "columnName": "language_code",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "mVariant",
-            "columnName": "mVariant",
+            "fieldPath": "languageName",
+            "columnName": "language_name",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "mType",
-            "columnName": "mType",
+            "fieldPath": "variant",
+            "columnName": "variant",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -63,8 +69,8 @@
             "notNull": false
           },
           {
-            "fieldPath": "mUrl",
-            "columnName": "mUrl",
+            "fieldPath": "url",
+            "columnName": "url",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -88,7 +94,7 @@
           },
           {
             "fieldPath": "size",
-            "columnName": "size",
+            "columnName": "local_size",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -101,15 +107,15 @@
         },
         "indices": [
           {
-            "name": "index_voice_table_mName_mLanguage_mCountry_mVariant",
+            "name": "index_voice_table_name_gender_language_code_type",
             "unique": true,
             "columnNames": [
-              "mName",
-              "mLanguage",
-              "mCountry",
-              "mVariant"
+              "name",
+              "gender",
+              "language_code",
+              "type"
             ],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_voice_table_mName_mLanguage_mCountry_mVariant` ON `${TABLE_NAME}` (`mName`, `mLanguage`, `mCountry`, `mVariant`)"
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_voice_table_name_gender_language_code_type` ON `${TABLE_NAME}` (`name`, `gender`, `language_code`, `type`)"
           }
         ],
         "foreignKeys": []
@@ -174,7 +180,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4e26ec612b6901466469e27920dbeb2e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '570cd2638a931d1e25d725fdabf7c72e')"
     ]
   }
 }
