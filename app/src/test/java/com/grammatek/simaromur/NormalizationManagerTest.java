@@ -12,12 +12,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import java.io.*;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
@@ -33,11 +28,14 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Vindmyllurnar eru hvor um sig 900 kW og samanlögð raforkuframleiðsla þeirra er áæetluð um 5,4 GWst á ári.";
+        String input = "Vindmyllurnar eru hvor um sig 900 kW og samanlögð raforkuframleiðsla " +
+                "þeirra er áæetluð um 5,4 GWst á ári.";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("Vindmyllurnar eru hvor um sig níu hundruð kílóvött og samanlögð raforkuframleiðsla þeirra er áæetluð um fimm komma fjórar Gígavattstundir á ári .", processed);
+        assertEquals("Vindmyllurnar eru hvor um sig níu hundruð kílóvött og samanlögð " +
+                "raforkuframleiðsla þeirra er áæetluð um fimm komma fjórar Gígavattstundir á ári .",
+                processed);
     }
 
     @Test
@@ -52,12 +50,16 @@ public class NormalizationManagerTest {
     private Map<String, String> getTestSentences() {
         Map<String, String> testSentences = new HashMap<>();
         testSentences.put("þetta stóð í 4. gr. laga.",  "þetta stóð í fjórðu grein laga .");
-        testSentences.put("Að jafnaði koma daglega um 48 rútur í Bláa Lónið .", "Að jafnaði koma daglega um fjörutíu og átta rútur í Bláa Lónið .");
-        // should be sport domain, for now we can only set domain=sport manually (where the hyphen is replaced with a space instead of "til")
+        testSentences.put("Að jafnaði koma daglega um 48 rútur í Bláa Lónið .",
+                "Að jafnaði koma daglega um fjörutíu og átta rútur í Bláa Lónið .");
+        // should be sport domain, for now we can only set domain=sport manually (where the hyphen
+        // is replaced with a space instead of "til")
         testSentences.put("Áfram hélt fjörið í síðari hálfleik og þegar 3. leikhluti var tæplega hálfnaður var staðan 64-52 .",
                 "Áfram hélt fjörið í síðari hálfleik og þegar þriðji leikhluti var tæplega hálfnaður var staðan sextíu og fjögur til fimmtíu og tvö .");
-        testSentences.put("Viðeignin fer fram í sal FS og hefst klukkan 20 .", "Viðeignin fer fram í sal F S og hefst klukkan tuttugu ."); // spelling error!
-        testSentences.put("Annars var verði 3500 fyrir tímann !", "Annars var verði þrjú þúsund og fimm hundruð fyrir tímann !"); // spelling error
+        testSentences.put("Viðeignin fer fram í sal FS og hefst klukkan 20 .",
+                "Viðeignin fer fram í sal F S og hefst klukkan tuttugu ."); // spelling error!
+        testSentences.put("Annars var verði 3500 fyrir tímann !",
+                "Annars var verði þrjú þúsund og fimm hundruð fyrir tímann !"); // spelling error
         testSentences.put("Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann SL þriðjudaginn 18. janúar nk. ",
                 "Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann S L þriðjudaginn átjánda janúar næstkomandi .");
         testSentences.put("„ Ég kíki daglega á facebook , karfan.is , vf.is , mbl.is , kkí , og utpabroncs.com . “ ",

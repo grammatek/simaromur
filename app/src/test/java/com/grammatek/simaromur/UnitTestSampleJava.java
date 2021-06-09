@@ -13,7 +13,6 @@ import com.grammatek.simaromur.frontend.TTSUnicodeNormalizer;
 
 import java.util.List;
 
-@RunWith(RobolectricTestRunner.class)
 public class UnitTestSampleJava {
 
 }
