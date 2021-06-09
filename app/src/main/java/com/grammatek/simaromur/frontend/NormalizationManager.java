@@ -21,12 +21,14 @@ import java.util.logging.Logger;
 
 public class NormalizationManager {
     private final static Logger LOGGER = Logger.getLogger(NormalizationManager.class.getName());
+    private Context mContext;
     private final static String POS_MODEL = "is-pos-maxent.bin";
     TTSUnicodeNormalizer mUnicodeNormalizer;
     Tokenizer mTokenizer;
     TTSNormalizer mTTSNormalizer;
 
     public NormalizationManager(Context context) {
+        mContext = context;
         mUnicodeNormalizer = new TTSUnicodeNormalizer();
         mTokenizer = new Tokenizer(context);
         mTTSNormalizer = new TTSNormalizer();
@@ -77,7 +79,7 @@ public class NormalizationManager {
     private String[] tagText(String text) {
         String[] tags = {};
         try {
-            InputStream is = getClass().getClassLoader().getResourceAsStream(POS_MODEL);
+            InputStream is = mContext.getAssets().open(POS_MODEL);
             POSModel posModel = new POSModel(is);
             POSTaggerME posTagger = new POSTaggerME(posModel);
             String[] tokens = text.split(" ");

@@ -1,8 +1,16 @@
 package com.grammatek.simaromur;
 
+import android.content.Context;
+import android.os.Build;
+
+import androidx.test.core.app.ApplicationProvider;
+
 import com.grammatek.simaromur.frontend.NormalizationManager;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.io.*;
 import java.time.Duration;
@@ -14,14 +22,19 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
+@RunWith(RobolectricTestRunner.class)
+// we need this to run the tests explicitly against sdk 28, sdk 29 and 30 need Java 9, we are
+// using Java 8
+@Config(sdk = {Build.VERSION_CODES.P})
+
 public class NormalizationManagerTest {
 
-    //TODO: mockup context
-    /*
+    private final Context context = ApplicationProvider.getApplicationContext();
+
     @Test
     public void processTest() {
         String input = "Vindmyllurnar eru hvor um sig 900 kW og samanlögð raforkuframleiðsla þeirra er áæetluð um 5,4 GWst á ári.";
-        NormalizationManager manager = new NormalizationManager();
+        NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
         assertEquals("Vindmyllurnar eru hvor um sig níu hundruð kílóvött og samanlögð raforkuframleiðsla þeirra er áæetluð um fimm komma fjórar Gígavattstundir á ári .", processed);
@@ -29,46 +42,12 @@ public class NormalizationManagerTest {
 
     @Test
     public void processListTest() {
-        NormalizationManager manager = new NormalizationManager();
+        NormalizationManager manager = new NormalizationManager(context);
         for (String sent : getTestSentences().keySet()) {
             String processed = manager.process(sent);
             assertEquals(getTestSentences().get(sent), processed);
         }
     }
-
-    @Test
-    public void processFileTest() {
-        Instant start = Instant.now();
-        NormalizationManager manager = new NormalizationManager();
-        List<String> normalizedSentences = new ArrayList<>();
-        String line = "";
-        try {
-            InputStream is = getClass().getClassLoader().getResourceAsStream("content_df_string_original.txt");
-            if (is != null) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                while ((line = reader.readLine()) != null) {
-                    String normalized = manager.process(line);
-                    normalizedSentences.add(normalized);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("normalized_df_original.txt")));
-            for (String s : normalizedSentences) {
-                writer.write(s);
-                writer.write("\n");
-            }
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Instant finish = Instant.now();
-        long timeElapsed = Duration.between(start, finish).getSeconds();
-        System.out.println("Total execution time was " + timeElapsed + " seconds");
-    } */
 
     private Map<String, String> getTestSentences() {
         Map<String, String> testSentences = new HashMap<>();
