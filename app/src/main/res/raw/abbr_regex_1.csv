@@ -1,0 +1,10 @@
+(\\d+\\.) gr\\.(\\W|$)	\\g<1> grein\\g<2>
+(\\d+\\.) mgr\\.(\\W|$) \\g<1> málsgrein\\g<2>
+(\\d+\\.) nmgr\\.(\\W|$)    \\g<1> neðanmálsgrein\\g<2>
+(\\W|^)[Ii]nnsk\\. (blm\\.|blaðamanns) \\g<1>innskot \\g<2>
+(\\W|^)([Ii]nnsk(\\.|ot) )(blm\\.)(\\W|$)   \\g<1>\\g<2>blaðamanns \\g<5>
+ ([Ff]\\.[Kk]r\\.?)(\\W|$)   fyrir Krist\\g<2>
+ ([Ee]\\.[Kk]r\\.?)(\\W|$)   eftir Krist\\g<2>
+(\\W|^)([Cc]a|CA)\\.?(\\W|$)    \\g<1>sirka\\g<3>
+(\\d+\\.) [Ss]ek\\.?(\\W|$) \\g<1> sekúnda\\g<2>
+(\\d+\\.) [Mm]ín\\.?(\\W|$)    \\g<1> mínúta\\g<2>
