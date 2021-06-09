@@ -47,7 +47,7 @@ public class FrontendManager {
      */
     public String process(String text) {
         String processed = text;
-        String cleaned = mUnicodeNormalizer.normalize_encoding(processed);
+        String cleaned = mUnicodeNormalizer.normalizeEncoding(processed);
         Log.i(LOG_TAG, text + " => " + cleaned);
         //tokenize
         List<String> sentences = mTokenizer.detectSentences(cleaned);

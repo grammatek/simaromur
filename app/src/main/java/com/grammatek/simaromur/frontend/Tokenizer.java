@@ -10,17 +10,18 @@ import java.util.Set;
  * The Tokenizer is a basic white space tokenizer, that takes abbreviations and digits into account,
  * when splitting and determining end of sentences.
  * Algorithm:
- *      a. split on white spaces
- *      b. insert spaces before punctuation where appropriate (see processSpecialCharacters)
- *      c. determine end of sentence (EOS) with the help of context (see detectSentences)
- *      d. collect sentences in a list to return
+ * a. split on white spaces
+ * b. insert spaces before punctuation where appropriate (see processSpecialCharacters)
+ * c. determine end of sentence (EOS) with the help of context (see detectSentences)
+ * d. collect sentences in a list to return
  */
 public class Tokenizer {
     private Set<String> mAbbreviations;
     private Set<String> mAbbreviationsNonending;
 
-    private String mAlphabetic = "[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ]+";
-    private String mUpperCase = "[A-ZÁÉÍÓÚÝÐÞÆÖ]";
+    private final String mAlphabetic = "[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ]+";
+    private final String mUpperCase = "[A-ZÁÉÍÓÚÝÐÞÆÖ]";
+    private final String mEOSSymbol = "[.:?!;]";
 
     public Tokenizer(Context context) {
         Abbreviations abbr = new Abbreviations(context);
@@ -34,6 +35,7 @@ public class Tokenizer {
      * separated from word tokens, except from digits and abbreviations. However, a full stop at the
      * end of a sentence is always separated from the last token, even if the last token is an
      * abbreviation.
+     *
      * @param text a string that has been unicode-normalized
      * @return a list of sentences as strings
      */
@@ -45,59 +47,100 @@ public class Tokenizer {
         // loop through all tokens in text and determine sentence boundaries,
         // store tokens ending with '.' in the 'lastToken' variable
         for (String t : tokensArr) {
+            if (t.isEmpty())
+                continue;
             String tokenized = t;
             // we don't need to do anything with alphabetic-only tokens
             if (!t.matches(mAlphabetic)) {
                 tokenized = processSpecialCharacters(t.trim());
             }
-            if (!lastToken.isEmpty()) {
-                if (!isFullStopEOS(tokenized, lastToken))
-                    addToSent(sb, lastToken);
-                else {
-                    String sentence = finishSent(sb, lastToken);
-                    sentences.add(sentence);
-                    sb = new StringBuilder();
-                }
-            }
+            sb = checkLastToken(sentences, sb, lastToken, tokenized);
             // keep tokens ending with '.' for the next iteration
-            if (endsWithDot(tokenized)) {
-                lastToken = tokenized;
-                continue;
-            }
-            else
-                lastToken = "";
+            lastToken = updateLastToken(tokenized);
+            if (!lastToken.isEmpty()) continue;
 
-            sb.append(tokenized).append(" ");
-            if (isEOS(tokenized)) {
-                sentences.add(sb.toString().trim());
-                sb = new StringBuilder();
-            }
+            sb = updateStringBuilder(sentences, sb, tokenized);
         }
+        finishSentence(sentences, sb, lastToken);
 
+        return sentences;
+    }
+
+    /*
+     * Check the content of 'sb' and 'lastToken' and finish the sentence contained in 'sb'.
+     * 'sentences' is the list of sentences already detected from the input text (see @detectSentences)
+     * After processing 'sb' and 'lastToken' we create a new sentence string to add to 'sentences'
+     */
+    private void finishSentence(List<String> sentences, StringBuilder sb, String lastToken) {
         // we might still have a dangling last token
         if (!lastToken.isEmpty()) {
-            String sent = finishSent(sb, lastToken);
+            String sent = ensureFullStop(sb, lastToken);
             sentences.add(sent);
             sb = new StringBuilder();
         }
         // last token of text might not have ended with an EOS symbol, we still want to
         // collect the last tokens into a sentence and return
         if (!sb.toString().trim().isEmpty()) {
-            sentences.add (sb.toString().trim() + " .");
+            String lastSentence = sb.toString().trim();
+            if (!lastSentence.matches(".*" + mAlphabetic + ".*|.*\\d+.*")) {
+                // we don't want to add a sentence only consisting of symbols, do we?
+                // rather add to last sentence, was probably a mistake to finish that one
+                if (!sentences.isEmpty()) {
+                    String sent = sentences.get(sentences.size() - 1);
+                    sent = sent + " " + lastSentence;
+                    sentences.set(sentences.size() - 1, sent);
+                }
+            } else if (!Character.toString(lastSentence.charAt(lastSentence.length() - 1)).matches(mEOSSymbol))
+                sentences.add(sb.toString().trim() + " .");
+            else
+                sentences.add(sb.toString().trim());
         }
-        return sentences;
+    }
+
+    /*
+     * Append 'tokenized' to 'sb', check if 'tokenized' represents an end of a sentence, if yes, create a
+     * new sentence from 'sb' and add to 'sentences'. Create new StringBuilder object.
+     * Return the 'sb', either we have the old 'sb' with 'tokenized' appended, or a new StringBuilder object.
+     */
+    private StringBuilder updateStringBuilder(List<String> sentences, StringBuilder sb, String tokenized) {
+        sb.append(tokenized).append(" ");
+        if (isEOS(tokenized)) {
+            sentences.add(sb.toString().trim());
+            sb = new StringBuilder();
+        }
+        return sb;
+    }
+
+    private String updateLastToken(String tokenized) {
+        if (endsWithDot(tokenized)) {
+            return tokenized;
+        } else
+            return "";
+    }
+
+    private StringBuilder checkLastToken(List<String> sentences, StringBuilder sb, String lastToken, String tokenized) {
+        if (!lastToken.isEmpty()) {
+            if (!isFullStopEOS(tokenized, lastToken))
+                appendToken(sb, lastToken);
+            else {
+                String sentence = ensureFullStop(sb, lastToken);
+                sentences.add(sentence);
+                sb = new StringBuilder();
+            }
+        }
+        return sb;
     }
 
     // 'token' might end with " .", delete the space, because we are dealing with an
     // abbreviation or digits, that should not contain a space before the "."
-    private void addToSent(StringBuilder sb, String token) {
+    private void appendToken(StringBuilder sb, String token) {
         token = token.replace(" ", "");
         sb.append(token + " ");
     }
 
     // finish a sentence, take a look if if the sb content has a correct sentence ending,
     // if not, add a " ." to the sentence and return.
-    private String finishSent(StringBuilder sb, String token) {
+    private String ensureFullStop(StringBuilder sb, String token) {
         sb.append(token);
         String sent = sb.toString().trim();
         if (!sent.endsWith(" .") && !sent.endsWith(" . \""))
@@ -117,6 +160,8 @@ public class Tokenizer {
     // the last token (the dot-token) is a one-letter upper case abbr. or a defined non-sentence
     // ending abbreviation (like 'Hr.', which should always be followed by a name).
     private boolean isFullStopEOS(String current, String last) {
+        if (current.isEmpty())
+            return false;
         if (Character.isUpperCase(current.charAt(0)) || current.charAt(0) == '"') {
             if (isUpperCaseAbbr(last) || mAbbreviationsNonending.contains(last.toLowerCase())) {
                 return false;
@@ -146,8 +191,8 @@ public class Tokenizer {
         // for all kinds of punctuation we need to insert spaces at the correct positions
         // Patterns
         String processedToken = token;
-        String insertSpaceAfterAnywhere = "(.*)([(\\[{])(.*)";
-        String insertSpaceBeforeAnywhere = "(.+)([)\\[}])(.*)";
+        String insertSpaceAfterAnywhere = "(.*)([(\\[{\\-])(.*)";
+        String insertSpaceBeforeAnywhere = "(.+)([)\\[}\\-])(.*)";
         String insertSpaceAfterIfBeginning = "^(\")(.+)";
         String insertSpaceBeforeIfEnd = "(.+)([\":,.!?])$";
         String insertSpaceBeforeIfEndAndPunct = "(.+)([\":,.!?])(\\s[\":,.!?])$";
@@ -162,10 +207,11 @@ public class Tokenizer {
         return processedToken;
     }
 
-    // We assume 'token' contains some non-alphabetic characters and we test
-    // if it needs further processing. Tokens of size 0 or 1 do not need processing, and digits (with
-    // or without punctuation) and defined abbreviations are also not to be processed further.
-    // For all other tokens the method returns 'true'.
+    /* We assume 'token' contains some non-alphabetic characters and we test
+     * if it needs further processing. Tokens of size 0 or 1 do not need processing, and digits (with
+     * or without punctuation) and defined abbreviations are also not to be processed further.
+     * For all other tokens the method returns 'true'.
+     */
     private boolean shouldProcess(String token) {
         if (token.length() <= 1)
             return false;
@@ -174,6 +220,9 @@ public class Tokenizer {
             return false;
         // a more complex combination of digits and punctuations, e.g. dates and large numbers
         if (token.matches("(\\d+[.,:]\\d+)+[,.]?"))
+            return false;
+        // telephone number, don't split on hyphen
+        if (token.matches("\\d{3}-?\\d{4}"))
             return false;
         if (isAbbreviation(token))
             return false;
