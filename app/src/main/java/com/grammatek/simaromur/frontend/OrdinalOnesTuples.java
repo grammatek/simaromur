@@ -3,32 +3,35 @@ package com.grammatek.simaromur.frontend;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A list of CategoryTuples to deal with ordinals in the "ones" and "dozens" positions
+ */
 public class OrdinalOnesTuples {
 
-    public static final List<OrdinalTuple> TUPLES = new ArrayList<>();
+    public static final List<CategoryTuple> TUPLES = new ArrayList<>();
 
-    public static List<OrdinalTuple> getTuples() {
+    public static List<CategoryTuple> getTuples() {
         if (!TUPLES.isEmpty())
             return TUPLES;
 
-        for (Tuple tuple : TupleRules.TWO_ORDINAL_ZIP) {
-            TUPLES.add(new OrdinalTuple(NumberPatterns.ONES_PTRN_NO_11 + "2\\.$", tuple.getNumberPattern(),
+        for (ExpansionTuple tuple : TupleRules.TWO_ORDINAL_ZIP) {
+            TUPLES.add(new CategoryTuple(NumberPatterns.ONES_PTRN_NO_11 + "2\\.$", tuple.getPosPattern(),
                     NumberHelper.ONES, tuple.getNumberWord()));
         }
-        for (Tuple tuple : TupleRules.ORDINAL_LETTERS) {
-            TUPLES.add(new OrdinalTuple("^\\.$", tuple.getNumberPattern(), NumberHelper.ONES,
+        for (ExpansionTuple tuple : TupleRules.ORDINAL_LETTERS) {
+            TUPLES.add(new CategoryTuple("^\\.$", tuple.getPosPattern(), NumberHelper.ONES,
                     "núllt" + tuple.getNumberWord()));
-            for (Tuple t : TupleRules.ORDINALS_ONES_ZIP) {
-                TUPLES.add(new OrdinalTuple(NumberPatterns.ONES_PTRN_NO_11 + t.getDigit() + "\\.$",
-                        tuple.getNumberPattern(), t.getNumberPattern(), t.getNumberWord() + tuple.getNumberWord()));
+            for (ExpansionTuple t : TupleRules.ORDINALS_ONES_ZIP) {
+                TUPLES.add(new CategoryTuple(NumberPatterns.ONES_PTRN_NO_11 + t.getDigit() + "\\.$",
+                        tuple.getPosPattern(), t.getPosPattern(), t.getNumberWord() + tuple.getNumberWord()));
             }
         }
-        for (Tuple tuple : TupleRules.DOZENS_ORDINAL_LETTERS) {
-            for (Tuple t : TupleRules.DOZENS_ORDINAL_ZIP) {
-                TUPLES.add(new OrdinalTuple(NumberPatterns.TNS_PTRN + t.getDigit() + "0\\.$",
-                        tuple.getNumberPattern(), NumberHelper.DOZENS, t.getNumberWord() + tuple.getNumberWord()));
-                TUPLES.add(new OrdinalTuple(NumberPatterns.TNS_PTRN + t.getDigit() + "[1-9]\\.$",
-                        tuple.getNumberPattern(), NumberHelper.DOZENS, t.getNumberWord() + tuple.getNumberWord() + " og"));
+        for (ExpansionTuple tuple : TupleRules.DOZENS_ORDINAL_LETTERS) {
+            for (ExpansionTuple t : TupleRules.DOZENS_ORDINAL_ZIP) {
+                TUPLES.add(new CategoryTuple(NumberPatterns.TNS_PTRN + t.getDigit() + "0\\.$",
+                        tuple.getPosPattern(), NumberHelper.DOZENS, t.getNumberWord() + tuple.getNumberWord()));
+                TUPLES.add(new CategoryTuple(NumberPatterns.TNS_PTRN + t.getDigit() + "[1-9]\\.$",
+                        tuple.getPosPattern(), NumberHelper.DOZENS, t.getNumberWord() + tuple.getNumberWord() + " og"));
             }
         }
         return TUPLES;

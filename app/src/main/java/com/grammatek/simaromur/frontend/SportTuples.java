@@ -3,39 +3,42 @@ package com.grammatek.simaromur.frontend;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A list of category tuples to deal with sport results
+ */
 public class SportTuples {
 
-    public static final List<OrdinalTuple> TUPLES = new ArrayList<>();
+    public static final List<CategoryTuple> TUPLES = new ArrayList<>();
 
-    public static List<OrdinalTuple> getTuples() {
+    public static List<CategoryTuple> getTuples() {
         if (!TUPLES.isEmpty())
             return TUPLES;
 
-        TUPLES.add(new OrdinalTuple("^[1-9]\\d?\\/[1-9]?\\d$", NormalizationDictionaries.MATCH_ANY,
+        TUPLES.add(new CategoryTuple("^[1-9]\\d?\\/[1-9]?\\d$", NormalizationDictionaries.MATCH_ANY,
                 NumberHelper.BETWEEN_TEAMS, " <sil>")); //TODO: move <sil> to a central class as a constant
 
-        for (Tuple tuple : TupleRules.ONES_ZIP) {
-            TUPLES.add(new OrdinalTuple("^[1-9]?" + tuple.getDigit() + "\\/[1-9]\\d?$", tuple.getNumberPattern(),
+        for (ExpansionTuple tuple : TupleRules.ONES_ZIP) {
+            TUPLES.add(new CategoryTuple("^[1-9]?" + tuple.getDigit() + "\\/[1-9]\\d?$", tuple.getPosPattern(),
                     NumberHelper.FIRST_ONE, tuple.getNumberWord()));
-            TUPLES.add(new OrdinalTuple("^[1-9]\\d?\\/[1-9]?" + tuple.getDigit() + "$", tuple.getNumberPattern(),
+            TUPLES.add(new CategoryTuple("^[1-9]\\d?\\/[1-9]?" + tuple.getDigit() + "$", tuple.getPosPattern(),
                     NumberHelper.SECOND_ONE, tuple.getNumberWord()));
         }
 
-        for (Tuple tuple : TupleRules.TENS_ZIP) {
-            TUPLES.add(new OrdinalTuple("^" + tuple.getDigit() + "\\/[1-9]\\d?$", NormalizationDictionaries.MATCH_ANY,
+        for (ExpansionTuple tuple : TupleRules.TENS_ZIP) {
+            TUPLES.add(new CategoryTuple("^" + tuple.getDigit() + "\\/[1-9]\\d?$", NormalizationDictionaries.MATCH_ANY,
                     NumberHelper.FIRST_ONE, tuple.getNumberWord()));
-            TUPLES.add(new OrdinalTuple("^[1-9]\\d?\\/" + tuple.getDigit(), NormalizationDictionaries.MATCH_ANY,
+            TUPLES.add(new CategoryTuple("^[1-9]\\d?\\/" + tuple.getDigit(), NormalizationDictionaries.MATCH_ANY,
                     NumberHelper.SECOND_ONE, tuple.getNumberWord()));
         }
 
-        for (Tuple tuple : TupleRules.DOZENS_ZIP) {
-            TUPLES.add(new OrdinalTuple("^" + tuple.getDigit() + "0\\/[1-9]\\d?$", NormalizationDictionaries.MATCH_ANY,
+        for (ExpansionTuple tuple : TupleRules.DOZENS_ZIP) {
+            TUPLES.add(new CategoryTuple("^" + tuple.getDigit() + "0\\/[1-9]\\d?$", NormalizationDictionaries.MATCH_ANY,
                     NumberHelper.FIRST_TEN, tuple.getNumberWord()));
-            TUPLES.add(new OrdinalTuple("^[1-9]\\d?\\/" + tuple.getDigit() + "0$", NormalizationDictionaries.MATCH_ANY,
+            TUPLES.add(new CategoryTuple("^[1-9]\\d?\\/" + tuple.getDigit() + "0$", NormalizationDictionaries.MATCH_ANY,
                     NumberHelper.SECOND_TEN, tuple.getNumberWord()));
-            TUPLES.add(new OrdinalTuple("^" + tuple.getDigit() + "[1-9]\\/[1-9]\\d?$", NormalizationDictionaries.MATCH_ANY,
+            TUPLES.add(new CategoryTuple("^" + tuple.getDigit() + "[1-9]\\/[1-9]\\d?$", NormalizationDictionaries.MATCH_ANY,
                     NumberHelper.FIRST_TEN, tuple.getNumberWord() + " og"));
-            TUPLES.add(new OrdinalTuple("^[1-9]\\d?\\/" + tuple.getDigit() + "[1-9]$", NormalizationDictionaries.MATCH_ANY,
+            TUPLES.add(new CategoryTuple("^[1-9]\\d?\\/" + tuple.getDigit() + "[1-9]$", NormalizationDictionaries.MATCH_ANY,
                     NumberHelper.SECOND_TEN, tuple.getNumberWord() + " og"));
         }
 

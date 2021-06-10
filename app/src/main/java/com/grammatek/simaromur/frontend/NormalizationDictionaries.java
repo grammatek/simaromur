@@ -8,7 +8,8 @@ import java.util.Map;
 
 /**
  * Normalization dictionaries for abbreviations, digits and other non-standard-words.
- * This class still needs refactoring!
+ * TODO: This class still needs refactoring!
+ * For reference files see: https://github.com/cadia-lvl/regina-normalizer
  */
 
 public class NormalizationDictionaries {
@@ -27,19 +28,19 @@ public class NormalizationDictionaries {
     public static final String LINK_PTRN_HASHTAG = "LINK_PTRN_HASHTAG";
     public static final String LINK_PTRN_ALL = "LINK_PTRN_ALL";
 
-
     //regex bits:
     public static final String MATCH_ANY = ".*";
     public static final String BOS = "([^\\wÁÉÍÓÚÝÐÞÆÖáéíóúýðþæö]|^)"; // non-word char OR beginning of string
     public static final String EOS = "([^\\wÁÉÍÓÚÝÐÞÆÖáéíóúýðþæö]|$)"; // non-word char OR end of string, note that \\w and \\W are ascii-based! //TODO: check with Helga
     public static final String DOT = "\\."; // escaped dot
     public static final String DOT_ONE_NONE = "\\.?"; // escaped dot
-    public static final String LETTERS = "[A-ZÁÉÍÓÚÝÐÞÆÖa-záéíóúýðþæö]";
+    public static final String LETTER = "[A-ZÁÉÍÓÚÝÐÞÆÖa-záéíóúýðþæö]";
     public static final String LETTER_OR_DIGIT = "[A-ZÁÉÍÓÚÝÐÞÆÖa-záéíóúýðþæö\\d]";
-    public static final String NOT_LETTERS = "[^A-ZÁÉÍÓÚÝÐÞÆÖa-záéíóúýðþæö]";
-    public static final String ALL_MONTHS = "jan(úar)?|feb(rúar)?|mars?|apr(íl)?|maí|jú[nl]í?|ág(úst)?|sep(t(ember)?)?|okt(óber)?|nóv(ember)?|des(ember)?";
+    public static final String NOT_LETTER = "[^A-ZÁÉÍÓÚÝÐÞÆÖa-záéíóúýðþæö]";
+    public static final String MONTH = "jan(úar)?|feb(rúar)?|mars?|apr(íl)?|maí|jú[nl]í?|ág(úst)?|sep(t(ember)?)?|okt(óber)?|nóv(ember)?|des(ember)?";
     public static final String THE_CLOCK = "(núll|eitt|tvö|þrjú|fjögur|fimm|sex|sjö|átta|níu|tíu|ellefu|tólf" +
             "|((þret|fjór|fimm|sex)tán)|((sau|á|ní)tján)|tuttugu( og (eitt|tvö|þrjú|fjögur))?)";
+    // e.g. 12.345.678,59 or 34,5 etc. //TODO: this would match 12.345.1234556677,34 -> is this deliberate?
     public static final String MEASURE_PREFIX_DIGITS = "(\\d{1,2}" + DOT + ")?(\\d{3}" + DOT + "?)*\\d+(,\\d+)?";
     public static final String MEASURE_PREFIX_WORDS = "([Hh]undr[au]ð|HUNDR[AU]Ð|[Þþ]úsund|ÞÚSUND|[Mm]illjón(ir)?|MILLJÓN(IR)?) ";
 
@@ -54,16 +55,18 @@ public class NormalizationDictionaries {
 
     private NormalizationDictionaries() {}
 
-    public static Map<String, String> prepositions = new HashMap<String, String>() {{
-        put(ACC, "um(fram|hverfis)|um|gegnum|kringum|við|í|á");
-        put(DAT, "frá|a[ðf]|ásamt|gagnvart|gegnt?|handa|hjá|með(fram)?|móti?|undan|nálægt");
-        put(GEN, "til|auk|án|handan|innan|meðal|megin|milli|ofan|sakir|sökum|utan|vegna");
-        put(ACC_DAT, "eftir|fyrir|með|undir|við|yfir");
-        put(ACC_GEN, "um(fram|hverfis)|um|gegnum|kringum|við|í|á|til|auk|án|handan|innan|meðal|megin|milli|ofan|sakir|sökum|utan|vegna");
-        put(ACC_DAT_COMB, "um(fram|hverfis)|um|gegnum|kringum|við|í|á|frá|a[ðf]|ásamt|gagnvart|gegnt?|handa|hjá|með(fram)?|móti?|undan|nálægt|eftir|fyrir|með|undir|við|yfir");
-        put(ACC_DAT_GEN_COMB, "um(fram|hverfis)|um|gegnum|kringum|við|í|á|frá|a[ðf]|ásamt|gagnvart|gegnt?" +
+    // prepositions control the case of the following word, can be used to determine number formats
+    public static Map<String, String> prepositions = new HashMap<>();
+    static {
+        prepositions.put(ACC, "um(fram|hverfis)|um|gegnum|kringum|við|í|á");
+        prepositions.put(DAT, "frá|a[ðf]|ásamt|gagnvart|gegnt?|handa|hjá|með(fram)?|móti?|undan|nálægt");
+        prepositions.put(GEN, "til|auk|án|handan|innan|meðal|megin|milli|ofan|sakir|sökum|utan|vegna");
+        prepositions.put(ACC_DAT, "eftir|fyrir|með|undir|við|yfir");
+        prepositions.put(ACC_GEN, "um(fram|hverfis)|um|gegnum|kringum|við|í|á|til|auk|án|handan|innan|meðal|megin|milli|ofan|sakir|sökum|utan|vegna");
+        prepositions.put(ACC_DAT_COMB, "um(fram|hverfis)|um|gegnum|kringum|við|í|á|frá|a[ðf]|ásamt|gagnvart|gegnt?|handa|hjá|með(fram)?|móti?|undan|nálægt|eftir|fyrir|með|undir|við|yfir");
+        prepositions.put(ACC_DAT_GEN_COMB, "um(fram|hverfis)|um|gegnum|kringum|við|í|á|frá|a[ðf]|ásamt|gagnvart|gegnt?" +
                 "|handa|hjá|með(fram)?|móti?|undan|nálægt|eftir|fyrir|með|undir|við|yfir|til|auk|án|handan|innan|meðal|megin|milli|ofan|sakir|sökum|utan|vegna");
-    }};
+    }
 
     //The link patterns handle external patterns like https://mbl.is/innlent, internal patterns like https://localholst:8888,
     //mail patterns like name@address.com, twitter handles like @handle and hashtags, e.g. #thisrules2021
@@ -85,9 +88,8 @@ public class NormalizationDictionaries {
     public static OrderedMap<String, String> preHelpDict = new ListOrderedMap<>();
     static {
         preHelpDict.put(BOS + "(?i)2ja" + EOS, "$1tveggja$2");
-        // is this save? couldn't it be 'þriðja/þriðju/þriðji'?
+        //TODO: is this save? couldn't it be 'þriðja/þriðju/þriðji'?
         preHelpDict.put(BOS + "(?i)3ja" + EOS, "$1þriggja$2");
-
         preHelpDict.put(BOS + "(?i)4ð(a|i|u)" + EOS, "$1fjórð$2$3");
         preHelpDict.put(BOS + "(?i)5t(a|i|u)" + EOS, "$1fimmt$2$3");
         preHelpDict.put(BOS + "(?i)6t(a|i|u)" + EOS, "$1sjött$2$3");
@@ -99,9 +101,9 @@ public class NormalizationDictionaries {
         preHelpDict.put("(?i)([a-záðéíóúýþæö]+)(\\d+)", "$1 $2");
         preHelpDict.put("(?i)(\\d+)([a-záðéíóúýþæö]+)", "$1 $2");
 
-        // what are these? degrees and percent with letters?
+        //TODO: what are these? degrees and percent with letters?
         preHelpDict.put("(?i)([\\da-záðéíóúýþæö]+)(°)", "$1 $2");
-        //this causes normalization errors at later stages, analyze why
+        //TODO: this causes normalization errors at later stages, analyze why
         //preHelpDict.put("(?i)([\\da-záðéíóúýþæö]+)(%)", "$1 $2");
         // dates
         preHelpDict.put(BOS + "(0?[1-9]|[12]\\d|3[01])\\.(0?[1-9]|1[012])\\.(\\d{3,4})" + EOS, "$1$2. $3. $4$5");
@@ -155,7 +157,7 @@ public class NormalizationDictionaries {
         abbreviationDict.put(BOS + "([Aa]lþm" + DOT_ONE_NONE + ")" + EOS, "$1alþingismaður$3");
         abbreviationDict.put(BOS + "([Aa]lm|ALM)" + DOT_ONE_NONE + EOS, "$1almennt$3");
         abbreviationDict.put(BOS + "(bls" + DOT_ONE_NONE + ") (" + NUMBER_ANY + "|" + MEASURE_PREFIX_WORDS +
-                "( )?)" + EOS, "$1blaðsíða $3$12"); // realistic? million pages? 45,3 pages?
+                "( )?)" + EOS, "$1blaðsíða $3$12"); //TODO: realistic? million pages? 45,3 pages?
         abbreviationDict.put("(?i)" + BOS + "(B" + DOT + "S[Cc]" + DOT + "?)" + EOS, "$1B S C$3");
         abbreviationDict.put("(?i)" + BOS + "(M" + DOT + "S[Cc]" + DOT + "?)" + EOS, "$1M S C$3");
 
@@ -171,8 +173,8 @@ public class NormalizationDictionaries {
         abbreviationDict.put(BOS + "([Ee]\\-r)" + EOS, "$1einhvers$3");
         abbreviationDict.put(BOS + "([Ee]\\-n)" + EOS, "$1einhvern$3");
         abbreviationDict.put(BOS + "([Ee]\\-um)" + EOS, "$1einhverjum$3");
-        // do we have "fædd" somewhere or how do we know this should be "fæddur"?
-        abbreviationDict.put(BOS + "(f" + DOT + ") (^((([012]?[1-9]|3[01])" + DOT + " ?)?(" + ALL_MONTHS + ") )\\d{2,4}$)" + EOS, "$1fæddur $3$4");
+        //TODO: do we have "fædd" somewhere or how do we know this should be "fæddur"?
+        abbreviationDict.put(BOS + "(f" + DOT + ") (^((([012]?[1-9]|3[01])" + DOT + " ?)?(" + MONTH + ") )\\d{2,4}$)" + EOS, "$1fæddur $3$4");
         abbreviationDict.put(BOS + "([Ff]él" + DOT_ONE_NONE + ")" + EOS, "$1félag$3");
         abbreviationDict.put(BOS + "([Ff]rh|FRH)" + DOT_ONE_NONE + EOS, "$1framhald$3");
         abbreviationDict.put(BOS + "([Ff]rt|FRT)" + DOT_ONE_NONE + EOS, "$1framtíð$3");
@@ -191,13 +193,13 @@ public class NormalizationDictionaries {
         abbreviationDict.put(BOS + "([Hh]v" + DOT_ONE_NONE + ")" + EOS, "$1hæstvirtur$3"); //case?
         abbreviationDict.put(BOS + "([Hh]" + DOT + "u" + DOT + "b|H" + DOT + "U" + DOT + "B)" + DOT_ONE_NONE + EOS, "$1hér um bil$3");
 
-        abbreviationDict.put("(" + LETTERS + "+ )([Jj]r)" + DOT_ONE_NONE + EOS, "$1junior$3");
+        abbreviationDict.put("(" + LETTER + "+ )([Jj]r)" + DOT_ONE_NONE + EOS, "$1junior$3");
 
         abbreviationDict.put(BOS + "([Kk]k)" + EOS, "$1karlkyn$3");
         abbreviationDict.put(BOS + "([Kk]vk)" + EOS, "$1kvenkyn$3");
         abbreviationDict.put(BOS + "([Kk]t" + DOT_ONE_NONE + ")(:| \\d{6}\\-?\\d{4})" + EOS, "$1kennitala$3");
         abbreviationDict.put(BOS + "([Kk]l ?(" + DOT + "|\\:)?)(\\s?\\d{2}([:" + DOT + "]\\d{2})?)", "$1klukkan$4");
-        // how do we get this, ef number normalizing is done after abbreviation normalizing?
+        //TODO: how do we get this, ef number normalizing is done after abbreviation normalizing?
         abbreviationDict.put("(?i)" + BOS + "kl ?(" + DOT + "|\\:)? ?(" + THE_CLOCK + " )", "klukkan$2");
 
         abbreviationDict.put(BOS + "([Kk]höfn|[Kk]bh|KBH)" + EOS, "$1Kaupmannahöfn$2"); // inflections?
@@ -286,8 +288,8 @@ public class NormalizationDictionaries {
                 "$1þar með talið$3");
 
         abbreviationDict.put(" ((" + MEASURE_PREFIX_DIGITS + "|" + MEASURE_PREFIX_WORDS + ")( )?\\s)(þú" + DOT_ONE_NONE + ")" +
-                "( " + LETTERS + "*)?", "$1þúsund$11"); // changed from group 13 to 11
-        abbreviationDict.put(" ([Mm]örg )þús" + DOT_ONE_NONE + "( " + LETTERS + "*)?", "$1þúsund$2");
+                "( " + LETTER + "*)?", "$1þúsund$11"); // changed from group 13 to 11
+        abbreviationDict.put(" ([Mm]örg )þús" + DOT_ONE_NONE + "( " + LETTER + "*)?", "$1þúsund$2");
 
         abbreviationDict.put("(\\d+" + DOT + ") [Áá]rg" + DOT + EOS, "$1 árgangur$2");
         abbreviationDict.put(BOS + "([Óó]ákv" + DOT + "gr" + DOT + ")" + EOS, "$1óáveðinn greinir$3");
@@ -308,11 +310,10 @@ public class NormalizationDictionaries {
         abbreviationDict.put("(1)( )?°S", "$1 gráða suður $2");
     }
 
-
     public static final Map<String, String> directionDict = new HashMap<>();
     static {
         // we don't accept dashes (u2013 or u2014), only standard hyphenation.
-        // see more patterns in directiondict.txt
+        //TODO: see more patterns in directiondict.txt
         directionDict.put(BOS + "(SV-(:?(til|lands|átt|verðu|vert)))" + EOS, "$1suðvestan$3$4");
         directionDict.put(BOS + "(NV-(:?(til|lands|átt|verðu|vert)))" + EOS, "$1norðvestan$3$4");
         directionDict.put(BOS + "(NA-(:?(til|lands|átt|verðu|vert)))" + EOS, "$1norðaustan$3$4");
@@ -325,7 +326,7 @@ public class NormalizationDictionaries {
 
     public static final Map<String, String> denominatorDict = new HashMap<>();
     static {
-        // not complete, see denominatordict.txt for further patterns
+        //TODO: not complete, see denominatordict.txt for further patterns
         denominatorDict.put("\\/kg" + DOT_ONE_NONE + EOS, " á kílóið$1");
         denominatorDict.put("\\/t" + DOT_ONE_NONE + EOS, " á tonnið$1");
         denominatorDict.put("\\/ha" + DOT_ONE_NONE + EOS, " á hektarann$1");
@@ -346,14 +347,13 @@ public class NormalizationDictionaries {
         denominatorDict.put("\\/ferm" + DOT_ONE_NONE + EOS, " á fermetra$1");
     }
 
-
     public static Map<String, String> weightDict = new HashMap<>();
     static {
         weightDict.put("(" + BOS + "(" + prepositions.get(DAT) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))) t" + DOT_ONE_NONE + EOS, "$1 tonni$10");
         weightDict.put("(" + BOS + "(" + prepositions.get(GEN) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))) t" + DOT_ONE_NONE + EOS, "$1 tonns$10");
         weightDict.put("(" + BOS + "(" + prepositions.get(DAT) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) t" + DOT_ONE_NONE + EOS, "$1 tonnum$9"); // changed from group 10 to 9
         weightDict.put("(" + BOS + "(" + prepositions.get(DAT) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)?) " + patternSelection.get(AMOUNT) + " t" + DOT_ONE_NONE + EOS, "1 $1$1 tonnum$13");
-        // usw. three more, and the same for grams
+        //TODO usw. three more, and the same for grams
         weightDict.put("(" + BOS + "(" + prepositions.get(DAT) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))) g" + DOT_ONE_NONE + EOS, "$1 grammi$10");
         weightDict.put("(" + BOS + "(" + prepositions.get(GEN) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))) g" + DOT_ONE_NONE + EOS, "$1 gramms$10");
         weightDict.put("(" + BOS + "(" + prepositions.get(DAT) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) g\\.?(\\W|$)", "$1 grömmum$10");
@@ -361,8 +361,7 @@ public class NormalizationDictionaries {
         weightDict.put("(1 )gr?" + DOT_ONE_NONE + EOS, "$1gramm$2");
         weightDict.put("([02-9]|" + patternSelection.get(AMOUNT) + ") gr?\\.?(\\W|$)", "$1 grömm$3");
 
-
-        // another section for nanó/milli/míkró/píkó/attó/zeptó/yoktó-kíló/pund + grammi/gramms/grömmum, ...
+        //TODO: another section for nanó/milli/míkró/píkó/attó/zeptó/yoktó-kíló/pund + grammi/gramms/grömmum, ...
         // see class weight_dict.py in regina
     }
 
@@ -372,7 +371,7 @@ public class NormalizationDictionaries {
             return distanceDict;
 
         Map<String, String> prefixMap = new HashMap<>();
-        // first initialized with "fet", "tomma", and some cryptic patterns for "metri"
+        //TODO: first initialized with "fet", "tomma"
 
         distanceDict.put("(" + BOS + "(" + prepositions.get(ACC_DAT_GEN_COMB) + ") " + NUMBER_EOS_1 + " )m" + DOT_ONE_NONE +
                 "( (?![kmgyabefstvö]" + DOT + ")" + LETTER_OR_DIGIT + "*" + EOS  + ")", "$1 metra$10"); // from 14 to 10
@@ -389,7 +388,7 @@ public class NormalizationDictionaries {
         distanceDict.put("([02-9] )m" + DOT_ONE_NONE + "( (?![kmgyabefstvö]" + DOT + ")" + LETTER_OR_DIGIT + "*" + EOS  + ")",
                 "$1metrar $2");
 
-        // also píkó, nanó, míkró, njúton, in original regina
+        //TODO: also píkó, nanó, míkró, njúton, in original regina
         prefixMap.put("m", "milli");
         prefixMap.put("[cs]", "senti");
         prefixMap.put("d", "desi");
@@ -409,7 +408,6 @@ public class NormalizationDictionaries {
             distanceDict.put("(1 )" + letter + "m" + DOT_ONE_NONE + EOS, "$1 " + prefixMap.get(letter) + "metri $2");
             distanceDict.put("([0-9]|" + patternSelection.get(AMOUNT) + ") " + letter + "m" + DOT_ONE_NONE + EOS, "$1 " + prefixMap.get(letter) + "metrar $3");
         }
-
         return distanceDict;
     }
 
@@ -433,7 +431,6 @@ public class NormalizationDictionaries {
         // put("k", "kíló");
     }};
 
-
     public static Map<String, String> areaDict = new HashMap<>();
 
     public static Map<String, String> getAreaDict() {
@@ -446,7 +443,6 @@ public class NormalizationDictionaries {
         areaDict.put("((\\W|^)(" + prepositions.get(DAT)+ ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) ha\\.?(\\W|$)","$1 hekturum$10");
         areaDict.put("((\\W|^)(" + prepositions.get(DAT) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)?) " + patternSelection.get(AMOUNT) + " ha\\.?(\\W|$)", "$1 1$1 hekturum$14");
         areaDict.put("(1) ha\\.?(\\W|$)", "$1 hektari$2");
-        // does this change later? at the moment we get: "reisa 15 ha ..." -> "reisa 15 hektarar ..."
         areaDict.put("([02-9]|" + patternSelection.get(AMOUNT) + ") ha\\.?(\\W|$)","$1 hektarar $3");
 
         for (String letter : prefixMeterDimension.keySet()) {
@@ -463,7 +459,6 @@ public class NormalizationDictionaries {
                         "$1 1$1 " + dimensionAfter.get(superscript) + prefixMeterDimension.get(letter) + "metrum$14");
                 areaDict.put("(1 )" + letter + "m" + superscript + "(\\W|$)", "$1" + dimensionAfter.get(superscript) + prefixMeterDimension.get(letter) + "metri$2");
                 areaDict.put("([02-9]|" + patternSelection.get(AMOUNT) + ") " + letter + "m" + superscript + "(\\W|$)", "$1 " + dimensionAfter.get(superscript) + prefixMeterDimension.get(letter) + "metrar $3");
-
             }
         }
 
@@ -512,7 +507,6 @@ public class NormalizationDictionaries {
             //if (!letter.isEmpty())
             //    volumeDict.put("(\\W|^)" + letter + "l\\.?(\\W|$)", "$1" + prefixLiter.get(letter) + "lítrar $2");
         }
-
         return volumeDict;
     }
 
@@ -549,7 +543,6 @@ public class NormalizationDictionaries {
             //TODO: this one messes up, need to give the preposition patterns priority and not allow this one to intervene. But why do they both match after one has been substituted? I.e. " ... sekúndur ..." matches the pattern above with preposition
             //timeDict.put("([02-9]|" + patternSelection.get(AMOUNT) + ") " + letters + "\\.?(\\W|$)", "$1 " + prefixTime.get(letters) + "ur $3");
         }
-
         return timeDict;
     }
 
@@ -576,10 +569,9 @@ public class NormalizationDictionaries {
         //currencyDict.put("(\\W|^)[Kk]r\\.? ?(\\d)", "$12x krónur$2");
         currencyDict.put("(\\W|^)[Kk]r\\.? ?(\\d)", "$1krónur $2");
 
-        // MUCH more here! other currencies, etc.
+        //TODO: MUCH more here! other currencies, etc.
 
         return currencyDict;
-
     }
 
     public static Map<String, String> electronicDict = new HashMap<>();
@@ -595,11 +587,9 @@ public class NormalizationDictionaries {
         wattPrefix.put("G", "Gíga");
         wattPrefix.put("T", "Tera");
 
-
         Map<String, String> measurement = new HashMap<>();
         measurement.put("V", "volt");
         measurement.put("Hz", "herz");
-
 
         for (String letter : wattPrefix.keySet()) {
             electronicDict.put("(" + BOS + "(" + prepositions.get(GEN) + ") (" + NUMBER_EOS_1 + ")) " + letter + "[Ww]"
@@ -613,7 +603,7 @@ public class NormalizationDictionaries {
             electronicDict.put("([02-9]|" + patternSelection.get(AMOUNT) + ") " + letter + "[Ww]" + DOT_ONE_NONE + "(st|h)" +
                     DOT_ONE_NONE + EOS, "$1 " + wattPrefix.get(letter) + "vattstundir $3");
             //electronic_dict.update({"([02-9]|" + amounts + ") " + letter + "[Ww]\.?(st|h)\.?(\W|$)": "\g<1> " + prefix + "vattstundir \g<3>"})
-            // etc. see electronic_dict.py in regina original
+            //TODO: etc. see electronic_dict.py in regina original
         }
         return electronicDict;
     }
@@ -629,30 +619,31 @@ public class NormalizationDictionaries {
         restDict.put("(" + BOS + "(" + prepositions.get(GEN) + ") (" + NUMBER_ANY + ") " + patternSelection.get(AMOUNT)
                 + ")\\%" + EOS, "$1 1$1 prósenta$14");
         restDict.put("\\%", " prósent");
-
     }
 
-    public static Map<String, String> periodDict = new HashMap<String, String>() {{
-        put("(\\W|^)mán(ud)?\\.?(\\W|$)", "$1mánudag$3");
-        put("(\\W|^)þri(ðjud)?\\.?(\\W|$)", "$1þriðjudag$3");
-        put("(\\W|^)mið(vikud)?\\.?(\\W|$)", "$1miðvikudag$3");
-        put("(\\W|^)fim(mtud)?\\.?(\\W|$)", "$1fimmtudag$3");
-        put("(\\W|^)fös(tud)?\\.?(\\W|$)", "$1föstudag$3");
-        put("(\\W|^)lau(gard)?\\.?(\\W|$)", "$1laugardag$3");
-        put("(\\W|^)sun(nud)?\\.?(\\W|$)", "$1sunnudag$3");
+    public static Map<String, String> periodDict = new HashMap<>();
+    static {
+        periodDict.put(BOS + "mán(ud)?" + DOT_ONE_NONE + EOS, "$1mánudag$3");
+        periodDict.put(BOS + "þri(ðjud)?" + DOT_ONE_NONE + EOS, "$1þriðjudag$3");
+        periodDict.put(BOS + "mið(vikud)?" + DOT_ONE_NONE + EOS, "$1miðvikudag$3");
+        periodDict.put(BOS + "fim(mtud)?" + DOT_ONE_NONE + EOS, "$1fimmtudag$3");
+        periodDict.put(BOS + "fös(tud)?" + DOT_ONE_NONE + EOS, "$1föstudag$3");
+        periodDict.put(BOS + "lau(gard)?" + DOT_ONE_NONE + EOS, "$1laugardag$3");
+        periodDict.put(BOS + "sun(nud)?" + DOT_ONE_NONE + EOS, "$1sunnudag$3");
 
-        put("(\\W|^)jan\\.?(\\W|$)", "$1janúar$3");
-        put("(\\W|^)feb\\.?(\\W|$)", "$1febrúar$3");
-        put("(\\W|^)mar\\.?(\\W|$)", "$1mars$3");
-        put("(\\W|^)apr\\.?(\\W|$)", "$1apríl$3");
-        put("(\\W|^)jún\\.?(\\W|$)", "$1júní$3");
-        put("(\\W|^)júl\\.?(\\W|$)", "$1júlí$3");
-        put("(\\W|^)ágú?\\.?(\\W|$)", "$1ágúst$3");
-        put("(\\W|^)sept?\\.?(\\W|$)", "$1september$3");
-        put("(\\W|^)okt\\.?(\\W|$)", "$1október$3");
-        put("(\\W|^)nóv\\.?(\\W|$)", "$1nóvember$3");
-        put("(\\W|^)des\\.?(\\W|$)", "$1desember$3");
+        periodDict.put(BOS + "jan" + DOT_ONE_NONE + EOS, "$1janúar$3");
+        periodDict.put(BOS + "feb" + DOT_ONE_NONE + EOS, "$1febrúar$3");
+        periodDict.put(BOS + "mar" + DOT_ONE_NONE + EOS, "$1mars$3");
+        periodDict.put(BOS + "apr" + DOT_ONE_NONE + EOS, "$1apríl$3");
+        periodDict.put(BOS + "jún" + DOT_ONE_NONE + EOS, "$1júní$3");
+        periodDict.put(BOS + "júl" + DOT_ONE_NONE + EOS, "$1júlí$3");
+        periodDict.put(BOS + "ágú?" + DOT_ONE_NONE + EOS, "$1ágúst$3");
+        periodDict.put(BOS + "sept?" + DOT_ONE_NONE + EOS, "$1september$3");
+        periodDict.put(BOS + "okt" + DOT_ONE_NONE + EOS, "$1október$3");
+        periodDict.put(BOS + "nóv" + DOT_ONE_NONE + EOS, "$1nóvember$3");
+        periodDict.put(BOS + "des" + DOT_ONE_NONE + EOS, "$1desember$3");
 
+        //TODO: determine if we need this for now
         /*
                 "(\W|^)II\.?(\W|$)": "\g<1>annar\g<2>",
                 "(\W|^)III\.?(\W|$)": "\g<1>þriðji\g<2>",
@@ -670,8 +661,5 @@ public class NormalizationDictionaries {
                 "(\W|^)XVII\.?(\W|$)": "\g<1>sautjándi\g<2>",
                 "(\W|^)XVIII\.?(\W|$)": "\g<1>átjándi\g<2>",
                 "(\W|^)XIX\.?(\W|$)": "\g<1>nítjándi\g<2>"} */
-
-    }};
-
-
+    }
 }

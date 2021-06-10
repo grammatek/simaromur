@@ -87,6 +87,7 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		// we need these properties for openNLP
 		System.setProperty("org.xml.sax.driver","org.xmlpull.v1.sax2.Driver");
 
 		if (checkPermission())

@@ -70,17 +70,6 @@ public class NormalizationDictionariesTest {
         assertEquals("það voru að minnsta kosti þúsund manns", normalized);
 
     }
-
-
 }
 
-/*
-static {
-
-        preHelpDict.put(BOS + "(0?[1-9]|[12]\\d|3[01])\\.(0?[1-9]|1[012])\\.(\\d{3,4})" + EOS, " x1x2x. x3x. x4x5");
-        preHelpDict.put(BOS + "(0?[1-9]|[12]\\d|3[01])\\.(0?[1-9]|1[012])\\." + EOS, " x1x2x. x3x.x4");
-        // what does that stand for?
-        preHelpDict.put("(\\d{3})( )(\\d{4})", " x1x-x3x");
-    }
- */
 

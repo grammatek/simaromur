@@ -1,6 +1,9 @@
 package com.grammatek.simaromur.frontend;
 
 import android.content.Context;
+import android.util.Log;
+
+import com.grammatek.simaromur.TTSDemo;
 
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
@@ -23,7 +26,8 @@ import java.util.logging.Logger;
  */
 
 public class NormalizationManager {
-    private static final Logger LOGGER = Logger.getLogger(NormalizationManager.class.getName());
+    private final static boolean DEBUG = false;
+    private final static String LOG_TAG = "Simaromur_Java_" + NormalizationManager.class.getSimpleName();
     private static final String POS_MODEL = "is-pos-maxent.bin";
 
     private final Context mContext;
@@ -42,7 +46,7 @@ public class NormalizationManager {
      * Processes the input text according to the defined steps: unicode cleaning,
      * tokenizing, normalizing
      * @param text
-     * @return
+     * @return normalized version of 'text'
      */
     public String process(final String text) {
 
@@ -80,22 +84,29 @@ public class NormalizationManager {
     private String[] tagText(final String text) {
         String[] tags = {};
         try {
+            //TODO: make the model static
             InputStream is = mContext.getAssets().open(POS_MODEL);
             POSModel posModel = new POSModel(is);
             POSTaggerME posTagger = new POSTaggerME(posModel);
             String[] tokens = text.split(" ");
             tags = posTagger.tag(tokens);
-            // Getting the probabilities of the tags given to the tokens to inspect
-            //double probs[] = posTagger.probs();
-            //System.out.println("Token\t:\tTag\t:\tProbability\n--------------------------");
-            //for(int i=0;i<tokens.length;i++){
-            //    System.out.println(tokens[i]+"\t:\t"+tags[i]+"\t:\t"+probs[i]);
-            //}
+
+            if (DEBUG)
+                printProbabilities(tags, posTagger, tokens);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
         return tags;
+    }
+
+    // Get the probabilities of the tags given to the tokens to inspect
+    private void printProbabilities(String[] tags, POSTaggerME posTagger, String[] tokens) {
+        double probs[] = posTagger.probs();
+        Log.v(LOG_TAG, "Token\t:\tTag\t:\tProbability\n--------------------------");
+        for(int i=0;i<tokens.length;i++){
+            Log.v(LOG_TAG, tokens[i]+"\t:\t"+tags[i]+"\t:\t"+probs[i]);
+        }
     }
 }
 
