@@ -5,11 +5,12 @@ on: [push]
 
 jobs:
   Build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       OPENFST_TAG: 1.8.1-android
       THRAX_TAG: 1.3.6-android
       FLITE_TAG: v2.3-pre1-android
+      NDK_VER: 22.1.7171670
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
@@ -19,20 +20,24 @@ jobs:
           java-version: 1.9
       - name: Get CMake
         uses: lukka/get-cmake@v3.20.1
+      - name: Install NDK
+        run: echo "y" | sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;${NDK_VER}" --sdk_root=${ANDROID_SDK_ROOT}
       - name: Setup NDK
         run: |
-          echo "ANDROID_NDK=$ANDROID_HOME/ndk-bundle" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk-bundle" >> $GITHUB_ENV
-          echo "NDK_HOME=$ANDROID_HOME/ndk-bundle" >> $GITHUB_ENV
+          echo "ANDROID_NDK=$ANDROID_HOME/ndk/${NDK_VER}" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/${NDK_VER}" >> $GITHUB_ENV
+          echo "NDK_HOME=$ANDROID_HOME/ndk/${NDK_VER}" >> $GITHUB_ENV
       - name: "Check build env"
         run: |
           pwd
           ls -al
+          echo "ANDROID_HOME:"
+          ls -al $ANDROID_HOME/
       - name: "Create local.properties"
         run: |
           echo "flite.dir=`pwd`/3rdparty/ndk">local.properties
           echo "3rdparty.dir=`pwd`/3rdparty/ndk" >>local.properties
-          echo "ndk.dir=$ANDROID_HOME/ndk-bundle" >>local.properties
+          echo "ndk.dir=$ANDROID_HOME/ndk/${NDK_VER}" >>local.properties
       - name: Cache native libs
         uses: actions/cache@v2
         env:

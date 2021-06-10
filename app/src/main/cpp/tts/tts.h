@@ -24,6 +24,8 @@
 // The shared library must contain a function named "android_getTtsEngine"
 // that returns an 'android_tts_engine_t' instance.
 
+#include <memory>
+ 
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -82,15 +84,7 @@ typedef struct {
     android_tts_engine_funcs_t *funcs;
 } android_tts_engine_t;
 
-/* This function must be located in the TTS Engine shared library
- * and must return the address of an android_tts_engine_t library.
- */
-extern android_tts_engine_t *android_getTtsEngine();
 
-/* Including the old version for legacy support.
- * This should return the same thing as android_getTtsEngine.
- */
-extern android_tts_engine_t *getTtsEngine();
 
 // A callback type used to notify the framework of new synthetized
 // audio samples, status will be SYNTH_DONE for the last sample of
@@ -118,8 +112,8 @@ typedef android_tts_callback_status_t (*android_tts_synth_cb_t)
              uint32_t trackSamplingHz,
              android_tts_audio_format_t audioFormat,
              int channelCount,
-             int8_t **pAudioBuffer,
-             size_t *pBufferSize,
+             int8_t *pAudioBuffer,
+             size_t pBufferSize,
              android_tts_synth_status_t status);
 
 
@@ -315,5 +309,10 @@ struct android_tts_engine_funcs_t {
 #ifdef __cplusplus
 }
 #endif
+
+/* This function must be located in the TTS Engine shared library
+ * and must return the address of an android_tts_engine_t library.
+ */
+extern std::unique_ptr<android_tts_engine_t> android_getTtsEngine();
 
 #endif /* ANDROID_TTS_H */

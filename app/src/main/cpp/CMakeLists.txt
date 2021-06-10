@@ -55,11 +55,9 @@ add_library( ttsflite
              # all dependent library objects need to be compile via -fPIC
              SHARED
 
-             # Provides a relative path to your source file(s).
              edu_cmu_cs_speech_tts_flite_engine.cc
              edu_cmu_cs_speech_tts_flite_service.cc
              edu_cmu_cs_speech_tts_flite_voices.cc
-             edu_cmu_cs_speech_tts_string.cc
         )
 
 # Specifies libraries CMake should link to your target library. You

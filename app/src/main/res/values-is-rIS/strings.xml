@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Símarómur</string>
+    <string name="eng_sample">This is a sample English sentence for Símarómur synthesizer.</string>
+    <string name="indic_sample">हिंदी भारत की राष्ट्रभाषा है।  मराठी ही महाराष्ट्र राज्याची अधिकृत भाषा आहे.</string>
+    <string name="simaromur_manager">Símarómur</string>
+    <string name="simaromur_voice_manager">Símarómur Raddir</string>
+    <string name="voice_list_update">Download Voice List</string>
+    <string name="todo">TODO</string>
+    <string name="speak_button">Spila</string>
+    <string name="voice_test_text">Innanlandssmitið sem greindist utan sóttkvíar í gær sýnir að veiran er ekki horfin úr samfélaginu</string>
+    <string name="voice_lang_title">Tungumál</string>
+    <string name="voice_name_title">Nafn</string>
+    <string name="voice_gender_title">Kyn</string>
+    <string name="voice_availability_title">Staða</string>
+    <string name="speak_voice_title">Spila</string>
+    <string name="play_voice_title_description">Speak the shown text</string>
+    <string name="is_IS">Íslenska</string>
+    <string name="en_EN">Enska</string>
+    <string name="en_US">Enska</string>
+</resources>

@@ -14,5 +14,5 @@ import com.grammatek.simaromur.frontend.TTSUnicodeNormalizer;
 import java.util.List;
 
 public class UnitTestSampleJava {
-
+    
 }

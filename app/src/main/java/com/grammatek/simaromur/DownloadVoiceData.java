@@ -64,7 +64,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 /* Download user-requested voice data for Flite
- * 
+ *
  */
 public class DownloadVoiceData extends ListActivity {
 	private static final int PERMISSION_REQUEST_CODE = 1;
@@ -87,13 +87,7 @@ public class DownloadVoiceData extends ListActivity {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-
 		unregisterReceiver(onComplete);
-	}
-
-	public void onResume() {
-		super.onResume();
-		mListAdapter.refresh();
 	}
 
 	@Override
@@ -253,9 +247,8 @@ public class DownloadVoiceData extends ListActivity {
 	}
 
 	private void requestPermission() {
-
 		if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-			Toast.makeText(this, "Write External Storage permission allows us to do store images. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
+			Toast.makeText(this, "Write External Storage permission allows us to store voices. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
 		} else {
 			ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
 		}

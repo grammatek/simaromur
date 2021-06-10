@@ -14,7 +14,8 @@
         android:layout_height="96.0dip"
         android:background="@drawable/dashboard_button_background"
         android:scaleType="fitCenter"
-        app:tint="#40C0FF" />
+        app:tint="#40C0FF"
+        android:contentDescription="@string/todo" />
 
     <TextView
        android:id="@+id/dashboard_icon_text"
