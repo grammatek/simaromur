@@ -96,6 +96,12 @@ android {
 }
 
 dependencies {
+
+    //implementation files('libs/opennlp-tools-1.9.3.jar')
+    implementation files('libs/opennlp-tools-1.6.0.jar')
+    implementation files('libs/opennlp-tools-1.6.0.jar')
+    implementation 'org.apache.commons:commons-collections4:4.4'
+
     implementation 'androidx.coordinatorlayout:coordinatorlayout:1.1.0'
 
     // Core library
