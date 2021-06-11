@@ -26,7 +26,7 @@ public class VoiceViewModel extends AndroidViewModel {
 
     public VoiceViewModel(Application application) {
         super(application);
-        mRepository = new AppRepository(application);
+        mRepository = App.getAppRepository();
     }
 
     // Return application data

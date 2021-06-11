@@ -15,11 +15,15 @@ import java.util.concurrent.Executors;
 
 public class App extends Application {
     ExecutorService executorService = Executors.newFixedThreadPool(4);
+    AppRepository mAppRepository;
 
     private static App sApplication;
 
     public static App getApplication() {
         return sApplication;
+    }
+    public static AppRepository getAppRepository() {
+        return sApplication.mAppRepository;
     }
 
     public static Context getContext() {
@@ -130,5 +134,6 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         sApplication = this;
+        mAppRepository = new AppRepository(this);
     }
 }
