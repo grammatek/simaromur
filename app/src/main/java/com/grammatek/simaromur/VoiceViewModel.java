@@ -32,7 +32,7 @@ public class VoiceViewModel extends AndroidViewModel {
     // Return application data
     public AppData getAppData() {
         if (mAppData == null) {
-            mAppData = mRepository.getAppData();
+            mAppData = mRepository.getCachedAppData();
         }
         return mAppData;
     }

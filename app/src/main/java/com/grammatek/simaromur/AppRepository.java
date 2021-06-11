@@ -1,12 +1,18 @@
 package com.grammatek.simaromur;
 
 import android.app.Application;
+import android.media.AudioFormat;
 import android.media.MediaDataSource;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
+import android.speech.tts.SynthesisCallback;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 
 import com.grammatek.simaromur.db.AppData;
 import com.grammatek.simaromur.db.AppDataDao;
@@ -19,7 +25,11 @@ import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Abstracted application repository as promoted by the Architecture Guide.
@@ -27,15 +37,17 @@ import java.util.List;
  */
 public class AppRepository {
     private final static String LOG_TAG = "Simaromur_" + AppRepository.class.getSimpleName();
-    private AppDataDao mAppDataDao;
-    private VoiceDao mVoiceDao;
-    private AppData mAppData;
+    private final AppDataDao mAppDataDao;
+    private final VoiceDao mVoiceDao;
+    private LiveData<AppData> mAppData;
     private LiveData<List<com.grammatek.simaromur.db.Voice>> mAllVoices;
-    private VoiceController mTiroVoiceController;
-    private SpeakController mTiroSpeakController;
+    private AppData mCachedAppData;
+    private List<com.grammatek.simaromur.db.Voice> mAllCachedVoices;
+    private final VoiceController mTiroVoiceController;
+    private final SpeakController mTiroSpeakController;
     private List<VoiceResponse> mTiroVoices;
-    private ApiDbUtil mApiDbUtil;
-    private MediaPlayer mMediaPlayer;
+    private final ApiDbUtil mApiDbUtil;
+    private final MediaPlayer mMediaPlayer;
 
     /**
      * Observer for Tiro voice query results.
@@ -47,7 +59,7 @@ public class AppRepository {
                 Log.v(LOG_TAG, "Tiro API returned: " + voice.VoiceId);
             }
             mTiroVoices = voices;
-            new updateVoicesAsyncTask(mApiDbUtil).execute(voices);
+            new updateVoicesAsyncTask(mApiDbUtil).execute(mTiroVoices);
         }
         public void error(String errorMsg) {
             Log.e(LOG_TAG, "TiroVoiceQueryObserver()::error: " + errorMsg);
@@ -100,6 +112,7 @@ public class AppRepository {
                     mMediaPlayer.setDataSource(dataSource);
                     mMediaPlayer.prepare();
                     mMediaPlayer.start();
+                    // @todo: implement MediaPlayer completion callbacks for visual feedback
                 } catch (IOException ex) {
                     String s = ex.toString();
                     ex.printStackTrace();
@@ -109,6 +122,42 @@ public class AppRepository {
             Log.e(LOG_TAG, "TiroAudioPlayObserver()::error: " + errorMsg);
         }
     }
+
+    static class TiroTtsObserver implements SpeakController.AudioObserver {
+        SynthesisCallback m_synthCb;
+        public TiroTtsObserver(SynthesisCallback synthCb) { m_synthCb = synthCb; }
+        public void update(byte[] ttsData) {
+            Log.v(LOG_TAG, "TiroTtsObserver: Tiro API returned: " + ttsData.length + " bytes");
+            if (ttsData.length == 0) {
+                playSilence();
+                return;
+            }
+            m_synthCb.start(22050, AudioFormat.ENCODING_PCM_16BIT, 1);
+            final int maxBytes = m_synthCb.getMaxBufferSize();
+            Log.v(LOG_TAG, "TiroTtsObserver: maxBufferSize = " + maxBytes);
+            int offset = 0;
+            while (offset < ttsData.length) {
+                Log.v(LOG_TAG, "TiroTtsObserver: offset = " + offset);
+                final int bytesConsumed = Math.min(maxBytes, (ttsData.length - offset));
+                m_synthCb.audioAvailable(ttsData, offset, bytesConsumed);
+                offset += bytesConsumed;
+            }
+            m_synthCb.done();
+        }
+        public void error(String errorMsg) {
+            Log.e(LOG_TAG, "TiroTtsObserver()::error: " + errorMsg);
+            playSilence();
+        }
+
+        private void playSilence() {
+            Log.v(LOG_TAG, "TiroTtsObserver()::playing silence ...");
+            m_synthCb.start(22050, AudioFormat.ENCODING_PCM_16BIT, 1);
+            byte[] silenceData = new byte[m_synthCb.getMaxBufferSize()];
+            m_synthCb.audioAvailable(silenceData, 0, silenceData.length);
+            m_synthCb.done();
+        }
+    }
+
     // Note that in order to unit test the AppRepository, you have to remove the Application
     // dependency.
     public AppRepository(Application application) {
@@ -119,19 +168,44 @@ public class AppRepository {
         mTiroSpeakController = new SpeakController();
         mTiroVoiceController = new VoiceController();
         mMediaPlayer = new MediaPlayer();
+        mAllVoices = mVoiceDao.getAllVoices();
+        mAllCachedVoices = new ArrayList<>();
+        getAllVoices().observeForever(voices -> {
+            Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
+            // Update cached voices
+            mAllCachedVoices = voices;
+        });
+        getAppData().observeForever(appData -> {
+            Log.v(LOG_TAG, "onChanged - appData currentVoice: " + appData);
+            // Update cached appData
+            mCachedAppData = appData;
+        });
+        // send request far all available Tiro voices
+        streamTiroVoices("");
     }
 
     /**
      * Returns AppData
      *
-     * @return  single instance of the AppData
+     * @return  single instance of the AppData as LiveData
      */
-    public AppData getAppData() {
+    public LiveData<AppData> getAppData() {
         Log.v(LOG_TAG, "getAppData");
         if (mAppData == null) {
-            mAppData = mAppDataDao.getAppData();
+            mAppData = mAppDataDao.getLiveAppData();
         }
         return mAppData;
+    }
+
+    /**
+     * Returns observed/cached AppData
+     *
+     * @return  single instance of the AppData
+     */
+    public AppData getCachedAppData() {
+        Log.v(LOG_TAG, "getCachedAppData");
+        assert(mCachedAppData.appDataId != 0);
+        return mCachedAppData;
     }
 
     /**
@@ -145,6 +219,17 @@ public class AppRepository {
             mAllVoices = mVoiceDao.getAllVoices();
         }
         return mAllVoices;
+    }
+
+    /**
+     * Returns list of all observed/cached voices. If there are any changes in the model,
+     * this list will be updated.
+     *
+     * @return  list of all cached voices
+     */
+    public final List<com.grammatek.simaromur.db.Voice> getCachedVoices() {
+        Log.v(LOG_TAG, "getCachedVoices");
+        return mAllCachedVoices;
     }
 
     /**
@@ -201,6 +286,22 @@ public class AppRepository {
     }
 
     /**
+     * Request to Tiro TTS to return audio and call Android TTS asynchronously.
+     *
+     * @param voiceId   the voice name identifier of the TTS API
+     * @param text      text to speak
+     * @param langCode  language code, e.g. "is-IS"
+     * @param speed     speed to use for the voice audio
+     * @param pitch     pitch to use for the voice audio
+     */
+    public void startTiroTts(SynthesisCallback synthCb, String voiceId, String text, String langCode, float speed, float pitch) {
+        final String KHZ_22 = "22050";
+        SpeakRequest request = new SpeakRequest("standard", langCode,
+                "pcm", KHZ_22, text, "text", voiceId);
+        mTiroSpeakController.streamAudio(request , new TiroTtsObserver(synthCb));
+    }
+
+    /**
      * Insert a voice into the db.
      *
      * @param voice Voice to be saved into db
@@ -208,6 +309,149 @@ public class AppRepository {
     public void insertVoice(com.grammatek.simaromur.db.Voice voice) {
         Log.v(LOG_TAG, "insertVoice");
         new insertVoiceAsyncTask(mVoiceDao).execute(voice);
+    }
+
+    /**
+     * Maps ISO 639-3 language / ISO 3166 ALPHA3 country code to
+     *      ISO 639-1 language / ISO 3166 ALPHA1 country code.
+     * This is necessary, because Android service uses the former, but we use the latter in our
+     * models.
+     * This Map only contains supported languages.
+     */
+    static final Map<String, String> LangCodeMap = new HashMap<>();
+    static {
+        LangCodeMap.put("isl", "is-IS");
+        LangCodeMap.put("islISL", "is-IS");
+        LangCodeMap.put("en", "en-US");
+        LangCodeMap.put("enUS", "en-US");
+    }
+
+    /**
+     * @todo: this method gets called right at the beginning of a speak request, but I am not sure,
+     *         how we can use this function, because we already populate our voices
+     *        at Application start ... we could refresh the list, make a network request to see,
+     *        if the appropriate list is up-to-date, or similar ...
+     *
+     */
+    public void loadLanguages() {
+        Log.v(LOG_TAG, "loadLanguages()");
+        //streamTiroVoices("");
+        // this is async.
+    }
+
+    /**
+     * Loads given voice, e.g. from disk. Can also to network request to see, if the voice is
+     * available.
+     *
+     * @param voiceName     Name of the voice to load
+     *
+     * @return  TextToSpeech.SUCCESS in case operation successful, TextToSpeech.ERROR otherwise
+     *
+     * @note : Is called on the synthesis thread, so it's safe to call even DB-methods here
+     */
+    public int loadVoice(String voiceName) {
+        Log.v(LOG_TAG, "loadVoice: (" + voiceName + ")");
+        List<Voice> voices = mVoiceDao.getAnyVoices();
+        for (final Voice voice:voices) {
+            if (voice.name.equals(voiceName)) {
+                Log.v(LOG_TAG, "SUCCESS");
+                return TextToSpeech.SUCCESS;
+            }
+        }
+        Log.v(LOG_TAG, "ERROR");
+        return TextToSpeech.ERROR;
+    }
+
+    /**
+     * Use our DB model to query availability of voices.
+     *
+     * @param language  ISO 639-3 language code, passed from Android
+     * @param country   ISO 3166 ALPHA3 country code, passed from Android
+     * @param variant   Language variant, passed from Android
+     *
+     * @return -2 .. 2, depending on availability, @see LangCodeMap
+     */
+    public int isLanguageAvailable(String language, String country, String variant) {
+        Log.v(LOG_TAG, "isLanguageAvailable: (" + language + "/" + country + "/" + variant + ")");
+
+        int la = TextToSpeech.LANG_NOT_SUPPORTED;
+        List<Voice> availableVoicesList = getCachedVoices();
+
+        if (availableVoicesList.isEmpty()) {
+            Log.v(LOG_TAG, "No voices registered yet");
+            return TextToSpeech.ERROR_NOT_INSTALLED_YET;
+        }
+
+        final String combinedLangCountry = language+country;
+        List<Voice> voices = new ArrayList<>();
+        if (LangCodeMap.containsKey(combinedLangCountry)) {
+            // query voice db for available languages, we need to have this already filled
+            final String langCode = LangCodeMap.get(combinedLangCountry);
+            for (final Voice voice:availableVoicesList){
+                if (voice.languageCode.equals(langCode)) {
+                    Log.v(LOG_TAG, "isLanguageAvailable: lang/country matches for voice "
+                            + voice.name);
+                    voices.add(voice);
+                }
+            }
+        }
+
+        if (! voices.isEmpty()) {
+            la = TextToSpeech.LANG_COUNTRY_AVAILABLE;
+            if (variant.equals("")) {
+                la = TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE;
+            }
+        }
+        Log.v(LOG_TAG, "isLanguageAvailable: returns " + la);
+        return la;
+    }
+
+    public String getDefaultVoiceFor(String language, String country, String variant) {
+        Log.v(LOG_TAG, "getDefaultVoiceFor: (" + language + "/" + country + "/" + variant + ")");
+        String rv = new String("");
+        final Map<String, String> favoriteVoices = Map.of(
+                "is-Is", "Alvur",
+                "en-EN", "Joanna",
+                "en-US", "Joanna"
+        );
+
+        final String combinedLangCountry = language+country;
+        if (LangCodeMap.containsKey(combinedLangCountry)) {
+            final String langCode = LangCodeMap.get(combinedLangCountry);
+            Log.v(LOG_TAG, "Language " + langCode + " supported");
+            List<Voice> availableVoicesList = getCachedVoices();
+            long curVoiceId = mCachedAppData.currentVoiceId;
+
+            for (Voice voice : availableVoicesList) {
+                if (voice.languageCode.equals(langCode)) {
+                    rv = voice.name;
+
+                    // currently set voice
+                    if (curVoiceId == voice.voiceId) {
+                        Log.v(LOG_TAG, "Currently set voice for language found");
+                        rv = voice.name;
+                    }
+                    // favourite voice
+                    if (favoriteVoices.containsKey(langCode) &&
+                            Objects.equals(favoriteVoices.get(langCode), voice.name)) {
+                        rv = voice.name;
+                        Log.v(LOG_TAG, "Favourite voice \""+ voice.name + "\" found");
+                        break;
+                    }
+                }
+            }
+        }
+        Log.v(LOG_TAG, "default voice set to " + rv);
+        return rv;
+    }
+
+    private void waitABit(long millis) {
+        try            {
+            Thread.sleep(millis);
+        }
+        catch(InterruptedException ex)            {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static class insertVoiceAsyncTask extends AsyncTask<com.grammatek.simaromur.db.Voice, Void, Void> {
