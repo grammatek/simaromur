@@ -135,8 +135,15 @@ public class SpeakController implements Callback<ResponseBody> {
                 e.printStackTrace();
             }
         } else {
-            Log.e(LOG_TAG, "API Error: " + response.errorBody());
-            mAudioObserver.error(response.message());
+            String errMsg = "";
+            try {
+                assert response.errorBody() != null;
+                errMsg = response.errorBody().string();
+                Log.e(LOG_TAG, "API Error: " + errMsg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mAudioObserver.error(errMsg);
         }
     }
 
