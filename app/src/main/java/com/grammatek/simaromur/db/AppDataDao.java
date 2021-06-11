@@ -1,5 +1,6 @@
 package com.grammatek.simaromur.db;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -21,6 +22,10 @@ public abstract class AppDataDao {
     // get the single AppData object
     @Query("SELECT * FROM app_data_table ORDER BY ROWID ASC LIMIT 1")
     public abstract AppData getAppData();
+
+    // get the single AppData object as LiveData
+    @Query("SELECT * FROM app_data_table ORDER BY ROWID ASC LIMIT 1")
+    public abstract LiveData<AppData> getLiveAppData();
 
     /**
      * Updates current voice in AppData table.
