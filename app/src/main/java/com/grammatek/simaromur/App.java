@@ -9,6 +9,8 @@ import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.os.Build;
 
+import com.grammatek.simaromur.frontend.NormalizationManager;
+
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,6 +20,8 @@ public class App extends Application {
 
     private static App sApplication;
 
+    private NormalizationManager mNormalizationManager;
+
     public static App getApplication() {
         return sApplication;
     }
@@ -25,6 +29,7 @@ public class App extends Application {
     public static Context getContext() {
         return getApplication().getApplicationContext();
     }
+
 
     public static String getAbsoluteFilePath(String relativePath) {
         if (Utility.isExternalStorageWritable()) {
@@ -47,6 +52,10 @@ public class App extends Application {
         } else {
             return new File(getContext().getFilesDir(), relativePath).getParent();
         }
+    }
+
+    public NormalizationManager getNormalizationManager() {
+        return mNormalizationManager;
     }
 
     /**
@@ -130,5 +139,6 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         sApplication = this;
+        mNormalizationManager = new NormalizationManager(this.getBaseContext());
     }
 }
