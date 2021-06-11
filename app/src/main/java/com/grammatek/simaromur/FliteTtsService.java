@@ -61,70 +61,40 @@ import java.util.Set;
  */
 public class FliteTtsService extends TextToSpeechService {
     private final static String LOG_TAG = "Simaromur_Java_" + FliteTtsService.class.getSimpleName();
-    private NativeFliteTTS mEngine;
     private FrontendManager mFrontendManager;
-
-    private static final String DEFAULT_LANGUAGE = "isl";
-    private static final String DEFAULT_COUNTRY = "ISL";
-    private static final String DEFAULT_VARIANT = "Alfur";
-
-    private String mCountry = DEFAULT_COUNTRY;
-    private String mLanguage = DEFAULT_LANGUAGE;
-    private String mVariant = DEFAULT_VARIANT;
-    private SynthesisCallback mCallback;
     private AppRepository mRepository;
 
     @Override
     public void onCreate() {
-        //mRepository = new AppRepository(App.getApplication());
         mRepository = App.getAppRepository();
-        //initializeFliteEngine();
         initializeFrontendManager(this);
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
     }
 
-    /*
-    private void initializeFliteEngine() {
-        if (mEngine != null) {
-            mEngine.stop();
-            mEngine = null;
-        }
-        mEngine = new NativeFliteTTS(this, mSynthCallback);
-    }
-    */
     private void initializeFrontendManager(Context context) {
         if (mFrontendManager == null)
             mFrontendManager = new FrontendManager(context);
-    }
-
-    // mandatory for API < 18, but deprecated later on
-    @Override
-    protected String[] onGetLanguage()
-    {
-        Log.v(LOG_TAG, "onGetLanguage");
-        return new String[] {
-                mLanguage, mCountry, mVariant
-        };
     }
 
     // mandatory
     @Override
     protected int onIsLanguageAvailable(String language, String country, String variant) {
         Log.v(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+")");
-        int retVal = mRepository.isLanguageAvailable(language, country, variant);
-        if (retVal < 0) {
-            // try engine
-            //retVal = mEngine.isLanguageAvailable(language, country, variant);
-        }
-        return retVal;
+        return mRepository.isLanguageAvailable(language, country, variant);
+    }
+
+    // @todo: seems to be deprecated, but still it's mandatory to implement it ...
+    @Override
+    protected String[] onGetLanguage() {
+        // @todo: return currently set langauge as selected from the settings menu
+        return new String[] {"isl", "ISL", ""};
     }
 
     // mandatory
     @Override
     protected int onLoadLanguage(String language, String country, String variant) {
         Log.v(LOG_TAG, "onLoadLanguage("+language+","+country+","+variant+")");
-        mRepository.loadLanguages();
         return onIsLanguageAvailable(language, country, variant);
     }
 
@@ -132,7 +102,7 @@ public class FliteTtsService extends TextToSpeechService {
     @Override
     protected void onStop() {
         Log.v(LOG_TAG, "onStop");
-        mEngine.stop();
+        // @todo stop ongoing speec request, i.e. unregister observers
     }
 
     // mandatory
@@ -153,72 +123,11 @@ public class FliteTtsService extends TextToSpeechService {
         Log.i(LOG_TAG, text + " => normalized =>" + engineInput);
         if (engineInput.isEmpty())
         {
-            // if there is nothing to speak, we don't need to access
-            //callback.done();
-            //return;
+            // @todo: if there is nothing to speak, we don't need to access the API ... ?!
             text = " ";
         }
         mRepository.startTiroTts(callback, "Bjartur", text, "is-IS", speechrate, 1.0f);
-/*
-        if (! ((mLanguage.equals(language)) &&
-                (mCountry.equals(country)) &&
-                (mVariant.equals(variant)))) {
-            result = mEngine.setLanguage(language, country, variant);
-            mLanguage = language;
-            mCountry = country;
-            mVariant = variant;
-        }
-
-        if (!result) {
-            Log.e(LOG_TAG, "Could not set language for synthesis");
-            return;
-        }
-
-        mEngine.setSpeechRate(speechrate);
-
-        mCallback = callback;
-        Integer rate = mEngine.getSampleRate();
-        Log.e(LOG_TAG, rate.toString());
-        mCallback.start(mEngine.getSampleRate(), AudioFormat.ENCODING_PCM_16BIT, 1);
-        mEngine.synthesize(text);
-
- */
     }
-/*
-    private final NativeFliteTTS.SynthReadyCallback mSynthCallback = new SynthReadyCallback() {
-        @Override
-        public void onSynthDataReady(byte[] audioData) {
-            if ((audioData == null) || (audioData.length == 0)) {
-                onSynthDataComplete();
-                return;
-            }
-
-            final int maxBytesToCopy = mCallback.getMaxBufferSize();
-
-            int offset = 0;
-
-            while (offset < audioData.length) {
-                final int bytesToWrite = Math.min(maxBytesToCopy, (audioData.length - offset));
-                mCallback.audioAvailable(audioData, offset, bytesToWrite);
-                offset += bytesToWrite;
-            }
-        }
-
-        @Override
-        public void onSynthDataComplete() {
-            mCallback.done();
-        }
-    };
-*/
-    /**
-     * Listens for language update broadcasts and initializes the flite engine.
-     */
-    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            //initializeFliteEngine();
-        }
-    };
 
     @Override
     public String onGetDefaultVoiceNameFor(String language, String country, String variant)
@@ -237,9 +146,9 @@ public class FliteTtsService extends TextToSpeechService {
         ArrayList<Voice> announcedVoiceList = new ArrayList<>();
 
         for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
-        	// languageCode is a string like "langugae-Country", so we need to regenerate language
-			// Country code
-			String[] localeParts = voice.languageCode.split("-");
+            // languageCode is a string like "langugae-Country", so we need to regenerate language
+            // Country code
+            String[] localeParts = voice.languageCode.split("-");
             Locale locale = new Locale(localeParts[0], localeParts[1]);
             int quality = Voice.QUALITY_NORMAL;
             int latency = Voice.LATENCY_LOW;
@@ -287,13 +196,13 @@ public class FliteTtsService extends TextToSpeechService {
     public int onIsValidVoiceName(String name)
     {
         Log.v(LOG_TAG, "onIsValidVoiceName("+name+")");
-		for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
-			if (voice.name.equals(name)) {
-				Log.v(LOG_TAG, "SUCCESS");
-				return TextToSpeech.SUCCESS;
-			}
-		}
-		Log.v(LOG_TAG, "ERROR");
+        for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
+            if (voice.name.equals(name)) {
+                Log.v(LOG_TAG, "SUCCESS");
+                return TextToSpeech.SUCCESS;
+            }
+        }
+        Log.v(LOG_TAG, "ERROR");
         return TextToSpeech.ERROR;
     }
 

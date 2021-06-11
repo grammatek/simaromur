@@ -327,19 +327,6 @@ public class AppRepository {
     }
 
     /**
-     * @todo: this method gets called right at the beginning of a speak request, but I am not sure,
-     *         how we can use this function, because we already populate our voices
-     *        at Application start ... we could refresh the list, make a network request to see,
-     *        if the appropriate list is up-to-date, or similar ...
-     *
-     */
-    public void loadLanguages() {
-        Log.v(LOG_TAG, "loadLanguages()");
-        //streamTiroVoices("");
-        // this is async.
-    }
-
-    /**
      * Loads given voice, e.g. from disk. Can also to network request to see, if the voice is
      * available.
      *
