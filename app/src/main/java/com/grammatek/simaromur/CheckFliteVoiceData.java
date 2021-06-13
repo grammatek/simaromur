@@ -146,8 +146,8 @@ public class CheckVoiceData extends Activity {
                 unavailable.add(vox.getName());
             }
         }
-        returnData.putStringArrayListExtra("availableVoices", available);
-        returnData.putStringArrayListExtra("unavailableVoices", unavailable);
+        returnData.putStringArrayListExtra(TextToSpeech.Engine.EXTRA_AVAILABLE_VOICES, available);
+        returnData.putStringArrayListExtra(TextToSpeech.Engine.EXTRA_UNAVAILABLE_VOICES, unavailable);
         setResult(result, returnData);
         finish();
     }
