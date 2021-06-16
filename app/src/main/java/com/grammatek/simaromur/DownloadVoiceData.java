@@ -43,7 +43,6 @@ import android.app.DownloadManager;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.BroadcastReceiver;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -104,7 +103,7 @@ public class DownloadVoiceData extends ListActivity {
 		Toast toast = Toast.makeText(mContext, "Downloading Voice List", Toast.LENGTH_SHORT);
 		toast.show();
 
-		Thread thread = new Thread(() -> CheckVoiceData.DownloadVoiceList(() -> runOnUiThread(() -> mListAdapter.refresh())));
+		Thread thread = new Thread(() -> CheckFliteVoiceData.DownloadVoiceList(() -> runOnUiThread(() -> mListAdapter.refresh())));
 
 		thread.start();
 		return true;
@@ -121,16 +120,16 @@ public class DownloadVoiceData extends ListActivity {
 			mInflater = LayoutInflater.from(mContext);
 
 			// Get Information about voices
-			mVoiceList = CheckVoiceData.getVoices();
+			mVoiceList = CheckFliteVoiceData.getVoices();
 
 			if (mVoiceList.isEmpty()) {
-				Intent intent = new Intent(mContext, CheckVoiceData.class);
+				Intent intent = new Intent(mContext, CheckFliteVoiceData.class);
 		        startActivity(intent);
 			}
 		}
 
 		public void refresh() {
-			mVoiceList = CheckVoiceData.getVoices();
+			mVoiceList = CheckFliteVoiceData.getVoices();
 			notifyDataSetChanged();
 		}
 
