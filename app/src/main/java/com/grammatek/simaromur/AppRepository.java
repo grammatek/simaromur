@@ -9,10 +9,7 @@ import android.speech.tts.SynthesisCallback;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
-import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 
 import com.grammatek.simaromur.db.AppData;
 import com.grammatek.simaromur.db.AppDataDao;
@@ -26,7 +23,6 @@ import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,6 +44,10 @@ public class AppRepository {
     private List<VoiceResponse> mTiroVoices;
     private final ApiDbUtil mApiDbUtil;
     private final MediaPlayer mMediaPlayer;
+    static final int SAMPLE_RATE_WAV= 22050;
+    static final int SAMPLE_RATE_MP3= 22050;
+    // this saves the voice name to use for the next speech synthesis
+    private Voice mSelectedVoice;
 
     /**
      * Observer for Tiro voice query results.
@@ -132,7 +132,7 @@ public class AppRepository {
                 playSilence();
                 return;
             }
-            m_synthCb.start(22050, AudioFormat.ENCODING_PCM_16BIT, 1);
+            m_synthCb.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, 1);
             final int maxBytes = m_synthCb.getMaxBufferSize();
             Log.v(LOG_TAG, "TiroTtsObserver: maxBufferSize = " + maxBytes);
             int offset = 0;
@@ -151,7 +151,7 @@ public class AppRepository {
 
         private void playSilence() {
             Log.v(LOG_TAG, "TiroTtsObserver()::playing silence ...");
-            m_synthCb.start(22050, AudioFormat.ENCODING_PCM_16BIT, 1);
+            m_synthCb.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, 1);
             byte[] silenceData = new byte[m_synthCb.getMaxBufferSize()];
             m_synthCb.audioAvailable(silenceData, 0, silenceData.length);
             m_synthCb.done();
@@ -271,9 +271,9 @@ public class AppRepository {
      * @param pitch     pitch to use for the voice audio
      */
     public void startTiroSpeak(String voiceId, String text, String langCode, float speed, float pitch) {
-        final String KHZ_22 = "22050";
+        final String SampleRate = "" + SAMPLE_RATE_MP3;
         SpeakRequest request = new SpeakRequest("standard", langCode,
-                "mp3", KHZ_22, text, "text", voiceId);
+                "mp3", SampleRate, text, "text", voiceId);
         mTiroSpeakController.streamAudio(request , new TiroAudioPlayObserver());
     }
 
@@ -288,17 +288,22 @@ public class AppRepository {
     /**
      * Request to Tiro TTS to return audio and call Android TTS asynchronously.
      *
-     * @param voiceId   the voice name identifier of the TTS API
+     * @param synthCb   The Synthesize callback to use
+     * @param voice     The voice to use
      * @param text      text to speak
-     * @param langCode  language code, e.g. "is-IS"
      * @param speed     speed to use for the voice audio
      * @param pitch     pitch to use for the voice audio
      */
-    public void startTiroTts(SynthesisCallback synthCb, String voiceId, String text, String langCode, float speed, float pitch) {
-        final String KHZ_22 = "22050";
-        SpeakRequest request = new SpeakRequest("standard", langCode,
-                "pcm", KHZ_22, text, "text", voiceId);
-        mTiroSpeakController.streamAudio(request , new TiroTtsObserver(synthCb));
+    public void startTiroTts(SynthesisCallback synthCb, Voice voice, String text, float speed, float pitch) {
+        // map given voice to voiceId
+        if (voice != null) {
+            final String SampleRate = "" + SAMPLE_RATE_WAV;
+            SpeakRequest request = new SpeakRequest("standard", voice.languageCode,
+                    "pcm", SampleRate, text, "text", voice.internalName);
+            mTiroSpeakController.streamAudio(request , new TiroTtsObserver(synthCb));
+        } else {
+            Log.e(LOG_TAG, "startTiroTts: given voice is null ?!");
+        }
     }
 
     /**
@@ -309,21 +314,6 @@ public class AppRepository {
     public void insertVoice(com.grammatek.simaromur.db.Voice voice) {
         Log.v(LOG_TAG, "insertVoice");
         new insertVoiceAsyncTask(mVoiceDao).execute(voice);
-    }
-
-    /**
-     * Maps ISO 639-3 language / ISO 3166 ALPHA3 country code to
-     *      ISO 639-1 language / ISO 3166 ALPHA1 country code.
-     * This is necessary, because Android service uses the former, but we use the latter in our
-     * models.
-     * This Map only contains supported languages.
-     */
-    static final Map<String, String> LangCodeMap = new HashMap<>();
-    static {
-        LangCodeMap.put("isl", "is-IS");
-        LangCodeMap.put("islISL", "is-IS");
-        LangCodeMap.put("en", "en-US");
-        LangCodeMap.put("enUS", "en-US");
     }
 
     /**
@@ -342,6 +332,8 @@ public class AppRepository {
         for (final Voice voice:voices) {
             if (voice.name.equals(voiceName)) {
                 Log.v(LOG_TAG, "SUCCESS");
+                mSelectedVoice = voice;
+                mAppDataDao.selectCurrentVoice(voice);
                 return TextToSpeech.SUCCESS;
             }
         }
@@ -356,36 +348,42 @@ public class AppRepository {
      * @param country   ISO 3166 ALPHA3 country code, passed from Android
      * @param variant   Language variant, passed from Android
      *
-     * @return -2 .. 2, depending on availability, @see LangCodeMap
+     * @return -2 .. 2, depending on availability
      */
     public int isLanguageAvailable(String language, String country, String variant) {
         Log.v(LOG_TAG, "isLanguageAvailable: (" + language + "/" + country + "/" + variant + ")");
 
-        int la = TextToSpeech.LANG_NOT_SUPPORTED;
-        List<Voice> availableVoicesList = getCachedVoices();
+        final List<Voice> availableVoicesList = getCachedVoices();
 
         if (availableVoicesList.isEmpty()) {
             Log.v(LOG_TAG, "No voices registered yet");
             return TextToSpeech.ERROR_NOT_INSTALLED_YET;
         }
 
-        final String combinedLangCountry = language+country;
-        List<Voice> voices = new ArrayList<>();
-        if (LangCodeMap.containsKey(combinedLangCountry)) {
-            // query voice db for available languages, we need to have this already filled
-            final String langCode = LangCodeMap.get(combinedLangCountry);
-            for (final Voice voice:availableVoicesList){
-                if (voice.languageCode.equals(langCode)) {
-                    Log.v(LOG_TAG, "isLanguageAvailable: lang/country matches for voice "
-                            + voice.name);
-                    voices.add(voice);
+        boolean supportsLanguage = false;
+        boolean supportsVariant = false;
+        boolean supportsCountry = false;
+
+        for (final Voice voice:availableVoicesList){
+            if (voice.supportsIso3(language, country, variant)) {
+                supportsLanguage = true;
+                if (!variant.isEmpty()) {
+                    supportsVariant = true;
+                    // no more need to iterate further
+                    break;
+                } else if (!country.isEmpty()) {
+                    supportsCountry = true;
                 }
             }
         }
 
-        if (! voices.isEmpty()) {
-            la = TextToSpeech.LANG_COUNTRY_AVAILABLE;
-            if (variant.equals("")) {
+        int la = TextToSpeech.LANG_NOT_SUPPORTED;
+        if (supportsLanguage) {
+            la = TextToSpeech.LANG_AVAILABLE;
+            if (supportsCountry) {
+                la = TextToSpeech.LANG_COUNTRY_AVAILABLE;
+            }
+            if (supportsVariant) {
                 la = TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE;
             }
         }
@@ -393,43 +391,75 @@ public class AppRepository {
         return la;
     }
 
-    public String getDefaultVoiceFor(String language, String country, String variant) {
-        Log.v(LOG_TAG, "getDefaultVoiceFor: (" + language + "/" + country + "/" + variant + ")");
-        String rv = new String("");
-        final Map<String, String> favoriteVoices = Map.of(
-                "is-Is", "Alvur",
-                "en-EN", "Joanna",
-                "en-US", "Joanna"
-        );
+    /**
+     * Get the name of the voice for given values. Parameter iso3Language is mandatory,
+     * iso3Country and variant are optional. In case not all parameters are given, we hard-code
+     * here directly, which voice is our default voice for given iso3Language/iso3Country.
+     *
+     * @param iso3Language  Iso3 language
+     * @param iso3Country   Iso3 country
+     * @param variant   variant
+     *
+     * @return  name of default voice for given parameter
+     */
+    public String getDefaultVoiceFor(String iso3Language, String iso3Country, String variant) {
+        Log.v(LOG_TAG, "getDefaultVoiceFor: (" + iso3Language + "/" + iso3Country + "/" + variant + ")");
+        String rv = null;
 
-        final String combinedLangCountry = language+country;
-        if (LangCodeMap.containsKey(combinedLangCountry)) {
-            final String langCode = LangCodeMap.get(combinedLangCountry);
-            Log.v(LOG_TAG, "Language " + langCode + " supported");
-            List<Voice> availableVoicesList = getCachedVoices();
-            long curVoiceId = mCachedAppData.currentVoiceId;
-
-            for (Voice voice : availableVoicesList) {
-                if (voice.languageCode.equals(langCode)) {
-                    rv = voice.name;
-
-                    // currently set voice
-                    if (curVoiceId == voice.voiceId) {
-                        Log.v(LOG_TAG, "Currently set voice for language found");
-                        rv = voice.name;
-                    }
-                    // favourite voice
-                    if (favoriteVoices.containsKey(langCode) &&
-                            Objects.equals(favoriteVoices.get(langCode), voice.name)) {
-                        rv = voice.name;
-                        Log.v(LOG_TAG, "Favourite voice \""+ voice.name + "\" found");
-                        break;
+        if (mSelectedVoice != null) {
+            Log.d(LOG_TAG, "getDefaultVoiceFor: selected voice not yet loaded");
+            Long curVoiceId = mAppDataDao.getCurrentVoiceId();
+            if (curVoiceId != 0) {
+                for (final Voice voice : getCachedVoices()) {
+                    if (voice.voiceId == curVoiceId) {
+                        mSelectedVoice = voice;
                     }
                 }
             }
         }
-        Log.v(LOG_TAG, "default voice set to " + rv);
+
+        /* Favor our selected voice before falling back to other choices */
+        if (mSelectedVoice != null && mSelectedVoice.supportsIso3(iso3Language, iso3Country, variant)) {
+            return mSelectedVoice.name;
+        }
+
+        Log.v(LOG_TAG, "getDefaultVoiceFor: not matching selected voice");
+
+        for (final Voice voice : getCachedVoices()) {
+            // if the voice is the exact fit for given parameters, return it directly
+            if (voice.supportsIso3(iso3Language, iso3Country, variant)) {
+                rv = voice.name;
+                break;
+            }
+        }
+        Log.v(LOG_TAG, "chosen default voice: (" + rv + ")");
         return rv;
+    }
+
+    Voice getVoiceForName(String name) {
+        for (final Voice voice : getCachedVoices()) {
+            if (voice.name.equals(name)) {
+                return voice;
+            }
+        }
+        return null;
+    }
+
+    Voice getVoiceForLocale(String iso3Language, String iso3Country, String variant) {
+        for (final Voice voice : getCachedVoices()) {
+            // if the voice is the exact fit for given parameters, return it directly
+            if (voice.supportsIso3(iso3Language, iso3Country, variant)) {
+                return voice;
+            }
+        }
+        return null;
+    }
+
+    String getLoadedVoiceName() {
+        if (mSelectedVoice != null) {
+            return mSelectedVoice.name;
+        }
+        return "";
     }
 
     private void waitABit(long millis) {
