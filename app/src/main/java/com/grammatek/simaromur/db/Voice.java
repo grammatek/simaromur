@@ -1,5 +1,7 @@
 package com.grammatek.simaromur.db;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -7,15 +9,19 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
+import com.grammatek.simaromur.CheckSimVoices;
+
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 // Create unique index on name, language, country, variant
 @Entity(tableName = "voice_table",
         indices = {@Index(value = {"name", "gender", "language_code", "type"}, unique = true)})
 public class Voice {
-
+    private final static String LOG_TAG = "Voice" + CheckSimVoices.class.getSimpleName();
     static final List<String> voiceTypes = Arrays.asList("tiro", "clustergen", "clunits", "neural");
 
     @PrimaryKey(autoGenerate = true)
@@ -127,6 +133,7 @@ public class Voice {
                 ", internalName='" + internalName + '\'' +
                 ", languageCode='" + languageCode + '\'' +
                 ", languageName='" + languageName + '\'' +
+                ", gender='" + gender + '\'' +
                 ", variant='" + variant + '\'' +
                 ", type='" + type + '\'' +
                 ", updateTime=" + updateTime +
@@ -137,5 +144,140 @@ public class Voice {
                 ", md5Sum='" + md5Sum + '\'' +
                 ", size=" + size +
                 '}';
+    }
+
+    /**
+     * Returns boolean if voice needs network access / is network voice
+     *
+     * @return  true in case voice needs network access, false otherwise
+     */
+    public boolean needsNetwork() {
+        return (this.type.equals("tiro"));
+    }
+
+    /**
+     * Returns if given voice is available. For network voices, true is given, but no
+     * network API query is done. For local voices, the download date, size > 0 and md5Sum
+     * is checked.
+     *
+     * @return  true in case voice is available, false otherwise
+     */
+    public boolean isAvailable() {
+        boolean rv = false;
+        if (this.needsNetwork()) {
+            // network voices are supposed to be available, because these are already queried
+            // at TTS service start
+            // @todo: provide an additional Voice-based check in the AppRepository class
+            rv = true;
+        } else {
+            // local voice sanity checks ...
+            if ((this.size > 0) && ((! this.md5Sum.isEmpty()))) {
+                // Check download date to be valid
+                Calendar cal = Calendar.getInstance();
+                cal.setLenient(false);
+                cal.setTime(this.downloadTime);
+                try {
+                    cal.getTime();
+                    rv = true;
+                } catch (Exception ignored) {}
+            }
+        }
+        return rv;
+    }
+
+    /**
+     * Returns Locale of voice with language, country and name as variant.
+     *
+     * @return  locale of the voice
+     */
+    public Locale getLocale() {
+        final String[] langCountrySplit = this.languageCode.split("-");
+        return new Locale(langCountrySplit[0], langCountrySplit[1], this.name);
+    }
+
+    /**
+     * Returns the ISO-3 representation for voice as Language-Country-Name
+     *
+     * @return  String with ISO-3 encoded Language-Country-Name
+     */
+    public String iso3LangCountryName() {
+        final Locale locale = getLocale();
+        return locale.getISO3Language()
+                + "-"
+                + locale.getISO3Country()
+                + "-"
+                + this.name;
+    }
+
+    /**
+     * Returns the ISO-3 representation for voice as Language-Country-Name
+     *
+     * @return  String with ISO-3 encoded Language-Country-Name
+     */
+    public String iso2LangCountryName() {
+        String[] iso2Languages = Locale.getISOLanguages();
+        String[] iso2Countries = Locale.getISOCountries();
+        final Locale locale = getLocale();
+        return locale.getISO3Language()
+                + "-"
+                + locale.getISO3Country()
+                + "-"
+                + this.gender;
+    }
+
+    /**
+     * Returns the ISO-3 representation for voice as Language-Country-Variant
+     *
+     * @return  String with ISO-3 encoded Language-Country-Variant
+     */
+    public String iso3LangCountryVariant() {
+        final Locale locale = getLocale();
+        return locale.getISO3Language()
+                + "-"
+                + locale.getISO3Country()
+                + "-"
+                + this.variant;
+    }
+
+    /**
+     * Returns the ISO-3 representation for voice as Language-Country-Variant
+     *
+     * @return  String with ISO-3 encoded Language-Country-Variant
+     */
+    public String iso2LangCountryVariant() {
+        final Locale locale = getLocale();
+        return locale.getISO3Language()
+                + "-"
+                + locale.getISO3Country()
+                + "-"
+                + this.gender;
+    }
+    /**
+     * Checks, if given ISO-3 language, country and variant matches our voice locale.
+     * Parameters country and variant are optional, but if provided, they are used for checking.
+     *
+     * @param iso3Language  iso-3 language code
+     * @param iso3Country   iso-3 country code (optional)
+     * @param iso3Variant   language variant (optional)
+     *
+     * @return true in case given iso3 locale is supported by voice, false otherwise
+     */
+    public boolean supportsIso3(String iso3Language, String iso3Country, String iso3Variant) {
+        Locale givenLocale = new Locale(iso3Language, iso3Country, iso3Variant);
+        Locale voiceLocale = getLocale();
+        // direct comparison of Locale's not supported, if different ISO code variants are used
+        if (iso3Country.isEmpty()) {
+            // only compare language
+            return (voiceLocale.getISO3Language().equals(givenLocale.getISO3Language()));
+        } else if (iso3Variant.isEmpty()) {
+            // only compare language, country
+            return (voiceLocale.getISO3Language().equals(givenLocale.getISO3Language())
+                    && voiceLocale.getISO3Country().equals(givenLocale.getISO3Country()));
+        }
+        // compare all paramateres
+        Log.v(LOG_TAG, "supportsIso3: compare all parameters");
+        return (voiceLocale.getISO3Language().equals(givenLocale.getISO3Language())
+                && voiceLocale.getISO3Country().equals(givenLocale.getISO3Country())
+                && voiceLocale.getVariant().equals(givenLocale.getVariant()));
     }
 }
