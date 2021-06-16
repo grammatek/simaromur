@@ -1,6 +1,7 @@
 package com.grammatek.simaromur;
 
 import com.grammatek.simaromur.frontend.FrontendManager;
+import com.grammatek.simaromur.frontend.NormalizationManager;
 
 import android.content.Context;
 import android.speech.tts.SynthesisCallback;
@@ -20,22 +21,16 @@ import java.util.Set;
  */
 public class TTSService extends TextToSpeechService {
     private final static String LOG_TAG = "Simaromur_Java_" + TTSService.class.getSimpleName();
-    private FrontendManager mFrontendManager;
     private AppRepository mRepository;
 
     @Override
     public void onCreate() {
         Log.i(LOG_TAG, "onCreate()");
         mRepository = App.getAppRepository();
-        initializeFrontendManager(this);
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
     }
 
-    private void initializeFrontendManager(Context context) {
-        if (mFrontendManager == null)
-            mFrontendManager = new FrontendManager(context);
-    }
 
     // mandatory
     @Override
@@ -91,14 +86,15 @@ public class TTSService extends TextToSpeechService {
 
         com.grammatek.simaromur.db.Voice voice = mRepository.getVoiceForName(loadedVoiceName);
         if (voice != null) {
-            String engineInput = mFrontendManager.process(text);
-            Log.i(LOG_TAG, text + " => normalized =>" + engineInput);
-            if (engineInput.isEmpty()) {
-                // @todo: if there is nothing to speak, we don't need to access the API ... ?!
-                text = " ";
-            }
+            NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
+            String normalizedText = normalizationManager.process(text);
 
-            mRepository.startTiroTts(callback, voice, text, speechrate, pitch/100.0f);
+            Log.i(LOG_TAG, text + " => normalized =>" + normalizedText);
+            if (normalizedText.isEmpty()) {
+                // @todo: if there is nothing to speak, we don't need to access the API ... ?!
+                normalizedText = " ";
+            }
+            mRepository.startTiroTts(callback, voice, normalizedText, speechrate, pitch/100.0f);
         }
         else {
             Log.e(LOG_TAG, "onSynthesizeText: unsupported voice ?!");
