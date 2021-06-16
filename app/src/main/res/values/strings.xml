@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Símarómur</string>
     <string name="eng_sample">This is a sample English sentence for Símarómur synthesizer.</string>
-    <string name="indic_sample">हिंदी भारत की राष्ट्रभाषा है।  मराठी ही महाराष्ट्र राज्याची अधिकृत भाषा आहे.</string>
+    <string name="icelandic_sample">Þetta er prófunarsetning á ensku fyrir talgervilinn Símarómur.</string>
     <string name="simaromur_manager">Símarómur</string>
     <string name="simaromur_voice_manager">Símarómur Voices</string>
     <string name="voice_list_update">Download Voice List</string>
