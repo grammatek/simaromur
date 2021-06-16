@@ -11,6 +11,9 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.grammatek.simaromur.frontend.FrontendManager;
+import com.grammatek.simaromur.frontend.NormalizationManager;
+
 import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_ID;
 
 /**
@@ -95,7 +98,9 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
     public void onClick(View v) {
         Log.v(LOG_TAG, "onClick");
         String text = mUserText.getText().toString();
-        Log.v(LOG_TAG, "Text to speak: " + text);
-        mVoiceViewModel.startSpeaking(mVoice, text, 1.0f, 1.0f);
+        NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
+        String normalizedText = normalizationManager.process(text);
+        Log.v(LOG_TAG, "Text to speak: " + normalizedText);
+        mVoiceViewModel.startSpeaking(mVoice, normalizedText, 1.0f, 1.0f);
     }
 }
