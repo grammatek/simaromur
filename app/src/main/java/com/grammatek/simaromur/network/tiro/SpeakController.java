@@ -54,6 +54,7 @@ public class SpeakController implements Callback<ResponseBody> {
         if (mCall != null) {
             stop();
         }
+        Log.v(LOG_TAG, "streamAudio: request: " + request);
         mCall = buildSpeakCall(request);
         mAudioObserver = audioObserver;
         // async request execution
