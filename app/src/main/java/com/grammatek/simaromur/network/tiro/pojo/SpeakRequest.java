@@ -57,5 +57,18 @@ public class SpeakRequest {
         this.TextType = textType;
         this.VoiceId = voiceId;
     }
+
+    @Override
+    public String toString() {
+        return "SpeakRequest{" +
+                "Engine='" + Engine + '\'' +
+                ", LanguageCode='" + LanguageCode + '\'' +
+                ", OutputFormat='" + OutputFormat + '\'' +
+                ", SampleRate='" + SampleRate + '\'' +
+                ", Text='" + Text + '\'' +
+                ", TextType='" + TextType + '\'' +
+                ", VoiceId='" + VoiceId + '\'' +
+                '}';
+    }
 }
 
