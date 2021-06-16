@@ -1,15 +1,23 @@
 package com.grammatek.simaromur.frontend;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.util.Log;
 
+import com.grammatek.simaromur.App;
 import com.grammatek.simaromur.TTSDemo;
 
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -28,18 +36,23 @@ import java.util.logging.Logger;
 public class NormalizationManager {
     private final static boolean DEBUG = false;
     private final static String LOG_TAG = "Simaromur_Java_" + NormalizationManager.class.getSimpleName();
-    private static final String POS_MODEL = "is-pos-maxent.bin";
+    private static final String POS_MODEL = "is-pos-reduced-maxent.bin";
 
     private final Context mContext;
+    private final POSTaggerME mPosTagger;
     private TTSUnicodeNormalizer mUnicodeNormalizer;
     private Tokenizer mTokenizer;
     private TTSNormalizer mTTSNormalizer;
+    private String mAssetsPath;
 
     public NormalizationManager(Context context) {
         mContext = context;
         mUnicodeNormalizer = new TTSUnicodeNormalizer();
         mTokenizer = new Tokenizer(context);
         mTTSNormalizer = new TTSNormalizer();
+        mAssetsPath = new File(App.getDataPath()).getParent();
+        copyAssets("pos");
+        mPosTagger = initPOSTagger();
     }
 
     /**
@@ -49,7 +62,6 @@ public class NormalizationManager {
      * @return normalized version of 'text'
      */
     public String process(final String text) {
-
         String cleaned = mUnicodeNormalizer.normalizeEncoding(text);
         List<String> tokenized = mTokenizer.detectSentences(cleaned);
         List<String> normalizedSentences = normalize(tokenized);
@@ -69,6 +81,7 @@ public class NormalizationManager {
             // us the correct tokens according to the tokenizer
             normalized.add(mTTSNormalizer.postNormalize(preNormalized.split(" "), tags));
         }
+
         return normalized;
     }
 
@@ -83,21 +96,29 @@ public class NormalizationManager {
 
     private String[] tagText(final String text) {
         String[] tags = {};
+        String[] tokens = text.split(" ");
+        if (mPosTagger == null) {
+            //TODO: proper error handling here - what do we do if the tagger fails?
+            Log.e(LOG_TAG, "POSTagger is not initialized!");
+        }
+        tags = mPosTagger.tag(tokens);
+
+        if (DEBUG)
+            printProbabilities(tags, mPosTagger, tokens);
+
+        return tags;
+    }
+
+    private POSTaggerME initPOSTagger() {
+        POSTaggerME posTagger = null;
         try {
-            //TODO: make the model static
-            InputStream is = mContext.getAssets().open(POS_MODEL);
-            POSModel posModel = new POSModel(is);
-            POSTaggerME posTagger = new POSTaggerME(posModel);
-            String[] tokens = text.split(" ");
-            tags = posTagger.tag(tokens);
+            POSModel posModel = new POSModel(new File(mAssetsPath + "/pos/" + POS_MODEL));
+            posTagger = new POSTaggerME(posModel);
 
-            if (DEBUG)
-                printProbabilities(tags, posTagger, tokens);
-
-        } catch (IOException e) {
+        } catch(IOException e) {
             e.printStackTrace();
         }
-        return tags;
+        return posTagger;
     }
 
     // Get the probabilities of the tags given to the tokens to inspect
@@ -106,6 +127,48 @@ public class NormalizationManager {
         Log.v(LOG_TAG, "Token\t:\tTag\t:\tProbability\n--------------------------");
         for(int i=0;i<tokens.length;i++){
             Log.v(LOG_TAG, tokens[i]+"\t:\t"+tags[i]+"\t:\t"+probs[i]);
+        }
+    }
+
+    private void copyAssets(String assetSubPath) {
+        AssetManager assetManager = mContext.getAssets();
+        String[] files = null;
+        try {
+            files = assetManager.list(assetSubPath);
+            // create destination assetSubPath if not exists
+            String destDir = mAssetsPath + "/" + assetSubPath + "/";
+            try {
+                File dir = new File(destDir);
+                if (!dir.exists())
+                    dir.mkdir();
+            } catch(SecurityException e) {
+                Log.e(LOG_TAG, "Failed to create directory: " + destDir, e);
+            }
+            for(String filename : files) {
+                try {
+                    File outFile = new File(destDir, filename);
+                    OutputStream outStream = new FileOutputStream(outFile);
+                    InputStream inStream = assetManager.open(assetSubPath + "/" + filename);
+
+                    copyFile(inStream, outStream);
+                    inStream.close();
+                    outStream.flush();
+                    outStream.close();
+                    Log.i(LOG_TAG, "Copied " + filename + " to " + outFile.getAbsolutePath());
+                } catch(IOException e) {
+                    Log.e(LOG_TAG, "Failed to copy asset file: " + filename, e);
+                }
+            }
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Failed to get asset file list.", e);
+        }
+    }
+
+    private void copyFile(InputStream inStream, OutputStream outStream) throws IOException {
+        byte[] buffer = new byte[1024];
+        int read;
+        while((read = inStream.read(buffer)) != -1) {
+            outStream.write(buffer, 0, read);
         }
     }
 }
