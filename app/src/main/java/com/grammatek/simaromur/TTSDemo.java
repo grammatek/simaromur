@@ -40,7 +40,6 @@ import java.util.Locale;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -96,7 +95,7 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 			requestPermission(); // Code for permission
 		}
 
-		ArrayList<Voice> allVoices = CheckVoiceData.getVoices();
+		ArrayList<Voice> allVoices = CheckFliteVoiceData.getVoices();
 		mVoices = new ArrayList<Voice>();
 		for(Voice vox:allVoices) {
 			if (vox.isAvailable()) {
