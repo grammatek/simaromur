@@ -3,8 +3,12 @@ package com.grammatek.simaromur.frontend;
 import android.content.Context;
 import android.util.Log;
 
-import com.grammatek.simaromur.NativeG2P;
+import opennlp.tools.postag.POSModel;
+import opennlp.tools.postag.POSTaggerME;
 
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -17,14 +21,21 @@ import java.util.List;
 
 public class FrontendManager {
     private final static String LOG_TAG = "Flite_Java_" + FrontendManager.class.getSimpleName();
-    private NativeG2P mG2P;
-    private TTSUnicodeNormalizer mNormalizer;
+
+    private TTSUnicodeNormalizer mUnicodeNormalizer;
     private Tokenizer mTokenizer;
+    private Pronunciation mPronunciation;
+    private TTSNormalizer mNormalizer;
+
+    private Context mContext;
+
 
     public FrontendManager(Context context) {
-        mNormalizer = new TTSUnicodeNormalizer();
+        mUnicodeNormalizer = new TTSUnicodeNormalizer();
         initializeTokenizer(context);
-        initializeG2P(context);
+        initializePronunciation(context);
+        initializeNormalizer(context);
+        this.mContext = context;
     }
 
     /**
@@ -36,21 +47,48 @@ public class FrontendManager {
      */
     public String process(String text) {
         String processed = text;
-        String cleaned = mNormalizer.normalize_encoding(processed);
+        String cleaned = mUnicodeNormalizer.normalizeEncoding(processed);
         Log.i(LOG_TAG, text + " => " + cleaned);
         //tokenize
         List<String> sentences = mTokenizer.detectSentences(cleaned);
+        // do we need some size restrictions here? don't want to read the bible in one go ...
         String tokenized = getSentencesAsString(sentences);
         Log.i(LOG_TAG, text + " => " + tokenized);
+
+        String tagged = tagText(tokenized);
         //normalize
         //TODO
-        //transcribe: a) dictionary look-up b) g2p
-        // TODO: dictionary lookup, only send unknown words to g2p
-        String g2pText = mG2P.process(tokenized);
-        Log.i(LOG_TAG, text + " => " + g2pText);
 
-        processed = g2pText;
+        String transcribedText = mPronunciation.transcribe(tokenized);
+        Log.i(LOG_TAG, text + " => " + transcribedText);
+
+        processed = transcribedText;
         return processed;
+    }
+
+    private String tagText(String text) {
+        String tagged = text;
+        try {
+            InputStream is = mContext.getAssets().open("is-pos-maxent.bin");
+            POSModel posModel = new POSModel(is);
+            // initializing the parts-of-speech tagger with model
+            POSTaggerME posTagger = new POSTaggerME(posModel);
+
+            // Tagger tagging the tokens
+            String[] tokens = text.split(" ");
+            String tags[] = posTagger.tag(tokens);
+            // Getting the probabilities of the tags given to the tokens
+            double probs[] = posTagger.probs();
+
+            System.out.println("Token\t:\tTag\t:\tProbability\n---------------------------------------------");
+            for(int i=0;i<tokens.length;i++){
+                Log.i(LOG_TAG, tokens[i]+"\t:\t"+tags[i]+"\t:\t"+probs[i]);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return tagged;
     }
 
     // Joins the sentences into one string, separated by a white space. No further processing.
@@ -69,12 +107,16 @@ public class FrontendManager {
         }
     }
 
-    private void initializeG2P(Context context) {
-        if (mG2P != null) {
-            // @todo: mG2P.stop();
-            mG2P = null;
+    private void initializePronunciation(Context context) {
+        if (mPronunciation == null) {
+            mPronunciation = new Pronunciation(context);
         }
-        mG2P = new NativeG2P(context);
+    }
+
+    private void initializeNormalizer(Context context) {
+        if (mNormalizer == null) {
+            mNormalizer = new TTSNormalizer();
+        }
     }
 
 }

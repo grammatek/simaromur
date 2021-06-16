@@ -14,24 +14,24 @@ public class TTSUnicodeNormalizer {
      * @param text raw input text
      * @return cleaned version of @text as String
      */
-    public String normalize_encoding(String text) {
-        String normalized_text = text;
+    public String normalizeEncoding(String text) {
+        String normalizedText = text;
         for (int i = 0; i < text.length(); i++) {
-            String repl = get_replacement(text.charAt(i));
+            String repl = getReplacement(text.charAt(i));
             if (!repl.isEmpty()) {
-                normalized_text = normalized_text.replace(Character.toString(text.charAt(i)), repl);
+                normalizedText = normalizedText.replace(Character.toString(text.charAt(i)), repl);
             }
-            if (should_delete(text.charAt(i)))
-                normalized_text = normalized_text.replace(Character.toString(text.charAt(i)), "");
+            if (shouldDelete(text.charAt(i)))
+                normalizedText = normalizedText.replace(Character.toString(text.charAt(i)), "");
         }
-        return normalized_text;
+        return normalizedText;
     }
 
-    private boolean should_delete(Character c) {
+    private boolean shouldDelete(Character c) {
         return UnicodeMaps.deleteCharsMap.containsKey(c);
     }
 
-    private String get_replacement(Character c) {
+    private String getReplacement(Character c) {
         if (UnicodeMaps.insertSpaceMap.containsKey(c))
             return UnicodeMaps.insertSpaceMap.get(c);
         if (UnicodeMaps.otherSubstMap.containsKey(c))
@@ -50,3 +50,4 @@ public class TTSUnicodeNormalizer {
         return "";
     }
 }
+
