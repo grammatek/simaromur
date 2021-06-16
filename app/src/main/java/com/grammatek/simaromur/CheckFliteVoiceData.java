@@ -52,8 +52,8 @@ import android.util.Log;
  * for flite
  */
 
-public class CheckVoiceData extends Activity {
-    private final static String LOG_TAG = "Simaromur_Java_" + CheckVoiceData.class.getSimpleName();
+public class CheckFliteVoiceData extends Activity {
+    private final static String LOG_TAG = "Simaromur_Java_" + CheckFliteVoiceData.class.getSimpleName();
     private final static String DATA_PATH = App.getDataPath();
     public final static String VOICE_LIST_FILE = DATA_PATH +"cg/voices-20150129.list";
 
@@ -161,7 +161,7 @@ public class CheckVoiceData extends Activity {
         File voiceListFile = new File(DATA_PATH);
         boolean dirCreated = voiceListFile.mkdir();
         boolean dirExists = voiceListFile.exists();
-        Log.d("CheckVoiceData", "dirCreated=" + dirCreated + " exists: " + dirExists);
+        Log.d("CheckFliteVoiceData", "dirCreated=" + dirCreated + " exists: " + dirExists);
         FileDownloader fdload = new FileDownloader();
         fdload.saveUrlAsFile(voiceListURL, VOICE_LIST_FILE);
         while(!fdload.finished) {}
