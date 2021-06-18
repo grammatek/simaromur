@@ -1,26 +1,19 @@
 # Símarómur
 
-This project provides an Icelandic TTS application for the Android TTS service. It is planned to
-provide local voices on the device as well as access to network voices over a network API.
+This project provides an Icelandic TTS application for the Android TTS service. It provides already
+access to network voices of the [Tíro TTS API](https://tts.tiro.is/v0/voices). We are currently working
+on device-local voices.
 
-Handling of local voices is based on [Flite TTS Engine For Android](https://github.com/happyalu/Flite-TTS-Engine-for-Android) and is
-adapted to current Android platforms. It uses CMake for integrating the C++ part instead of ndk-build and is able
-to run on 64Bit platforms. We expect to modify the code considerably and making it more mature. Therefore, we started
-with a clean slate instead of forking it.
-
-Currently, Símarómur is more a tech-demo, than a fully functional TTS service, but we can already access
-and demo Icelandic network voices inside the "SIM Voices" activity.
-
-I. So far, the local voice UI provides nothing more than the original Flite TTS Engine for Android
-project - basically English & Indian voices, just in a less buggy way :)
-
-But we are working actively on the implementation of a new device-based Icelandic voice. Stay tuned
-for project updates ...
+Handling of device-local voices is originally based on [Flite TTS Engine For Android](https://github.com/happyalu/Flite-TTS-Engine-for-Android),
+but we changed it considerably and started with a clean slate instead of forking the project.
+We replaced many deprecated API's and also use current TTS Service Android API's. We also use CMake
+for integrating the C++ part instead of ndk-build and adapted the JNI part to be compatible with 64Bit
+platforms.
 
 ## Text Normalization & G2P
 
-Icelandic text normalization is always done on the Phone itself before the text enters G2P.
-Local voice G2P is [rule-based](https://github.com/grammatek/g2p-thrax), implemented using the C++
+Icelandic text normalization is always done on the phone itself before the text enters G2P.
+Local voice G2P is [rule-based](https://github.com/grammatek/g2p-thrax) and is implemented using the C++
 frameworks Thrax & OpenFST, which are accessed via JNI. The network voices use somewhat better but
 computationally more demanding [LSTM g2p-models](https://github.com/grammatek/g2p-lstm).
 

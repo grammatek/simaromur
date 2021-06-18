@@ -36,11 +36,11 @@
 package com.grammatek.simaromur;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -74,9 +74,9 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 	private ArrayAdapter<String> mAdapter;
 	private ArrayAdapter<String> mVoiceAdapter;
     private ArrayAdapter<String> mRateAdapter;
-	private ArrayList<Voice> mVoices;
-	private ArrayList<String> mStrings = new ArrayList<String>();
-    private ArrayList<String> mRates = new ArrayList<String>();
+	private List<Voice> mVoices;
+	private ArrayList<String> mStrings = new ArrayList<>();
+    private List<String> mRates = new ArrayList<>();
 	private Spinner mVoiceSpinner;
     private Spinner mRateSpinner;
 	private TextToSpeech mTts;
@@ -98,8 +98,8 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 			requestPermission(); // Code for permission
 		}
 
-		ArrayList<Voice> allVoices = CheckVoiceData.getVoices();
-		mVoices = new ArrayList<Voice>();
+		List<Voice> allVoices = CheckFliteVoiceData.getVoices();
+		mVoices = new ArrayList<>();
 		for(Voice vox:allVoices) {
 			if (vox.isAvailable()) {
 				mVoices.add(vox);
@@ -175,7 +175,7 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 
 	private void buildUI() {
 
-		ArrayList<String> voiceNames = new ArrayList<String>();
+		List<String> voiceNames = new ArrayList<>();
 
 		for (Voice vox: mVoices) {
 		    voiceNames.add(vox.getDisplayName()); // vox.getVariant());

@@ -34,7 +34,7 @@ public class ApiDbUtil {
         modelVoice.internalName = apiVoice.VoiceId;
         modelVoice.languageCode = apiVoice.LanguageCode;
         modelVoice.languageName = apiVoice.LanguageName;
-        modelVoice.type = "tiro";
+        modelVoice.type = Voice.TYPE_TIRO;
         mVoiceDao.updateVoices(modelVoice);
     }
 
@@ -68,7 +68,7 @@ public class ApiDbUtil {
         for (VoiceResponse av:newApiVoices) {
             Log.v(LOG_TAG, "Creating new voice from " + av);
             Voice voice = new Voice(av.VoiceId, av.VoiceId, av.Gender, av.LanguageCode, av.LanguageName,
-                    "", "tiro", "");
+                    "", Voice.TYPE_TIRO, "");
             Log.v(LOG_TAG, "New contents: " + voice);
             mVoiceDao.insertVoice(voice);
         }
@@ -94,6 +94,6 @@ public class ApiDbUtil {
         return (apiVoice.VoiceId.equals(modelVoice.internalName) &&
                 apiVoice.LanguageCode.equals(modelVoice.languageCode) &&
                 apiVoice.LanguageName.equals(modelVoice.languageName) &&
-                "tiro".equals(modelVoice.type));
+                Voice.TYPE_TIRO.equals(modelVoice.type));
     }
 }

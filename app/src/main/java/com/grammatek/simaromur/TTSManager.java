@@ -19,8 +19,10 @@ public class TTSManager extends Activity implements OnItemClickListener {
     private final static String LOG_TAG = "Simaromur_Java_" + TTSManager.class.getSimpleName();
 
     static final LauncherIcon[] ICONS = {
-        new LauncherIcon(R.drawable.custom_dialog_tts, "TTS Demo", TTSDemo.class),
-        new LauncherIcon(R.drawable.custom_dialog_manage, "FLite Voices", DownloadVoiceData.class),
+        // @todo: we disable the FLite based choosers, we will replace local voice management
+        // completely
+        // new LauncherIcon(R.drawable.custom_dialog_tts, "TTS Demo", TTSDemo.class),
+        // new LauncherIcon(R.drawable.custom_dialog_manage, "FLite Voices", DownloadVoiceData.class),
         new LauncherIcon(R.drawable.sim_logo, "SIM Voices", VoiceManager.class),
         new LauncherIcon(R.drawable.custom_dialog_info, "About Símarómur", InfoViewer.class),
     };

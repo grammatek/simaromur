@@ -34,8 +34,8 @@ android {
         applicationId "com.grammatek.simaromur"
         minSdkVersion 28
         targetSdkVersion 30
-        versionCode 3
-        versionName "0.1"
+        versionCode 4
+        versionName "0.4"
 
         //testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

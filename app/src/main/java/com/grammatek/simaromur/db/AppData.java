@@ -46,4 +46,17 @@ public class AppData {
     @ColumnInfo(name = "sim_voice_list_update_time")
     @TypeConverters({TimestampConverter.class})
     public Date simVoiceListUpdateTime;
+
+    @Override
+    public String toString() {
+        return "AppData{" +
+                "appDataId=" + appDataId +
+                ", schemaVersion='" + schemaVersion + '\'' +
+                ", currentVoiceId=" + currentVoiceId +
+                ", fliteVoiceListPath='" + fliteVoiceListPath + '\'' +
+                ", fliteVoiceListUpdateTime=" + fliteVoiceListUpdateTime +
+                ", simVoiceListPath='" + simVoiceListPath + '\'' +
+                ", simVoiceListUpdateTime=" + simVoiceListUpdateTime +
+                '}';
+    }
 }

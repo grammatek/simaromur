@@ -26,13 +26,13 @@ public class VoiceViewModel extends AndroidViewModel {
 
     public VoiceViewModel(Application application) {
         super(application);
-        mRepository = new AppRepository(application);
+        mRepository = App.getAppRepository();
     }
 
     // Return application data
     public AppData getAppData() {
         if (mAppData == null) {
-            mAppData = mRepository.getAppData();
+            mAppData = mRepository.getCachedAppData();
         }
         return mAppData;
     }
@@ -66,7 +66,7 @@ public class VoiceViewModel extends AndroidViewModel {
 
     // Start speaking, i.e. make a speak request async.
     public void startSpeaking(Voice voice, String text, float speed, float pitch) {
-        if (voice.type.equals("tiro")) {
+        if (voice.type.equals(Voice.TYPE_TIRO)) {
             mRepository.startTiroSpeak(voice.internalName, text, voice.languageCode, speed, pitch);
         } else {
             // other voice types follow here ..
@@ -77,7 +77,7 @@ public class VoiceViewModel extends AndroidViewModel {
      * Stops any ongoing speak activity
      */
     public void stopSpeaking(Voice voice) {
-        if (voice.type.equals("tiro")) {
+        if (voice.type.equals(Voice.TYPE_TIRO)) {
             mRepository.stopTiroSpeak();
         } else {
             // other voice types follow here ..
