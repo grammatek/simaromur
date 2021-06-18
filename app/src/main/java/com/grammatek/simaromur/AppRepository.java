@@ -143,6 +143,7 @@ public class AppRepository {
             }
             m_synthCb.done();
         }
+
         public void error(String errorMsg) {
             Log.e(LOG_TAG, "TiroTtsObserver()::error: " + errorMsg);
             playSilence();

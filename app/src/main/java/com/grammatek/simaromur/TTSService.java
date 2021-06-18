@@ -120,7 +120,7 @@ public class TTSService extends TextToSpeechService {
             boolean needsNetwork = false;
             Set<String> features = new HashSet<>();
 
-            if (voice.type.equals("tiro")) {
+            if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TIRO)) {
                 latency = Voice.LATENCY_VERY_HIGH;
                 features.add(TextToSpeech.Engine.KEY_FEATURE_NETWORK_RETRIES_COUNT);
                 needsNetwork = true;

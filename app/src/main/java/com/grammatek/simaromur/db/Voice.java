@@ -22,7 +22,14 @@ import java.util.Locale;
         indices = {@Index(value = {"name", "gender", "language_code", "type"}, unique = true)})
 public class Voice {
     private final static String LOG_TAG = "Voice" + CheckSimVoices.class.getSimpleName();
-    static final List<String> voiceTypes = Arrays.asList("tiro", "clustergen", "clunits", "neural");
+    public final static String TYPE_TIRO="tiro";
+    public final static String TYPE_CG="clustergen";
+    public final static String TYPE_CLUNITS="clunits";
+    public final static String TYPE_NEURAL="neural";
+
+    static final List<String> voiceTypes = Arrays.asList(TYPE_TIRO, TYPE_CG,
+            TYPE_CLUNITS, TYPE_NEURAL);
+    static final String SEP = "-";
 
     @PrimaryKey(autoGenerate = true)
     public long voiceId;
@@ -114,7 +121,6 @@ public class Voice {
         this.languageCode = languageCode;
         this.languageName = languageName;
         this.variant = variant;
-        // @todo: check correctness of type
         if (voiceTypes.contains(type)) {
             this.type = type;
         }
@@ -152,7 +158,7 @@ public class Voice {
      * @return  true in case voice needs network access, false otherwise
      */
     public boolean needsNetwork() {
-        return (this.type.equals("tiro"));
+        return (this.type.equals(Voice.TYPE_TIRO));
     }
 
     /**
@@ -191,7 +197,7 @@ public class Voice {
      * @return  locale of the voice
      */
     public Locale getLocale() {
-        final String[] langCountrySplit = this.languageCode.split("-");
+        final String[] langCountrySplit = this.languageCode.split(SEP);
         return new Locale(langCountrySplit[0], langCountrySplit[1], this.name);
     }
 
@@ -203,9 +209,9 @@ public class Voice {
     public String iso3LangCountryName() {
         final Locale locale = getLocale();
         return locale.getISO3Language()
-                + "-"
+                + SEP
                 + locale.getISO3Country()
-                + "-"
+                + SEP
                 + this.name;
     }
 
@@ -219,9 +225,9 @@ public class Voice {
         String[] iso2Countries = Locale.getISOCountries();
         final Locale locale = getLocale();
         return locale.getISO3Language()
-                + "-"
+                + SEP
                 + locale.getISO3Country()
-                + "-"
+                + SEP
                 + this.gender;
     }
 
@@ -233,9 +239,9 @@ public class Voice {
     public String iso3LangCountryVariant() {
         final Locale locale = getLocale();
         return locale.getISO3Language()
-                + "-"
+                + SEP
                 + locale.getISO3Country()
-                + "-"
+                + SEP
                 + this.variant;
     }
 
@@ -247,9 +253,9 @@ public class Voice {
     public String iso2LangCountryVariant() {
         final Locale locale = getLocale();
         return locale.getISO3Language()
-                + "-"
+                + SEP
                 + locale.getISO3Country()
-                + "-"
+                + SEP
                 + this.gender;
     }
     /**
