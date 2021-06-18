@@ -1,9 +1,7 @@
 package com.grammatek.simaromur;
 
-import com.grammatek.simaromur.frontend.FrontendManager;
 import com.grammatek.simaromur.frontend.NormalizationManager;
 
-import android.content.Context;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.SynthesisRequest;
 import android.speech.tts.TextToSpeech;
@@ -114,7 +112,7 @@ public class TTSService extends TextToSpeechService {
     public synchronized  List<Voice> onGetVoices()
     {
         Log.i(LOG_TAG, "onGetVoices");
-        ArrayList<Voice> announcedVoiceList = new ArrayList<>();
+        List<Voice> announcedVoiceList = new ArrayList<>();
 
         for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
             int quality = Voice.QUALITY_NORMAL;
@@ -132,7 +130,6 @@ public class TTSService extends TextToSpeechService {
             announcedVoiceList.add(ttsVoice);
             Log.v(LOG_TAG, "onGetVoices: " + ttsVoice);
         }
-
         return announcedVoiceList;
     }
 

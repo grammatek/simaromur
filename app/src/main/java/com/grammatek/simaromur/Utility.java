@@ -43,6 +43,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.List;
+
 import android.os.Environment;
 
 public class Utility {
@@ -52,8 +54,8 @@ public class Utility {
     return !tempFile.exists();
   }
 
-  public static  ArrayList<String> readLines(String filename) throws IOException {
-    ArrayList<String> strLines = new ArrayList<>();
+  public static List<String> readLines(String filename) throws IOException {
+    List<String> strLines = new ArrayList<>();
     FileInputStream fstream = new FileInputStream(filename);
     DataInputStream in = new DataInputStream(fstream);
     BufferedReader br = new BufferedReader(new InputStreamReader(in),1024);

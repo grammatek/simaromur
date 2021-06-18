@@ -9,11 +9,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * Activity shows information about the application.
+ */
 public class InfoViewer extends ListActivity {
     private final static String LOG_TAG = "Simaromur_Java_" + InfoViewer.class.getSimpleName();
     private NativeFliteTTS mFliteEngine;
@@ -64,7 +67,7 @@ public class InfoViewer extends ListActivity {
         if (mEnableBenchmark && mBenchmark < 0) {
             mBenchmark = mFliteEngine.getNativeBenchmark();
         }
-        final ArrayList<String> Info = new ArrayList<String>() {
+        final List<String> Info = new ArrayList<String>() {
             {
                 add("Copyright");
                 add("URL");
@@ -75,7 +78,7 @@ public class InfoViewer extends ListActivity {
             }
         };
 
-        final ArrayList<String> Data = new ArrayList<String>() {
+        final List<String> Data = new ArrayList<String>() {
             {
             add("© (2021) Grammatek ehf\nBased on previous work from Carnegie Mellon University © (1999-2012)");
             add("https://github.com/grammatek/simaromur");

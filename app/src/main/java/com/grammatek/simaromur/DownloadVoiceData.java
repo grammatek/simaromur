@@ -37,7 +37,8 @@
 package com.grammatek.simaromur;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
+
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.ListActivity;
@@ -112,7 +113,7 @@ public class DownloadVoiceData extends ListActivity {
 	private class VoiceListAdapter extends BaseAdapter {
 
 		private Context mContext;
-		private ArrayList<Voice> mVoiceList;
+		private List<Voice> mVoiceList;
 		private LayoutInflater mInflater;
 
 		public VoiceListAdapter(Context context) {

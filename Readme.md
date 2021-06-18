@@ -12,7 +12,7 @@ platforms.
 
 ## Text Normalization & G2P
 
-Icelandic text normalization is always done on the Phone itself before the text enters G2P.
+Icelandic text normalization is always done on the phone itself before the text enters G2P.
 Local voice G2P is [rule-based](https://github.com/grammatek/g2p-thrax) and is implemented using the C++
 frameworks Thrax & OpenFST, which are accessed via JNI. The network voices use somewhat better but
 computationally more demanding [LSTM g2p-models](https://github.com/grammatek/g2p-lstm).

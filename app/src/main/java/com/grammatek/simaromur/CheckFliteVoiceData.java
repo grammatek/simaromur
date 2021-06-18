@@ -41,6 +41,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -131,7 +132,7 @@ public class CheckFliteVoiceData extends Activity {
          * if the data for that voice is installed.
          */
 
-        ArrayList<Voice> voiceList = getVoices();
+        List<Voice> voiceList = getVoices();
         if (voiceList.isEmpty()) {
             Log.e(LOG_TAG,"Problem reading voices list. This shouldn't happen!");
             result = TextToSpeech.Engine.CHECK_VOICE_DATA_FAIL;
@@ -177,10 +178,10 @@ public class CheckFliteVoiceData extends Activity {
         }
     }
 
-    public static ArrayList<Voice> getVoices() {
+    public static List<Voice> getVoices() {
         Log.d(LOG_TAG, "DATA_PATH: " + DATA_PATH);
 
-        ArrayList<String> voiceList = null;
+        List<String> voiceList = null;
         try {
             voiceList = Utility.readLines(VOICE_LIST_FILE);
         } catch (IOException e) {
@@ -190,7 +191,7 @@ public class CheckFliteVoiceData extends Activity {
             voiceList = new ArrayList<>();
         }
 
-        ArrayList<Voice> voices = new ArrayList<>();
+        List<Voice> voices = new ArrayList<>();
 
         for(String strLine:voiceList) {
             Voice vox = new Voice(strLine);
