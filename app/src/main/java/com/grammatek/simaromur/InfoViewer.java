@@ -12,20 +12,25 @@ import android.widget.ArrayAdapter;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 public class InfoViewer extends ListActivity {
     private final static String LOG_TAG = "Simaromur_Java_" + InfoViewer.class.getSimpleName();
     private NativeFliteTTS mFliteEngine;
     private float mBenchmark = -1;
+    static final boolean mEnableBenchmark = false;
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mFliteEngine = new NativeFliteTTS(this, null);
-        mFliteEngine.setLanguage("eng", "USA","");
 
         ProgressDialog progress = new ProgressDialog(this);
-        progress.setMessage("Benchmarking Símarómur. Wait a few seconds");
+        if (mEnableBenchmark) {
+            progress.setMessage("Benchmarking Símarómur. Wait a few seconds");
+            mFliteEngine = new NativeFliteTTS(this, null);
+            mFliteEngine.setLanguage("eng", "USA","");
+        }
         progress.setCancelable(false);
         new GetInformation(progress).execute();
     }
@@ -56,33 +61,46 @@ public class InfoViewer extends ListActivity {
     }
 
     private void populateInformation() {
-        if (mBenchmark < 0) {
+        if (mEnableBenchmark && mBenchmark < 0) {
             mBenchmark = mFliteEngine.getNativeBenchmark();
         }
-        final String[] Info = new String[] {
-                "Copyright",
-                "URL",
-                "RUNTIME_HEADER",
-                "Android Version",
-                "Supported ABIs",
-                "Phone Model",
-                "Benchmark",
-                };
-        final String[] Data = new String[] {
-                "© (2021) Grammatek ehf\nBased on previous work from Carnegie Mellon University © (1999-2012)",
-                "https://github.com/grammatek/simaromur",
-                "",
-                android.os.Build.VERSION.RELEASE,
-                String.join(", ", android.os.Build.SUPPORTED_ABIS),
-                android.os.Build.MODEL,
-                mBenchmark + " times faster than real time",
-                };
+        final ArrayList<String> Info = new ArrayList<String>() {
+            {
+                add("Copyright");
+                add("URL");
+                add("RUNTIME_HEADER");
+                add("Android Version");
+                add("Supported ABIs");
+                add("Phone Model");
+            }
+        };
+
+        final ArrayList<String> Data = new ArrayList<String>() {
+            {
+            add("© (2021) Grammatek ehf\nBased on previous work from Carnegie Mellon University © (1999-2012)");
+            add("https://github.com/grammatek/simaromur");
+            add("");
+            add(android.os.Build.VERSION.RELEASE);
+            add(String.join(", ", android.os.Build.SUPPORTED_ABIS));
+            add(android.os.Build.MODEL);
+            }
+        };
+
+        if (mEnableBenchmark) {
+            Info.add("Benchmark");
+            Data.add("mBenchmark + \" times faster than real time\"");
+        }
 
         runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
-                setListAdapter(new SettingsArrayAdapter(InfoViewer.this, Info, Data));
+                String[] dataArray = new String[Data.size()];
+                Data.toArray(dataArray);
+                String[] infoArray = new String[Info.size()];
+                Info.toArray(infoArray);
+                setListAdapter(new SettingsArrayAdapter(InfoViewer.this,
+                        infoArray, dataArray));
             }
         });
 
