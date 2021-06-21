@@ -31,7 +31,7 @@ public class FrontendManager {
 
 
     public FrontendManager(Context context) {
-        mUnicodeNormalizer = new TTSUnicodeNormalizer();
+        mUnicodeNormalizer = new TTSUnicodeNormalizer(context);
         initializeTokenizer(context);
         initializePronunciation(context);
         initializeNormalizer(context);

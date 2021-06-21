@@ -66,6 +66,35 @@ public class UnicodeMaps {
         insertSpaceMap.put('\ufa07', " "); // ideograph spokes of wheel CJK -> check this range, CJK
     }
 
+    // if those characters are found in words not in the pronunciation dictionary,
+    // we need to replace them with characters from the Icelandic alphabet
+    public static Map<Character, String> postDictLookupMap = new HashMap<>();
+    static {
+        postDictLookupMap.put('c', "k"); // TODO: can we contextualize this?
+        postDictLookupMap.put('w', "v");
+        postDictLookupMap.put('z', "s");
+        postDictLookupMap.put('q', "k");
+        postDictLookupMap.put('å', "o");
+        postDictLookupMap.put('ä', "e");
+        postDictLookupMap.put('ü', "u");
+        postDictLookupMap.put('ø', "ö");
+        postDictLookupMap.put('ć', "ts"); // polish
+        postDictLookupMap.put('ę', "e");
+        postDictLookupMap.put('ł', "ú"); // polish, like English 'w' in 'will'
+        postDictLookupMap.put('ń', "n");
+        postDictLookupMap.put('ś', "s");
+        postDictLookupMap.put('ź', "s");
+        postDictLookupMap.put('ż', "s");
+        postDictLookupMap.put('C', "K"); // TODO: can we contextualize this?
+        postDictLookupMap.put('W', "V");
+        postDictLookupMap.put('Z', "S");
+        postDictLookupMap.put('Q', "K");
+        postDictLookupMap.put('Å', "O");
+        postDictLookupMap.put('Ä', "E");
+        postDictLookupMap.put('Ü', "U");
+        postDictLookupMap.put('Ø', "Ö");
+    }
+
     // delete in MVP, transliterate later if necessary
     public static Map<Character, String> ipaMap = new HashMap<>();
     static {
