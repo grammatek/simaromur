@@ -9,6 +9,7 @@
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/darkGray"
         style="@style/text_view_style"
         tools:text="placeholder text" />
 </LinearLayout>

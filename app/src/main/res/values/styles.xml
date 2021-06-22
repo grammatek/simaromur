@@ -32,14 +32,31 @@
         <item name="android:textColor">@color/colorTextPrimary</item>
     </style>
 
-    <style name="button_style" parent="android:style/Widget.Material.Button">
-        <!-- Customize your theme here. -->
+    <style name="text_view_style_transparent">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">
+            @android:style/TextAppearance.Large</item>
         <item name="android:background">@color/colorPrimaryDark</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:textColor">@color/colorTextPrimary</item>
+    </style>
+
+
+
+    <style name="button_style" parent="android:style/Widget.Material.Button">
+        <!-- Customize your theme here. -->
+        <item name="android:buttonStyle">@style/Widget.MaterialComponents.Button.OutlinedButton</item>
+        <item name="android:theme">@style/Theme.MaterialComponents</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/transparent_bg_bordered_button</item>
         <item name="android:textAppearance">@android:style/TextAppearance.Large</item>
         <item name="android:layout_marginTop">16dp</item>
         <item name="android:textColor">@color/colorTextPrimary</item>
+
     </style>
 
 </resources>
