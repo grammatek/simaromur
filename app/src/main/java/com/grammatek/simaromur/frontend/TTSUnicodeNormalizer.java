@@ -114,19 +114,22 @@ public class TTSUnicodeNormalizer {
                     for (int i = 0; i < wrd.length(); i++) {
                         if (!CHAR_SET.contains(Character.toLowerCase(wrd.charAt(i)))) {
                             String repl = getIceAlphaReplacement(wrd.charAt(i));
+                            // we found a replacement for the non-Icelandic character
                             if (!repl.isEmpty())
                                 wrd = wrd.replace(Character.toString(wrd.charAt(i)), repl);
-                            else if (!Character.toString(wrd.charAt(i)).matches("\\d|\\p{Punct}"))
+                            // we want to keep punctuation marks still present in the normalized
+                            // string, but delete the unknown character otherwise
+                            else if (!Character.toString(wrd.charAt(i)).matches("\\p{Punct}"))
                                 wrd = wrd.replace(Character.toString(wrd.charAt(i)), "");
                         }
                     }
                 }
+                // the word is in the dictionary, we restore the original string
                 sb.append(wrd).append(" ");
             }
             normalizedSentences.add(sb.toString().trim());
         }
         return normalizedSentences;
-
     }
 
     private boolean inDictionary(String wrd) {

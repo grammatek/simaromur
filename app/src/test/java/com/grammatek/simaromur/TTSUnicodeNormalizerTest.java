@@ -13,7 +13,10 @@ import org.robolectric.annotation.Config;
 import androidx.test.core.app.ApplicationProvider;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -40,17 +43,17 @@ public class TTSUnicodeNormalizerTest {
     @Test
     public void alphabetNormalizingTest() {
         TTSUnicodeNormalizer normalizer = new TTSUnicodeNormalizer(context);
-        List<String> testSent = getTestSent();
-        List<String> normalized = normalizer.normalizeAlphabet(testSent);
-        for (String s : normalized)
-            System.out.println(s);
+        for (String sent : getTestSentences().keySet()) {
+            List<String> processed = normalizer.normalizeAlphabet(Arrays.asList(sent));
+            assertEquals(getTestSentences().get(sent), processed.get(0));
+        }
     }
 
-    private List<String> getTestSent() {
-        List<String> sent = new ArrayList<>();
-        sent.add("þetta er alíslensk setning");
-        sent.add("þessi zetning inniheldur orð með c og w");
-        sent.add("þessi setning er í tämu tjåni");
+    private Map<String, String> getTestSentences() {
+        Map<String, String> sent = new HashMap<>();
+        sent.put("þetta er alíslensk setning", "þetta er alíslensk setning");
+        sent.put("þessi zetning inniheldur cunning words orð með c og w", "þessi setning inniheldur kunning words orð með c og w");
+        sent.put("þessi setning er í tämu tjåni", "þessi setning er í temu tjoni");
         return sent;
     }
 }
