@@ -75,11 +75,11 @@ public class TTSService extends TextToSpeechService {
         String voiceName = request.getVoiceName();
         int speechrate = request.getSpeechRate();
         int pitch = request.getPitch();
-        Log.i(LOG_TAG, "onSynthesizeText: (" + language + "/"+country+"/"+variant+"), voice: "
+        Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/"+country+"/"+variant+"), voice: "
                 + voiceName);
         String loadedVoiceName = mRepository.getLoadedVoiceName();
         if (!loadedVoiceName.equals(voiceName)) {
-            Log.e(LOG_TAG, "Loaded voice ("+loadedVoiceName+") and given voice ("+voiceName+") differ ?!");
+            Log.e(LOG_TAG, "onSynthesizeText: Loaded voice ("+loadedVoiceName+") and given voice ("+voiceName+") differ ?!");
         }
 
         com.grammatek.simaromur.db.Voice voice = mRepository.getVoiceForName(loadedVoiceName);
@@ -87,10 +87,10 @@ public class TTSService extends TextToSpeechService {
             NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
             String normalizedText = normalizationManager.process(text);
 
-            Log.i(LOG_TAG, text + " => normalized =>" + normalizedText);
+            Log.v(LOG_TAG, text + "onSynthesizeText:  => normalized =>" + normalizedText);
             if (normalizedText.isEmpty()) {
-                // @todo: if there is nothing to speak, we don't need to access the API ... ?!
-                normalizedText = " ";
+                Log.i(LOG_TAG, "onSynthesizeText: finished");
+                return;
             }
             mRepository.startTiroTts(callback, voice, normalizedText, speechrate, pitch/100.0f);
         }
