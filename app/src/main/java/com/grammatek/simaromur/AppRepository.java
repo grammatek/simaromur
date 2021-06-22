@@ -149,8 +149,7 @@ public class AppRepository {
                 Log.v(LOG_TAG, "TiroTtsObserver: Nothing to speak");
                 return;
             }
-            // Either apply pitch and speed to ttsData, resulting in a differently sized output
-            // stream, or simply copy ttsData to the new output stream
+
             final byte[] audioData = applyPitchAndSpeed(ttsData, mPitch, mSpeed);
 
             final int maxBytes = mSynthCb.getMaxBufferSize();
