@@ -302,14 +302,14 @@ public class TupleRules {
     public static final List<ExpansionTuple> ONES_ZIP_TIME = new ArrayList<>();
     static {
         ONES_ZIP_TIME.add(new ExpansionTuple("", " eitt", "1"));
-        ONES_ZIP_TIME.add(new ExpansionTuple("", " tvö", "1"));
-        ONES_ZIP_TIME.add(new ExpansionTuple("", " þrjú", "1"));
-        ONES_ZIP_TIME.add(new ExpansionTuple("", " fjögur", "1"));
-        ONES_ZIP_TIME.add(new ExpansionTuple("", " fimm", "1"));
-        ONES_ZIP_TIME.add(new ExpansionTuple("", " sex", "1"));
-        ONES_ZIP_TIME.add(new ExpansionTuple("", " sjö", "1"));
-        ONES_ZIP_TIME.add(new ExpansionTuple("", " átta", "1"));
-        ONES_ZIP_TIME.add(new ExpansionTuple("", " níu", "1"));
+        ONES_ZIP_TIME.add(new ExpansionTuple("", " tvö", "2"));
+        ONES_ZIP_TIME.add(new ExpansionTuple("", " þrjú", "3"));
+        ONES_ZIP_TIME.add(new ExpansionTuple("", " fjögur", "4"));
+        ONES_ZIP_TIME.add(new ExpansionTuple("", " fimm", "5"));
+        ONES_ZIP_TIME.add(new ExpansionTuple("", " sex", "6"));
+        ONES_ZIP_TIME.add(new ExpansionTuple("", " sjö", "7"));
+        ONES_ZIP_TIME.add(new ExpansionTuple("", " átta", "8"));
+        ONES_ZIP_TIME.add(new ExpansionTuple("", " níu", "9"));
     }
     public static final List<ExpansionTuple> DOZENS_ZIP = new ArrayList<>();
     static {

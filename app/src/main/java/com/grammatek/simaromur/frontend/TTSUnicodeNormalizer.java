@@ -1,5 +1,18 @@
 package com.grammatek.simaromur.frontend;
 
+import android.content.Context;
+import android.content.res.Resources;
+
+import com.grammatek.simaromur.R;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * This class handles Unicode cleaning and unicode normalizing of text. To simplify further
  * processing, text normalizing and grapheme-to-phoneme conversion, we clean the text of most
@@ -7,6 +20,49 @@ package com.grammatek.simaromur.frontend;
  * number of punctuation characters and special symbols.
  */
 public class TTSUnicodeNormalizer {
+
+    private final Set<String> mLexicon;
+
+    // The Icelandic alphabet, the grapheme set valid for automatic g2p
+    private final static Set<Character> CHAR_SET = new HashSet<>();
+    static {
+        CHAR_SET.add('a');
+        CHAR_SET.add('á');
+        CHAR_SET.add('b');
+        CHAR_SET.add('d');
+        CHAR_SET.add('ð');
+        CHAR_SET.add('e');
+        CHAR_SET.add('é');
+        CHAR_SET.add('f');
+        CHAR_SET.add('g');
+        CHAR_SET.add('h');
+        CHAR_SET.add('i');
+        CHAR_SET.add('í');
+        CHAR_SET.add('j');
+        CHAR_SET.add('k');
+        CHAR_SET.add('l');
+        CHAR_SET.add('m');
+        CHAR_SET.add('n');
+        CHAR_SET.add('o');
+        CHAR_SET.add('ó');
+        CHAR_SET.add('p');
+        CHAR_SET.add('r');
+        CHAR_SET.add('s');
+        CHAR_SET.add('t');
+        CHAR_SET.add('u');
+        CHAR_SET.add('ú');
+        CHAR_SET.add('v');
+        CHAR_SET.add('y');
+        CHAR_SET.add('ý');
+        CHAR_SET.add('þ');
+        CHAR_SET.add('æ');
+        CHAR_SET.add('ö');
+        CHAR_SET.add('x');
+    }
+
+    public TTSUnicodeNormalizer(Context context) {
+        mLexicon = initLexicon(context);
+    }
 
     /**
      * Normalize the unicode encoding of the input text. This includes deleting and substituting
@@ -25,6 +81,59 @@ public class TTSUnicodeNormalizer {
                 normalizedText = normalizedText.replace(Character.toString(text.charAt(i)), "");
         }
         return normalizedText;
+    }
+
+    /**
+     * This method is the last in the normalization process. That is, we already have
+     * normalized the text with regards to abbreviations, digits, etc., but as last procedure
+     * we need to ensure that no non-valid characters are delivered to the g2p system.
+     *
+     * Before replaceing possible non-valid characters, we make a lexicon-lookup, since
+     * words with non-Icelandic characters might be stored there, even if automatic g2p
+     * would fail.
+     *
+     * TODO: this needs more careful handling and a "contract" with the g2p module: which
+     * characters should be allowed?
+     * @param sentences normalized sentences
+     * @return the list of 'sentences', cleaned of any non-valid characters for g2p
+     */
+    public List<String> normalizeAlphabet(List<String> sentences) {
+        List<String> normalizedSentences = new ArrayList<>();
+        for (String sent : sentences) {
+            StringBuilder sb = new StringBuilder();
+            String[] sentArr = sent.split(" ");
+            for (String wrd : sentArr) {
+                // we keep single characters for the moment, need to look into that
+                // more closely! we don't want web addresses to be corrupted, on
+                // the other hand all sinlge letters will have to be converted by g2p
+                if (wrd.length() == 1) {
+                    sb.append(wrd).append(" ");
+                    continue;
+                }
+                if (!inDictionary(wrd)) {
+                    for (int i = 0; i < wrd.length(); i++) {
+                        if (!CHAR_SET.contains(Character.toLowerCase(wrd.charAt(i)))) {
+                            String repl = getIceAlphaReplacement(wrd.charAt(i));
+                            // we found a replacement for the non-Icelandic character
+                            if (!repl.isEmpty())
+                                wrd = wrd.replace(Character.toString(wrd.charAt(i)), repl);
+                            // we want to keep punctuation marks still present in the normalized
+                            // string, but delete the unknown character otherwise
+                            else if (!Character.toString(wrd.charAt(i)).matches("\\p{Punct}"))
+                                wrd = wrd.replace(Character.toString(wrd.charAt(i)), "");
+                        }
+                    }
+                }
+                // the word is in the dictionary, we restore the original string
+                sb.append(wrd).append(" ");
+            }
+            normalizedSentences.add(sb.toString().trim());
+        }
+        return normalizedSentences;
+    }
+
+    private boolean inDictionary(String wrd) {
+        return mLexicon.contains(wrd);
     }
 
     private boolean shouldDelete(Character c) {
@@ -49,5 +158,29 @@ public class TTSUnicodeNormalizer {
 
         return "";
     }
-}
 
+    private String getIceAlphaReplacement(Character c) {
+        if (UnicodeMaps.postDictLookupMap.containsKey(c))
+            return UnicodeMaps.postDictLookupMap.get(c);
+
+        return "";
+    }
+
+    private Set<String> initLexicon(Context context) {
+        Set<String> lexicon = new HashSet<>();
+        Resources res = context.getResources();
+        String line = "";
+        try {
+            InputStream is = res.openRawResource(R.raw.lexicon_v2006);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            if (is != null) {
+                while ((line = reader.readLine()) != null) {
+                    lexicon.add(line.trim());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return lexicon;
+    }
+}

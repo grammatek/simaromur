@@ -152,15 +152,6 @@ public class TTSNormalizer {
         return token.replaceAll(".", "$0 ").trim();
     }
 
-    private String join(String[] textArr) {
-        StringBuilder sb = new StringBuilder();
-        for (String s : textArr) {
-            sb.append(s);
-            sb.append(" ");
-        }
-        return sb.toString().trim();
-    }
-
     /*
     Replace hyphens based on domain: in sport results we don't speak the hyphen between two digits, otherwise
     it is spoken as "til" (to)
@@ -180,7 +171,7 @@ public class TTSNormalizer {
             }
         }
         if (didReplace) {
-            replacedText = join(textArr);
+            replacedText = Util.join(textArr);
         }
         return replacedText;
     }

@@ -28,13 +28,11 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Vindmyllurnar eru hvor um sig 900 kW og samanlögð raforkuframleiðsla " +
-                "þeirra er áæetluð um 5,4 GWst á ári.";
+        String input = "21.06.2021 12:39";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("Vindmyllurnar eru hvor um sig níu hundruð kílóvött og samanlögð " +
-                "raforkuframleiðsla þeirra er áæetluð um fimm komma fjórar Gígavattstundir á ári .",
+        assertEquals("tuttugasta og fyrsta núll sjötta tvö þúsund tuttugu og eitt tólf þrjátíu og níu .",
                 processed);
     }
 
@@ -81,7 +79,7 @@ public class NormalizationManagerTest {
         //testSentences.put("Stelpurnar Carmen Diljá Guðbjarnardóttir og Elenora Rós Georgsdóttir söfnuðu 7.046 kr.",
         //        "Stelpurnar Carmen Diljá Guðbjarnardóttir og Elenora Rós Georgsdóttir söfnuðu sjö þúsund fjörutíu og sex krónum .");
         testSentences.put("Stelpurnar Carmen Diljá Guðbjarnardóttir og Elenora Rós Georgsdóttir söfnuðu 7.046 kr.",
-                "Stelpurnar Carmen Diljá Guðbjarnardóttir og Elenora Rós Georgsdóttir söfnuðu sjö þúsund fjörutíu og sex krónur .");
+                "Stelpurnar Karmen Diljá Guðbjarnardóttir og Elenora Rós Georgsdóttir söfnuðu sjö þúsund fjörutíu og sex krónur .");
         testSentences.put("Hann skoraði 21 stig og tók 12 fráköst.", "Hann skoraði tuttugu og eitt stig og tók tólf fráköst .");
         testSentences.put("Opna Suðurnesjamótið í pílu fer fram þann 4. desember nk. kl. 13:00 í píluaðstöðu Pílufélags Reykjanesbæjar að Hrannargötu 6. ",
                 "Opna Suðurnesjamótið í pílu fer fram þann fjórða desember næstkomandi klukkan þrettán núll núll " +

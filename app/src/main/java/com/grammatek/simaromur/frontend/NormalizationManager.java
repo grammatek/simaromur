@@ -47,7 +47,7 @@ public class NormalizationManager {
 
     public NormalizationManager(Context context) {
         mContext = context;
-        mUnicodeNormalizer = new TTSUnicodeNormalizer();
+        mUnicodeNormalizer = new TTSUnicodeNormalizer(context);
         mTokenizer = new Tokenizer(context);
         mTTSNormalizer = new TTSNormalizer();
         mAssetsPath = new File(App.getDataPath()).getParent();
@@ -65,8 +65,9 @@ public class NormalizationManager {
         String cleaned = mUnicodeNormalizer.normalizeEncoding(text);
         List<String> tokenized = mTokenizer.detectSentences(cleaned);
         List<String> normalizedSentences = normalize(tokenized);
+        List<String> cleanNormalized = mUnicodeNormalizer.normalizeAlphabet(normalizedSentences);
 
-        return list2string(normalizedSentences);
+        return list2string(cleanNormalized);
     }
 
     // pre-normalization, tagging and final normalization of the sentences in 'tokenized'
