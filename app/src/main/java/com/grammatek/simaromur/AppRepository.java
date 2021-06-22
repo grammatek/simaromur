@@ -43,7 +43,7 @@ public class AppRepository {
     private List<VoiceResponse> mTiroVoices;
     private final ApiDbUtil mApiDbUtil;
     private final MediaPlayer mMediaPlayer;
-    static final int SAMPLE_RATE_WAV= 22050;
+    static final int SAMPLE_RATE_WAV= 16000;
     static final int SAMPLE_RATE_MP3= 22050;
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
