@@ -21,9 +21,14 @@ import com.grammatek.simaromur.network.tiro.VoiceController;
 import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import thirdparty.Sonic;
 
 
 /**
@@ -43,8 +48,9 @@ public class AppRepository {
     private List<VoiceResponse> mTiroVoices;
     private final ApiDbUtil mApiDbUtil;
     private final MediaPlayer mMediaPlayer;
-    static final int SAMPLE_RATE_WAV= 16000;
-    static final int SAMPLE_RATE_MP3= 22050;
+    static final int SAMPLE_RATE_WAV = 16000;
+    static final int SAMPLE_RATE_MP3 = 22050;
+    static final int N_CHANNELS = 1;
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
 
@@ -100,7 +106,13 @@ public class AppRepository {
     }
 
     class TiroAudioPlayObserver implements SpeakController.AudioObserver {
-        public TiroAudioPlayObserver() {}
+        float mPitch;
+        float mSpeed;
+        public TiroAudioPlayObserver(float pitch, float speed) {
+            mPitch = pitch;
+            mSpeed = speed;
+        }
+
         public void update(byte[] audioData) {
             Log.v(LOG_TAG, "Tiro API returned: " + audioData.length + "bytes");
 
@@ -123,26 +135,84 @@ public class AppRepository {
     }
 
     static class TiroTtsObserver implements SpeakController.AudioObserver {
-        SynthesisCallback m_synthCb;
-        public TiroTtsObserver(SynthesisCallback synthCb) { m_synthCb = synthCb; }
-        public void update(byte[] ttsData) {
+        SynthesisCallback mSynthCb;
+        float mPitch;
+        float mSpeed;
+        public TiroTtsObserver(SynthesisCallback synthCb, float pitch, float speed) {
+            mSynthCb = synthCb;
+            mPitch = pitch;
+            mSpeed = speed;
+        }
+        public void update(final byte[] ttsData) {
             Log.v(LOG_TAG, "TiroTtsObserver: Tiro API returned: " + ttsData.length + " bytes");
             if (ttsData.length == 0) {
                 Log.v(LOG_TAG, "TiroTtsObserver: Nothing to speak");
                 return;
             }
-            m_synthCb.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, 1);
-            final int maxBytes = m_synthCb.getMaxBufferSize();
-            Log.v(LOG_TAG, "TiroTtsObserver: maxBufferSize = " + maxBytes);
+            // Either apply pitch and speed to ttsData, resulting in a differently sized output
+            // stream, or simply copy ttsData to the new output stream
+            final byte[] audioData = applyPitchAndSpeed(ttsData, mPitch, mSpeed);
+
+            final int maxBytes = mSynthCb.getMaxBufferSize();
+            mSynthCb.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
             int offset = 0;
-            while (offset < ttsData.length) {
+            while (offset < audioData.length) {
                 Log.v(LOG_TAG, "TiroTtsObserver: offset = " + offset);
-                final int bytesConsumed = Math.min(maxBytes, (ttsData.length - offset));
-                m_synthCb.audioAvailable(ttsData, offset, bytesConsumed);
+                final int bytesConsumed = Math.min(maxBytes, (audioData.length - offset));
+                mSynthCb.audioAvailable(audioData, offset, bytesConsumed);
                 offset += bytesConsumed;
             }
             Log.v(LOG_TAG, "TiroTtsObserver: consumed " + offset + " bytes");
-            m_synthCb.done();
+            mSynthCb.done();
+        }
+
+        /**
+         * Either apply pitch and speed to ttsData, resulting in a differently sized output
+         * buffer, or simply copy ttsData to the new output buffer, if no changes of speed or pitch
+         * is requested.
+         * Return the newly created output buffer.
+         *
+         * @param pcmData   byte array of PCM data to be used as input data
+         * @return  new byte array with converted PCM data
+         */
+        static private byte[] applyPitchAndSpeed(final byte[] pcmData, float pitch, float speed) {
+            ByteArrayOutputStream outputConversionStream = new ByteArrayOutputStream();
+            if (pitch == 1.0 && speed == 1.0) {
+                outputConversionStream.write(pcmData, 0, pcmData.length);
+            } else {
+                Log.i(LOG_TAG, "Applying pitch " + pitch + ", speed " + speed);
+                Sonic sonic = new Sonic(SAMPLE_RATE_WAV, N_CHANNELS);
+                int bufferSize = 8192;  // some typical buffer size
+                int numRead = 0, numWritten;
+                byte[] inBuffer = new byte[bufferSize];
+                byte[] outBuffer = new byte[bufferSize];
+                sonic.setSpeed(speed);
+                sonic.setPitch(pitch);
+                sonic.setRate(1.0f);
+                sonic.setVolume(1.0f);
+                sonic.setChordPitch(false);
+                sonic.setQuality(0);    // is much faster without sacrificing quality ...
+                InputStream inputStream = new ByteArrayInputStream(pcmData);
+                do {
+                    try {
+                        numRead = inputStream.read(inBuffer, 0, bufferSize);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    if(numRead <= 0) {
+                        sonic.flushStream();
+                    } else {
+                        sonic.writeBytesToStream(inBuffer, numRead);
+                    }
+                    do {
+                        numWritten = sonic.readBytesFromStream(outBuffer, bufferSize);
+                        if(numWritten > 0) {
+                            outputConversionStream.write(outBuffer, 0, numWritten);
+                        }
+                    } while(numWritten > 0);
+                } while(numRead > 0);
+            }
+            return outputConversionStream.toByteArray();
         }
 
         public void error(String errorMsg) {
@@ -266,7 +336,7 @@ public class AppRepository {
         final String SampleRate = "" + SAMPLE_RATE_MP3;
         SpeakRequest request = new SpeakRequest("standard", langCode,
                 "mp3", SampleRate, text, "text", voiceId);
-        mTiroSpeakController.streamAudio(request , new TiroAudioPlayObserver());
+        mTiroSpeakController.streamAudio(request , new TiroAudioPlayObserver(pitch, speed));
     }
 
     /**
@@ -296,7 +366,7 @@ public class AppRepository {
             final String SampleRate = "" + SAMPLE_RATE_WAV;
             SpeakRequest request = new SpeakRequest("standard", voice.languageCode,
                     "pcm", SampleRate, text, "text", voice.internalName);
-            mTiroSpeakController.streamAudio(request , new TiroTtsObserver(synthCb));
+            mTiroSpeakController.streamAudio(request , new TiroTtsObserver(synthCb, pitch, speed));
         } else {
             Log.e(LOG_TAG, "startTiroTts: given voice is null ?!");
         }
