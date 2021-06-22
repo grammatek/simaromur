@@ -43,7 +43,7 @@ public class AppRepository {
     private List<VoiceResponse> mTiroVoices;
     private final ApiDbUtil mApiDbUtil;
     private final MediaPlayer mMediaPlayer;
-    static final int SAMPLE_RATE_WAV= 22050;
+    static final int SAMPLE_RATE_WAV= 16000;
     static final int SAMPLE_RATE_MP3= 22050;
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
@@ -128,7 +128,7 @@ public class AppRepository {
         public void update(byte[] ttsData) {
             Log.v(LOG_TAG, "TiroTtsObserver: Tiro API returned: " + ttsData.length + " bytes");
             if (ttsData.length == 0) {
-                playSilence();
+                Log.v(LOG_TAG, "TiroTtsObserver: Nothing to speak");
                 return;
             }
             m_synthCb.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, 1);
@@ -141,20 +141,12 @@ public class AppRepository {
                 m_synthCb.audioAvailable(ttsData, offset, bytesConsumed);
                 offset += bytesConsumed;
             }
+            Log.v(LOG_TAG, "TiroTtsObserver: consumed " + offset + " bytes");
             m_synthCb.done();
         }
 
         public void error(String errorMsg) {
             Log.e(LOG_TAG, "TiroTtsObserver()::error: " + errorMsg);
-            playSilence();
-        }
-
-        private void playSilence() {
-            Log.v(LOG_TAG, "TiroTtsObserver()::playing silence ...");
-            m_synthCb.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, 1);
-            byte[] silenceData = new byte[m_synthCb.getMaxBufferSize()];
-            m_synthCb.audioAvailable(silenceData, 0, silenceData.length);
-            m_synthCb.done();
         }
     }
 
@@ -297,6 +289,10 @@ public class AppRepository {
     public void startTiroTts(SynthesisCallback synthCb, Voice voice, String text, float speed, float pitch) {
         // map given voice to voiceId
         if (voice != null) {
+            if (text.trim().isEmpty()) {
+                Log.w(LOG_TAG, "startTiroTts: given text is whitespace only ?!");
+            }
+
             final String SampleRate = "" + SAMPLE_RATE_WAV;
             SpeakRequest request = new SpeakRequest("standard", voice.languageCode,
                     "pcm", SampleRate, text, "text", voice.internalName);

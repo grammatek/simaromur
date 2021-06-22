@@ -4,17 +4,12 @@ import android.util.Log;
 
 import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import java.io.IOException;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class SpeakController implements Callback<ResponseBody> {
     private final static String LOG_TAG = "Simaromur_Tiro" + SpeakController.class.getSimpleName();
@@ -111,16 +106,7 @@ public class SpeakController implements Callback<ResponseBody> {
      * @return  a caller object, still needs to be executed
      */
     private Call<ResponseBody> buildSpeakCall(SpeakRequest speakRequest) {
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(TiroAPI.URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-
-        TiroAPI tiroAPI = retrofit.create(TiroAPI.class);
+        TiroAPI tiroAPI = TiroServiceGenerator.createService(TiroAPI.class);
         return tiroAPI.postSpeakRequest(speakRequest);
     }
 
