@@ -28,13 +28,11 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Vindmyllurnar eru hvor um sig 900 kW og samanlögð raforkuframleiðsla " +
-                "þeirra er áæetluð um 5,4 GWst á ári.";
+        String input = "21.06.2021 12:39";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("Vindmyllurnar eru hvor um sig níu hundruð kílóvött og samanlögð " +
-                "raforkuframleiðsla þeirra er áæetluð um fimm komma fjórar Gígavattstundir á ári .",
+        assertEquals("tuttugasta og fyrsta núll sjötta tvö þúsund tuttugu og eitt tólf þrjátíu og níu .",
                 processed);
     }
 
