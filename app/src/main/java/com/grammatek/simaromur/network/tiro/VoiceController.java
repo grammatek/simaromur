@@ -2,21 +2,14 @@ package com.grammatek.simaromur.network.tiro;
 
 import android.util.Log;
 
-import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
 import java.util.List;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class VoiceController implements Callback<List<VoiceResponse>> {
     private final static String LOG_TAG = "Simaromur_Tiro" + VoiceController.class.getSimpleName();
@@ -109,16 +102,7 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
      * @return  a caller object, still needs to be executed
      */
     private  Call<List<VoiceResponse>> buildQueryVoicesCall(String languageCode) {
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(TiroAPI.URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-
-        TiroAPI tiroAPI = retrofit.create(TiroAPI.class);
+        TiroAPI tiroAPI = TiroServiceGenerator.createService(TiroAPI.class);
         return tiroAPI.queryVoices(languageCode);
     }
 
