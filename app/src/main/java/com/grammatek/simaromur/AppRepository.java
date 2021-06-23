@@ -161,12 +161,16 @@ public class AppRepository {
         }
 
         /**
-         * Either apply pitch and speed to ttsData, resulting in a differently sized output
+         * Either apply pitch and speed to ttsData, resulting in a potentially differently sized output
          * buffer, or simply copy ttsData to the new output buffer, if no changes of speed or pitch
-         * is requested.
+         * are requested.
          * Return the newly created output buffer.
          *
          * @param pcmData   byte array of PCM data to be used as input data
+         * @param pitch     pitch to be applied. 1.0f means no pitch change, values > 1.0 mean higher
+         *                  pitch, values < 1.0 mean lower pitch than in given pcmData
+         * @param speed     speed to be applied. 1.0f means no speed change, values > 1.0 mean higher
+         *                  speed, values < 1.0 mean lower speed than in given pcmData
          * @return  new byte array with converted PCM data
          */
         static private byte[] applyPitchAndSpeed(final byte[] pcmData, float pitch, float speed) {
