@@ -119,7 +119,10 @@ public class TTSUnicodeNormalizer {
                     }
                 }
                 // we restore the original string with valid words / characters only
-                sb.append(wrd).append(" ");
+                sb.append(wrd);
+                // don't add an extra space if we deleted the word
+                if (!wrd.isEmpty())
+                    sb.append(" ");
             }
             normalizedSentences.add(sb.toString().trim());
         }

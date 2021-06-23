@@ -28,11 +28,11 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Áfangastaðir WOW air eru nú 31 talsins";
+        String input = "er \uF0C9";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("Áfangastaðir wow air eru nú þrjátíu og eins talsins .",
+        assertEquals("er .",
                 processed);
     }
 
