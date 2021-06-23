@@ -138,6 +138,14 @@ public class AppRepository {
             mPitch = pitch;
             mSpeed = speed;
         }
+
+        /**
+         * We receive the audio response from the API, convert it if necessary according to the
+         * values given in mPitch and mSpeed, and then feed the resulting buffer piece by piece to
+         * the callback object provided by the Android TTS API.
+         *
+         * @param ttsData   Audio response data from Tiro API
+         */
         public void update(final byte[] ttsData) {
             Log.v(LOG_TAG, "TiroTtsObserver: Tiro API returned: " + ttsData.length + " bytes");
             if (ttsData.length == 0) {
@@ -170,7 +178,9 @@ public class AppRepository {
          * @param pitch     pitch to be applied. 1.0f means no pitch change, values > 1.0 mean higher
          *                  pitch, values < 1.0 mean lower pitch than in given pcmData
          * @param speed     speed to be applied. 1.0f means no speed change, values > 1.0 mean higher
-         *                  speed, values < 1.0 mean lower speed than in given pcmData
+         *                  speed, values < 1.0 mean lower speed than in given pcmData. This parameter
+         *                  produces either more data for values >1.0, less data for values < 1.0, or
+         *                  no data change for a value of 1.0
          * @return  new byte array with converted PCM data
          */
         static private byte[] applyPitchAndSpeed(final byte[] pcmData, float pitch, float speed) {
@@ -180,7 +190,7 @@ public class AppRepository {
             } else {
                 Log.i(LOG_TAG, "Applying pitch " + pitch + ", speed " + speed);
                 Sonic sonic = new Sonic(SAMPLE_RATE_WAV, N_CHANNELS);
-                int bufferSize = 8192;  // some typical buffer size
+                int bufferSize = 8192;  // some typical buffer size, could also be 16K, 32K, ...
                 int numRead = 0, numWritten;
                 byte[] inBuffer = new byte[bufferSize];
                 byte[] outBuffer = new byte[bufferSize];
