@@ -106,12 +106,7 @@ public class AppRepository {
     }
 
     class TiroAudioPlayObserver implements SpeakController.AudioObserver {
-        float mPitch;
-        float mSpeed;
-        public TiroAudioPlayObserver(float pitch, float speed) {
-            mPitch = pitch;
-            mSpeed = speed;
-        }
+        public TiroAudioPlayObserver() { }
 
         public void update(byte[] audioData) {
             Log.v(LOG_TAG, "Tiro API returned: " + audioData.length + "bytes");
@@ -335,7 +330,7 @@ public class AppRepository {
         final String SampleRate = "" + SAMPLE_RATE_MP3;
         SpeakRequest request = new SpeakRequest("standard", langCode,
                 "mp3", SampleRate, text, "text", voiceId);
-        mTiroSpeakController.streamAudio(request , new TiroAudioPlayObserver(pitch, speed));
+        mTiroSpeakController.streamAudio(request , new TiroAudioPlayObserver());
     }
 
     /**
