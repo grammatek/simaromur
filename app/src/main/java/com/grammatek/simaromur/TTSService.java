@@ -92,7 +92,7 @@ public class TTSService extends TextToSpeechService {
                 Log.i(LOG_TAG, "onSynthesizeText: finished");
                 return;
             }
-            mRepository.startTiroTts(callback, voice, normalizedText, speechrate, pitch/100.0f);
+            mRepository.startTiroTts(callback, voice, normalizedText, speechrate/100.0f, pitch/100.0f);
         }
         else {
             Log.e(LOG_TAG, "onSynthesizeText: unsupported voice ?!");
