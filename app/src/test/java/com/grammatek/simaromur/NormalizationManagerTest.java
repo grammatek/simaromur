@@ -28,11 +28,11 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "21.06.2021 12:39";
+        String input = "Áfangastaðir WOW air eru nú 31 talsins";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("tuttugasta og fyrsta núll sjötta tvö þúsund tuttugu og eitt tólf þrjátíu og níu .",
+        assertEquals("Áfangastaðir wow air eru nú þrjátíu og eins talsins .",
                 processed);
     }
 
@@ -103,7 +103,7 @@ public class NormalizationManagerTest {
         //testSentences.put("Áfangastaðir WOW air eru nú 31 talsins, 23 innan Evrópu en 8 talsins í Norður Ameríku.",
         //        "Áfangastaðir WOW air eru nú þrjátíu og einn talsins , tuttugu og þrír innan Evrópu en átta talsins í Norður Ameríku .");
         testSentences.put("Áfangastaðir WOW air eru nú 31 talsins, 23 innan Evrópu en 8 talsins í Norður Ameríku.",
-                "Áfangastaðir W O W air eru nú þrjátíu og eins talsins , tuttugu og þrjú innan Evrópu en átta talsins í Norður Ameríku .");
+                "Áfangastaðir wow air eru nú þrjátíu og eins talsins , tuttugu og þrjú innan Evrópu en átta talsins í Norður Ameríku .");
         testSentences.put("Fyrstu félögin í Danmörku, Noregi og Svíþjóð 1919 og Norræna félagið á Íslandi 29. september árið 1922 .",
                 "Fyrstu félögin í Danmörku , Noregi og Svíþjóð nítján hundruð og nítján og Norræna félagið á Íslandi " +
                         "tuttugasta og níunda september árið nítján hundruð tuttugu og tvö .");

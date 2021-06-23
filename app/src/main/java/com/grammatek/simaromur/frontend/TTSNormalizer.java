@@ -113,8 +113,12 @@ public class TTSNormalizer {
                 token = normalizeNumber(token, nextTag);
             }
             // add space between upper case letters, if they do not build known Acronyms like "RÚV"
-            else if (token.matches(NumberHelper.LETTERS_PTRN))
-                token = insertSpaces(token);
+            else if (token.matches(NumberHelper.LETTERS_PTRN) && token.length() > 1) {
+                if (TTSUnicodeNormalizer.inDictionary(token))
+                    token = token.toLowerCase();
+                else
+                    token = insertSpaces(token);
+            }
             else if (token.length() > 1 && token.charAt(0) == token.charAt(1))
                 token = insertSpaces(token);
             else if (token.matches(linksPattern))
