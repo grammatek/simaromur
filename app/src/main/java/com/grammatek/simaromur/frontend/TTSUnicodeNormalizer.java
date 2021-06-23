@@ -21,7 +21,7 @@ import java.util.Set;
  */
 public class TTSUnicodeNormalizer {
 
-    private final Set<String> mLexicon;
+    public static Set<String> mLexicon = new HashSet<>();
 
     // The Icelandic alphabet, the grapheme set valid for automatic g2p
     private final static Set<Character> CHAR_SET = new HashSet<>();
@@ -103,15 +103,9 @@ public class TTSUnicodeNormalizer {
             StringBuilder sb = new StringBuilder();
             String[] sentArr = sent.split(" ");
             for (String wrd : sentArr) {
-                // we keep single characters for the moment, need to look into that
-                // more closely! we don't want web addresses to be corrupted, on
-                // the other hand all sinlge letters will have to be converted by g2p
-                if (wrd.length() == 1) {
-                    sb.append(wrd).append(" ");
-                    continue;
-                }
                 if (!inDictionary(wrd)) {
                     for (int i = 0; i < wrd.length(); i++) {
+                        // is it an Icelandic character?
                         if (!CHAR_SET.contains(Character.toLowerCase(wrd.charAt(i)))) {
                             String repl = getIceAlphaReplacement(wrd.charAt(i));
                             // we found a replacement for the non-Icelandic character
@@ -124,16 +118,19 @@ public class TTSUnicodeNormalizer {
                         }
                     }
                 }
-                // the word is in the dictionary, we restore the original string
-                sb.append(wrd).append(" ");
+                // we restore the original string with valid words / characters only
+                sb.append(wrd);
+                // don't add an extra space if we deleted the word
+                if (!wrd.isEmpty())
+                    sb.append(" ");
             }
             normalizedSentences.add(sb.toString().trim());
         }
         return normalizedSentences;
     }
 
-    private boolean inDictionary(String wrd) {
-        return mLexicon.contains(wrd);
+    public static boolean inDictionary(String wrd) {
+        return mLexicon.contains(wrd.toLowerCase());
     }
 
     private boolean shouldDelete(Character c) {
@@ -171,7 +168,7 @@ public class TTSUnicodeNormalizer {
         Resources res = context.getResources();
         String line = "";
         try {
-            InputStream is = res.openRawResource(R.raw.lexicon_v2006);
+            InputStream is = res.openRawResource(R.raw.lexicon_v2106b);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             if (is != null) {
                 while ((line = reader.readLine()) != null) {
