@@ -1,8 +1,10 @@
-package com.grammatek.simaromur.network.tiro;
+package com.grammatek.simaromur;
 
 import android.media.MediaDataSource;
 import android.media.MediaPlayer;
 import android.util.Log;
+
+import com.grammatek.simaromur.network.tiro.SpeakController;
 
 import java.io.IOException;
 
@@ -51,8 +53,6 @@ public class MediaPlayObserver implements SpeakController.AudioObserver {
     // interface implementation
 
     public void update(byte[] audioData) {
-        Log.v(LOG_TAG, "Tiro API returned: " + audioData.length + "bytes");
-
         ByteArrayMediaDataSource dataSource = new ByteArrayMediaDataSource(audioData);
         try {
             // resetting mediaplayer instance to evade problems

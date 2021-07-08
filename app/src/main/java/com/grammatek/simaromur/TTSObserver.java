@@ -1,8 +1,10 @@
-package com.grammatek.simaromur.network.tiro;
+package com.grammatek.simaromur;
 
 import android.media.AudioFormat;
 import android.speech.tts.SynthesisCallback;
 import android.util.Log;
+
+import com.grammatek.simaromur.network.tiro.SpeakController;
 
 import static android.speech.tts.TextToSpeech.ERROR_NETWORK;
 import static com.grammatek.simaromur.audio.AudioManager.N_CHANNELS;
@@ -32,9 +34,8 @@ public class TTSObserver implements SpeakController.AudioObserver {
      * @param ttsData Audio response data from Tiro API
      */
     public void update(final byte[] ttsData) {
-        Log.v(LOG_TAG, "TiroTtsObserver: Tiro API returned: " + ttsData.length + " bytes");
         if (ttsData.length == 0) {
-            Log.v(LOG_TAG, "TiroTtsObserver: Nothing to speak");
+            Log.v(LOG_TAG, "TTSObserver: Nothing to speak");
             return;
         }
 
@@ -47,14 +48,14 @@ public class TTSObserver implements SpeakController.AudioObserver {
         int offset = 0;
         final int maxBytes = mSynthCb.getMaxBufferSize();
         while (offset < audioData.length) {
-            Log.v(LOG_TAG, "TiroTtsObserver: offset = " + offset);
+            Log.v(LOG_TAG, "TTSObserver: offset = " + offset);
             final int bytesConsumed = Math.min(maxBytes, (audioData.length - offset));
             if (mSynthCb.hasStarted()) {
                 mSynthCb.audioAvailable(audioData, offset, bytesConsumed);
             }
             offset += bytesConsumed;
         }
-        Log.v(LOG_TAG, "TiroTtsObserver: consumed " + offset + " bytes");
+        Log.v(LOG_TAG, "TTSObserver: consumed " + offset + " bytes");
         stop();
     }
 
@@ -65,7 +66,7 @@ public class TTSObserver implements SpeakController.AudioObserver {
     }
 
     public void error(String errorMsg) {
-        Log.e(LOG_TAG, "TiroTtsObserver()::error: " + errorMsg);
+        Log.e(LOG_TAG, "TTSObserver()::error: " + errorMsg);
         mSynthCb.error(ERROR_NETWORK);
     }
 }
