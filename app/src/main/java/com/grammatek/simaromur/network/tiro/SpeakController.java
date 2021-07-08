@@ -100,8 +100,13 @@ public class SpeakController implements Callback<ResponseBody> {
             ResponseBody body = response.body();
             assert (body != null);
             try {
-                Log.v(LOG_TAG, "API returned: " + body.contentLength() + " bytes");
-                mAudioObserver.update(body.bytes());
+                // @todo: body.bytes() loads the whole response into memory. We should change this
+                //        to body.byteStream() to support streamed responses without further
+                //        network delays. Then we'd need to handle the end of response via a special
+                //        done() call in the observer.
+                byte[] data = body.bytes();
+                Log.v(LOG_TAG, "API returned: " + data.length + " bytes");
+                mAudioObserver.update(data);
             } catch (IOException e) {
                 e.printStackTrace();
             }
