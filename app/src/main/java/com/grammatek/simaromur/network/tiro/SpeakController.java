@@ -32,6 +32,11 @@ public class SpeakController implements Callback<ResponseBody> {
          * @param errorMsg  Error message
          */
         void error(String errorMsg);
+
+        /**
+         * Stop actions for Observer.
+         */
+        void stop();
     }
 
     private AudioObserver mAudioObserver;       // Audio observer given in streamAudio()
@@ -65,6 +70,9 @@ public class SpeakController implements Callback<ResponseBody> {
             mCall.cancel();
         }
         mCall = null;
+        if (mAudioObserver != null) {
+            mAudioObserver.stop();
+        }
         mAudioObserver = null;
     }
 

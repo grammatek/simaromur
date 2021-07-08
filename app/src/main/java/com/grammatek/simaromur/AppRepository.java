@@ -1,9 +1,6 @@
 package com.grammatek.simaromur;
 
 import android.app.Application;
-import android.media.AudioFormat;
-import android.media.MediaDataSource;
-import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.TextToSpeech;
@@ -16,19 +13,19 @@ import com.grammatek.simaromur.db.AppDataDao;
 import com.grammatek.simaromur.db.ApplicationDb;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
+import com.grammatek.simaromur.network.tiro.MediaPlayObserver;
 import com.grammatek.simaromur.network.tiro.SpeakController;
+import com.grammatek.simaromur.network.tiro.TTSObserver;
 import com.grammatek.simaromur.network.tiro.VoiceController;
 import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import thirdparty.Sonic;
+import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_MP3;
+import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
 
 
 /**
@@ -47,10 +44,7 @@ public class AppRepository {
     private final SpeakController mTiroSpeakController;
     private List<VoiceResponse> mTiroVoices;
     private final ApiDbUtil mApiDbUtil;
-    private final MediaPlayer mMediaPlayer;
-    static final int SAMPLE_RATE_WAV = 16000;
-    static final int SAMPLE_RATE_MP3 = 22050;
-    static final int N_CHANNELS = 1;
+
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
 
@@ -71,162 +65,6 @@ public class AppRepository {
         }
     }
 
-    /**
-     * This class transforms a byte array into a MediaDataSource consumable by the Media Player
-     */
-    public static class ByteArrayMediaDataSource extends MediaDataSource {
-        private final byte[] data;
-
-        public ByteArrayMediaDataSource(byte []data) {
-            assert data != null;
-            this.data = data;
-        }
-        @Override
-        public int readAt(long position, byte[] buffer, int offset, int size) throws IOException {
-            if (position > getSize()) {
-                return 0;
-            }
-            int adaptedSize = size;
-            if (position + (long) size > getSize()) {
-                adaptedSize = (int) getSize() - (int) position;
-            }
-            System.arraycopy(data, (int)position, buffer, offset, adaptedSize);
-            return adaptedSize;
-        }
-
-        @Override
-        public long getSize() throws IOException {
-            return data.length;
-        }
-
-        @Override
-        public void close() throws IOException {
-            // Nothing to do here
-        }
-    }
-
-    class TiroAudioPlayObserver implements SpeakController.AudioObserver {
-        public TiroAudioPlayObserver() { }
-
-        public void update(byte[] audioData) {
-            Log.v(LOG_TAG, "Tiro API returned: " + audioData.length + "bytes");
-
-            ByteArrayMediaDataSource dataSource = new ByteArrayMediaDataSource(audioData);
-                try {
-                    // resetting mediaplayer instance to evade problems
-                    mMediaPlayer.reset();
-                    mMediaPlayer.setDataSource(dataSource);
-                    mMediaPlayer.prepare();
-                    mMediaPlayer.start();
-                    // @todo: implement MediaPlayer completion callbacks for visual feedback
-                } catch (IOException ex) {
-                    String s = ex.toString();
-                    ex.printStackTrace();
-                }
-        }
-        public void error(String errorMsg) {
-            Log.e(LOG_TAG, "TiroAudioPlayObserver()::error: " + errorMsg);
-        }
-    }
-
-    static class TiroTtsObserver implements SpeakController.AudioObserver {
-        SynthesisCallback mSynthCb;
-        float mPitch;
-        float mSpeed;
-        public TiroTtsObserver(SynthesisCallback synthCb, float pitch, float speed) {
-            mSynthCb = synthCb;
-            mPitch = pitch;
-            mSpeed = speed;
-        }
-
-        /**
-         * We receive the audio response from the API, convert it if necessary according to the
-         * values given in mPitch and mSpeed, and then feed the resulting buffer piece by piece to
-         * the callback object provided by the Android TTS API.
-         *
-         * @param ttsData   Audio response data from Tiro API
-         */
-        public void update(final byte[] ttsData) {
-            Log.v(LOG_TAG, "TiroTtsObserver: Tiro API returned: " + ttsData.length + " bytes");
-            if (ttsData.length == 0) {
-                Log.v(LOG_TAG, "TiroTtsObserver: Nothing to speak");
-                return;
-            }
-
-            final byte[] audioData = applyPitchAndSpeed(ttsData, mPitch, mSpeed);
-
-            final int maxBytes = mSynthCb.getMaxBufferSize();
-            mSynthCb.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
-            int offset = 0;
-            while (offset < audioData.length) {
-                Log.v(LOG_TAG, "TiroTtsObserver: offset = " + offset);
-                final int bytesConsumed = Math.min(maxBytes, (audioData.length - offset));
-                mSynthCb.audioAvailable(audioData, offset, bytesConsumed);
-                offset += bytesConsumed;
-            }
-            Log.v(LOG_TAG, "TiroTtsObserver: consumed " + offset + " bytes");
-            mSynthCb.done();
-        }
-
-        /**
-         * Either apply pitch and speed to ttsData, resulting in a potentially differently sized output
-         * buffer, or simply copy ttsData to the new output buffer, if no changes of speed or pitch
-         * are requested.
-         * Return the newly created output buffer.
-         *
-         * @param pcmData   byte array of PCM data to be used as input data
-         * @param pitch     pitch to be applied. 1.0f means no pitch change, values > 1.0 mean higher
-         *                  pitch, values < 1.0 mean lower pitch than in given pcmData
-         * @param speed     speed to be applied. 1.0f means no speed change, values > 1.0 mean higher
-         *                  speed, values < 1.0 mean lower speed than in given pcmData. This parameter
-         *                  produces either more data for values >1.0, less data for values < 1.0, or
-         *                  no data change for a value of 1.0
-         * @return  new byte array with converted PCM data
-         */
-        static private byte[] applyPitchAndSpeed(final byte[] pcmData, float pitch, float speed) {
-            ByteArrayOutputStream outputConversionStream = new ByteArrayOutputStream();
-            if (pitch == 1.0 && speed == 1.0) {
-                outputConversionStream.write(pcmData, 0, pcmData.length);
-            } else {
-                Log.i(LOG_TAG, "Applying pitch " + pitch + ", speed " + speed);
-                Sonic sonic = new Sonic(SAMPLE_RATE_WAV, N_CHANNELS);
-                int bufferSize = 8192;  // some typical buffer size, could also be 16K, 32K, ...
-                int numRead = 0, numWritten;
-                byte[] inBuffer = new byte[bufferSize];
-                byte[] outBuffer = new byte[bufferSize];
-                sonic.setSpeed(speed);
-                sonic.setPitch(pitch);
-                sonic.setRate(1.0f);
-                sonic.setVolume(1.0f);
-                sonic.setChordPitch(false);
-                sonic.setQuality(0);    // is much faster without sacrificing quality ...
-                InputStream inputStream = new ByteArrayInputStream(pcmData);
-                do {
-                    try {
-                        numRead = inputStream.read(inBuffer, 0, bufferSize);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    if(numRead <= 0) {
-                        sonic.flushStream();
-                    } else {
-                        sonic.writeBytesToStream(inBuffer, numRead);
-                    }
-                    do {
-                        numWritten = sonic.readBytesFromStream(outBuffer, bufferSize);
-                        if(numWritten > 0) {
-                            outputConversionStream.write(outBuffer, 0, numWritten);
-                        }
-                    } while(numWritten > 0);
-                } while(numRead > 0);
-            }
-            return outputConversionStream.toByteArray();
-        }
-
-        public void error(String errorMsg) {
-            Log.e(LOG_TAG, "TiroTtsObserver()::error: " + errorMsg);
-        }
-    }
 
     // Note that in order to unit test the AppRepository, you have to remove the Application
     // dependency.
@@ -237,7 +75,6 @@ public class AppRepository {
         mApiDbUtil = new ApiDbUtil(mVoiceDao);
         mTiroSpeakController = new SpeakController();
         mTiroVoiceController = new VoiceController();
-        mMediaPlayer = new MediaPlayer();
         mAllVoices = mVoiceDao.getAllVoices();
         mAllCachedVoices = new ArrayList<>();
         getAllVoices().observeForever(voices -> {
@@ -344,15 +181,14 @@ public class AppRepository {
         final String SampleRate = "" + SAMPLE_RATE_MP3;
         SpeakRequest request = new SpeakRequest("standard", langCode,
                 "mp3", SampleRate, text, "text", voiceId);
-        mTiroSpeakController.streamAudio(request , new TiroAudioPlayObserver());
+        mTiroSpeakController.streamAudio(request , new MediaPlayObserver());
     }
 
     /**
      * Stops speaking current voice, if playing.
      */
     public void stopTiroSpeak() {
-        if (mMediaPlayer.isPlaying())
-            mMediaPlayer.stop();
+        mTiroSpeakController.stop();
     }
 
     /**
@@ -374,7 +210,7 @@ public class AppRepository {
             final String SampleRate = "" + SAMPLE_RATE_WAV;
             SpeakRequest request = new SpeakRequest("standard", voice.languageCode,
                     "pcm", SampleRate, text, "text", voice.internalName);
-            mTiroSpeakController.streamAudio(request , new TiroTtsObserver(synthCb, pitch, speed));
+            mTiroSpeakController.streamAudio(request , new TTSObserver(synthCb, pitch, speed));
         } else {
             Log.e(LOG_TAG, "startTiroTts: given voice is null ?!");
         }
@@ -534,15 +370,6 @@ public class AppRepository {
             return mSelectedVoice.name;
         }
         return "";
-    }
-
-    private void waitABit(long millis) {
-        try            {
-            Thread.sleep(millis);
-        }
-        catch(InterruptedException ex)            {
-            Thread.currentThread().interrupt();
-        }
     }
 
     private static class insertVoiceAsyncTask extends AsyncTask<com.grammatek.simaromur.db.Voice, Void, Void> {
