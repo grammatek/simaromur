@@ -4,11 +4,11 @@ import android.media.MediaDataSource;
 import android.media.MediaPlayer;
 import android.util.Log;
 
-import com.grammatek.simaromur.network.tiro.SpeakController;
+import com.grammatek.simaromur.audio.AudioObserver;
 
 import java.io.IOException;
 
-public class MediaPlayObserver implements SpeakController.AudioObserver {
+public class MediaPlayObserver implements AudioObserver {
     private final static String LOG_TAG = "Simaromur_" + MediaPlayObserver.class.getSimpleName();
     private final MediaPlayer mMediaPlayer;
 

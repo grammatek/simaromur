@@ -2,6 +2,7 @@ package com.grammatek.simaromur.network.tiro;
 
 import android.util.Log;
 
+import com.grammatek.simaromur.audio.AudioObserver;
 import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 
 import java.io.IOException;
@@ -13,32 +14,6 @@ import retrofit2.Response;
 
 public class SpeakController implements Callback<ResponseBody> {
     private final static String LOG_TAG = "Simaromur_Tiro" + SpeakController.class.getSimpleName();
-
-    /**
-     * Observer interface for async. speech audio playback
-     */
-    public interface AudioObserver {
-        /**
-         * Called when new data arrives from API.
-         *
-         * @param audioData     Audio data buffer - data format is dependent on requested
-         *                      OutputFormat
-         */
-        void update(byte[] audioData);
-
-        /**
-         * Called when an error occurs. Currently only the error message is passed on.
-         *
-         * @param errorMsg  Error message
-         */
-        void error(String errorMsg);
-
-        /**
-         * Stop actions for Observer.
-         */
-        void stop();
-    }
-
     private AudioObserver mAudioObserver;       // Audio observer given in streamAudio()
     private Call<ResponseBody> mCall;           // Caller object created in streamAudio(),
                                                 // saved for being cancelable via stop().
@@ -125,6 +100,7 @@ public class SpeakController implements Callback<ResponseBody> {
             ResponseBody body = response.body();
             assert (body != null);
             try {
+                Log.v(LOG_TAG, "API returned: " + body.contentLength() + " bytes");
                 mAudioObserver.update(body.bytes());
             } catch (IOException e) {
                 e.printStackTrace();

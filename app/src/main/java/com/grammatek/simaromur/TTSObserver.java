@@ -4,14 +4,14 @@ import android.media.AudioFormat;
 import android.speech.tts.SynthesisCallback;
 import android.util.Log;
 
-import com.grammatek.simaromur.network.tiro.SpeakController;
+import com.grammatek.simaromur.audio.AudioObserver;
 
 import static android.speech.tts.TextToSpeech.ERROR_NETWORK;
 import static com.grammatek.simaromur.audio.AudioManager.N_CHANNELS;
 import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
 import static com.grammatek.simaromur.audio.AudioManager.applyPitchAndSpeed;
 
-public class TTSObserver implements SpeakController.AudioObserver {
+public class TTSObserver implements AudioObserver {
     private final static String LOG_TAG = "Simaromur_" + TTSObserver.class.getSimpleName();
 
     private final SynthesisCallback mSynthCb;
