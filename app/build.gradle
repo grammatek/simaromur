@@ -1,5 +1,8 @@
 plugins {
     id 'com.android.application'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.firebase-perf'
+    id 'com.google.firebase.crashlytics'
 }
 
 def getFliteDir() {
@@ -58,6 +61,10 @@ android {
 
     buildTypes {
         release {
+            firebaseCrashlytics {
+                nativeSymbolUploadEnabled true
+            }
+
             // Enables code shrinking, obfuscation, and optimization for only
             // your project's release build type.
             minifyEnabled true
@@ -154,4 +161,19 @@ dependencies {
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
+
+    // Import the Firebase BoM
+    // When using the BoM, don't specify versions in Firebase dependencies
+    implementation platform('com.google.firebase:firebase-bom:28.2.1')
+
+    // Add the dependency for the Firebase SDKs
+    implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-crashlytics-ndk'
+    implementation 'com.google.firebase:firebase-inappmessaging-display'
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-perf'
+
+    // Add the dependencies for any other desired Firebase products
+    // https://firebase.google.com/docs/android/setup#available-libraries
+
 }
