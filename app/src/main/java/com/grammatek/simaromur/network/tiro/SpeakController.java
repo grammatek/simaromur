@@ -2,6 +2,7 @@ package com.grammatek.simaromur.network.tiro;
 
 import android.util.Log;
 
+import com.grammatek.simaromur.audio.AudioObserver;
 import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 
 import java.io.IOException;
@@ -13,27 +14,6 @@ import retrofit2.Response;
 
 public class SpeakController implements Callback<ResponseBody> {
     private final static String LOG_TAG = "Simaromur_Tiro" + SpeakController.class.getSimpleName();
-
-    /**
-     * Observer interface for async. speech audio playback
-     */
-    public interface AudioObserver {
-        /**
-         * Called when new data arrives from API.
-         *
-         * @param audioData     Audio data buffer - data format is dependent on requested
-         *                      OutputFormat
-         */
-        void update(byte[] audioData);
-
-        /**
-         * Called when an error occurs. Currently only the error message is passed on.
-         *
-         * @param errorMsg  Error message
-         */
-        void error(String errorMsg);
-    }
-
     private AudioObserver mAudioObserver;       // Audio observer given in streamAudio()
     private Call<ResponseBody> mCall;           // Caller object created in streamAudio(),
                                                 // saved for being cancelable via stop().
@@ -65,6 +45,9 @@ public class SpeakController implements Callback<ResponseBody> {
             mCall.cancel();
         }
         mCall = null;
+        if (mAudioObserver != null) {
+            mAudioObserver.stop();
+        }
         mAudioObserver = null;
     }
 
@@ -117,7 +100,13 @@ public class SpeakController implements Callback<ResponseBody> {
             ResponseBody body = response.body();
             assert (body != null);
             try {
-                mAudioObserver.update(body.bytes());
+                // @todo: body.bytes() loads the whole response into memory. We should change this
+                //        to body.byteStream() to support streamed responses without further
+                //        network delays. Then we'd need to handle the end of response via a special
+                //        done() call in the observer.
+                byte[] data = body.bytes();
+                Log.v(LOG_TAG, "API returned: " + data.length + " bytes");
+                mAudioObserver.update(data);
             } catch (IOException e) {
                 e.printStackTrace();
             }
