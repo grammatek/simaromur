@@ -9,6 +9,7 @@ import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.os.Build;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.grammatek.simaromur.frontend.NormalizationManager;
 
 import java.io.File;
@@ -18,7 +19,7 @@ import java.util.concurrent.Executors;
 public class App extends Application {
     ExecutorService executorService = Executors.newFixedThreadPool(4);
     AppRepository mAppRepository;
-
+    private FirebaseAnalytics mFirebaseAnalytics;
     private static App sApplication;
 
     private NormalizationManager mNormalizationManager;
@@ -144,6 +145,8 @@ public class App extends Application {
         super.onCreate();
         sApplication = this;
         mAppRepository = new AppRepository(this);
+        // Obtain the FirebaseAnalytics instance.
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
         mNormalizationManager = new NormalizationManager(this.getBaseContext());
     }
 }
