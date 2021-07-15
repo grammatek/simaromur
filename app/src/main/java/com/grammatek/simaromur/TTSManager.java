@@ -55,6 +55,11 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
         startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
     }
 
+    /**
+     * Method to fulfill TextToSpeech.OnInitListener interface.
+     *
+     * @param status status of TTS engine
+     */
     @Override
     public void onInit(final int status) {
         Log.v(LOG_TAG, "onInit: status: " + status);
@@ -142,17 +147,18 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     }
 
     /**
-     * This method is called, when the TTS system is bound to this activity. Before that, it might
-     * well be that onResume or on
+     * This method is called, when the TTS system is bound to this activity. Before, onResume()
+     * can be called.
      *
-     * @param requestCode
-     * @param resultCode
-     * @param data
+     * @param requestCode   The user-defined number provided when starting the activity
+     * @param resultCode    Result code / outcome of the activity
+     * @param data          optional data from the intent
      */
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.v(LOG_TAG, "onActivityResult: resultCode: " + resultCode);
         if (requestCode == MY_DATA_CHECK_CODE) {
-            // success, create the TTS instance, this also pulls up our TTSService
+            // Create the TTS instance, this also pulls up our TTSService. Anywhere we use
+            // this object, we must always check beforehand mTtsClient != null.
             mTtsClient = new TextToSpeech(this, this,
                     getApplicationContext().getPackageName());
         }
@@ -163,9 +169,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
 
         Intent intent = new Intent(this, ICONS[position].activity);
         startActivity(intent);
-
     }
-
 
     static class LauncherIcon {
         final String text;
@@ -178,7 +182,6 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
             this.text = text;
             this.activity = activity;
         }
-
     }
 
     static class ImageAdapter extends BaseAdapter {
