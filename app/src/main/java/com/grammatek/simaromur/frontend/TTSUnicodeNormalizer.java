@@ -168,7 +168,7 @@ public class TTSUnicodeNormalizer {
         Resources res = context.getResources();
         String line = "";
         try {
-            InputStream is = res.openRawResource(R.raw.lexicon_v2106b);
+            InputStream is = res.openRawResource(R.raw.lexicon);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             if (is != null) {
                 while ((line = reader.readLine()) != null) {
