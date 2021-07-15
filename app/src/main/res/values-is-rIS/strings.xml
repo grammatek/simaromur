@@ -18,4 +18,10 @@
     <string name="is_IS">Íslenska</string>
     <string name="en_EN">Enska</string>
     <string name="en_US">Enska</string>
+    <string name="ok">Í lagi</string>
+    <string name="cancel">Hætta</string>
+    <string name="doit">Virkja!</string>
+    <string name="tts_settings">Áður en þú getur notað Símaróm sem skjálesara þarftu að virkja hann í stillingum fyrir talgervil</string>
+    <string name="choose_tts_engine">Mikilvægt</string>
+    <string name="not_yet">Ekki núna</string>
 </resources>

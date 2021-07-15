@@ -1,9 +1,12 @@
 package com.grammatek.simaromur;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,12 +18,15 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class TTSManager extends Activity implements OnItemClickListener {
+public class TTSManager extends Activity implements OnItemClickListener, TextToSpeech.OnInitListener {
     private final static String LOG_TAG = "Simaromur_Java_" + TTSManager.class.getSimpleName();
+    private TextToSpeech mTtsClient;        // for querying TTS engine info
+    private AlertDialog mWarningDialog;
+    private final static int MY_DATA_CHECK_CODE = 1;
 
     static final LauncherIcon[] ICONS = {
         // @todo: we disable the FLite based choosers, we will replace local voice management
-        // completely
+        //        completely
         // new LauncherIcon(R.drawable.custom_dialog_tts, "TTS Demo", TTSDemo.class),
         // new LauncherIcon(R.drawable.custom_dialog_manage, "FLite Voices", DownloadVoiceData.class),
         new LauncherIcon(R.drawable.sim_logo, "SIM Voices", VoiceManager.class),
@@ -43,6 +49,119 @@ public class TTSManager extends Activity implements OnItemClickListener {
                 return event.getAction() == MotionEvent.ACTION_MOVE;
             }
         });
+
+        Intent checkIntent = new Intent();
+        checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+        startActivityForResult(checkIntent, MY_DATA_CHECK_CODE);
+    }
+
+    /**
+     * Method to fulfill TextToSpeech.OnInitListener interface.
+     *
+     * @param status status of TTS engine
+     */
+    @Override
+    public void onInit(final int status) {
+        Log.v(LOG_TAG, "onInit: status: " + status);
+    }
+
+    /**
+     * Checks if our service is the TTS default service
+     */
+    private void checkDefaultEngine() {
+        Log.v(LOG_TAG, "checkDefaultEngine()");
+        if (mTtsClient == null) {
+            Log.v(LOG_TAG, "No TTS connection ?!");
+            return;
+        }
+        try {
+            final String initEngine = mTtsClient.getDefaultEngine();
+            if (initEngine != null) {
+                Log.i(LOG_TAG, "Default engine: " + initEngine);
+                // if Símarómur is not the default engine: engage user to change that
+                if (!initEngine.equals(getApplicationContext().getPackageName())) {
+                    showTtsEngineWarningDialog();
+                }
+            }
+        } catch (final Exception e) {
+            Log.e(LOG_TAG, "TTS engine default error" + e.getMessage());
+        }
+    }
+
+    /**
+     * Shows TTS Engine warning and refers user to Android TTS service settings.
+     */
+    private void showTtsEngineWarningDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder
+            .setMessage(R.string.tts_settings)
+            .setTitle(R.string.choose_tts_engine)
+            .setCancelable(false)
+            .setPositiveButton(R.string.doit, (dialog, id) -> {
+                openTtsSettings();
+            })
+            .setNegativeButton(R.string.not_yet, (dialog, id) -> {
+                // nothing
+            });
+        if (mWarningDialog != null) {
+            mWarningDialog.cancel();
+            mWarningDialog = null;
+        }
+        mWarningDialog = builder.create();
+        mWarningDialog.show();
+    }
+
+    @Override
+    public void onResume() {
+        Log.v(LOG_TAG, "onResume:");
+        super.onResume();
+        checkDefaultEngine();
+    }
+
+    @Override
+    public void onStop() {
+        Log.v(LOG_TAG, "onStop:");
+        super.onStop();
+        if (mWarningDialog != null) {
+            mWarningDialog.cancel();
+            mWarningDialog = null;
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.v(LOG_TAG, "onDestroy:");
+        super.onDestroy();
+        if (mTtsClient != null) {
+            mTtsClient.shutdown();
+            mTtsClient = null;
+        }
+    }
+
+    // Open TTS engine preferences
+    private void openTtsSettings() {
+        Intent intent = new Intent();
+        intent.setAction("com.android.settings.TTS_SETTINGS");
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
+    /**
+     * This method is called, when the TTS system is bound to this activity. Before, onResume()
+     * can be called.
+     *
+     * @param requestCode   The user-defined number provided when starting the activity
+     * @param resultCode    Result code / outcome of the activity
+     * @param data          optional data from the intent
+     */
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.v(LOG_TAG, "onActivityResult: resultCode: " + resultCode);
+        if (requestCode == MY_DATA_CHECK_CODE) {
+            // Create the TTS instance, this also pulls up our TTSService. Anywhere we use
+            // this object, we must always check beforehand mTtsClient != null.
+            mTtsClient = new TextToSpeech(this, this,
+                    getApplicationContext().getPackageName());
+        }
     }
 
     @Override
@@ -50,7 +169,6 @@ public class TTSManager extends Activity implements OnItemClickListener {
 
         Intent intent = new Intent(this, ICONS[position].activity);
         startActivity(intent);
-
     }
 
     static class LauncherIcon {
@@ -64,7 +182,6 @@ public class TTSManager extends Activity implements OnItemClickListener {
             this.text = text;
             this.activity = activity;
         }
-
     }
 
     static class ImageAdapter extends BaseAdapter {
