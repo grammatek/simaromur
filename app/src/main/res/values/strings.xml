@@ -18,4 +18,10 @@
     <string name="is_IS">Icelandic</string>
     <string name="en_EN">English</string>
     <string name="en_US">U.S. English</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="not_yet">Not yet</string>
+    <string name="doit">Do it!</string>
+    <string name="tts_settings">Before you can use Símarómur as screen reader, you have to activate it in the Android TTS settings</string>
+    <string name="choose_tts_engine">Important</string>
 </resources>
