@@ -23,8 +23,8 @@ public class TTSManager extends Activity implements OnItemClickListener {
         // completely
         // new LauncherIcon(R.drawable.custom_dialog_tts, "TTS Demo", TTSDemo.class),
         // new LauncherIcon(R.drawable.custom_dialog_manage, "FLite Voices", DownloadVoiceData.class),
-        new LauncherIcon(R.drawable.simaromur_xxhdpi, "SIM Voices", VoiceManager.class),
-        new LauncherIcon(R.drawable.custom_dialog_info, "About Símarómur", InfoViewer.class),
+        new LauncherIcon(R.drawable.simaromur_large, "SIM Voices", VoiceManager.class),
+        new LauncherIcon(R.drawable.custom_info_large, "About Símarómur", InfoViewer.class),
     };
 
     @Override
