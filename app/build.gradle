@@ -35,10 +35,10 @@ android {
 
     defaultConfig {
         applicationId "com.grammatek.simaromur"
-        minSdkVersion 28
+        minSdkVersion 21
         targetSdkVersion 30
-        versionCode 4
-        versionName "0.4"
+        versionCode 5
+        versionName "1.0-beta1"
 
         //testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
