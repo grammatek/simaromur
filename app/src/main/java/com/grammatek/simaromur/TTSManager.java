@@ -176,8 +176,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
         final int textId;
         final int imgId;
         final Class activity;
-
-        //public LauncherIcon(int imgId, String text, Class activity) {
+        
         public LauncherIcon(int imgId, int textId, Class activity) {
             super();
             this.imgId = imgId;
