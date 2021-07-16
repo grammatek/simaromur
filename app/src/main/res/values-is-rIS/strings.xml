@@ -4,8 +4,9 @@
     <string name="eng_sample">This is a sample English sentence for Símarómur synthesizer.</string>
     <string name="icelandic_sample">Þetta er prófunarsetning á íslensku fyrir talgervilinn Símarómur.</string>
     <string name="simaromur_manager">Símarómur</string>
-    <string name="simaromur_voice_manager">Símarómur Raddir</string>
-    <string name="voice_list_update">Download Voice List</string>
+    <string name="simaromur_voice_manager">Símarómur raddir</string>
+    <string name="simaromur_info">Um Símarómr</string>
+    <string name="voice_list_update">Sækja lista af röddum</string>
     <string name="todo">TODO</string>
     <string name="speak_button">Spila</string>
     <string name="voice_test_text">Innanlandssmitið sem greindist utan sóttkvíar í gær sýnir að veiran er ekki horfin úr samfélaginu</string>

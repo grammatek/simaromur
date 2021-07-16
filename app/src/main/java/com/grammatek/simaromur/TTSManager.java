@@ -29,8 +29,8 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
         //        completely
         // new LauncherIcon(R.drawable.custom_dialog_tts, "TTS Demo", TTSDemo.class),
         // new LauncherIcon(R.drawable.custom_dialog_manage, "FLite Voices", DownloadVoiceData.class),
-        new LauncherIcon(R.drawable.simaromur_large, "SIM Voices", VoiceManager.class),
-        new LauncherIcon(R.drawable.custom_info_large, "About Símarómur", InfoViewer.class),
+        new LauncherIcon(R.drawable.simaromur_large, R.string.simaromur_voice_manager, VoiceManager.class),
+        new LauncherIcon(R.drawable.custom_info_large, R.string.simaromur_info, InfoViewer.class),
     };
 
     @Override
@@ -172,14 +172,16 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     }
 
     static class LauncherIcon {
-        final String text;
+        //final String text;
+        final int textId;
         final int imgId;
         final Class activity;
 
-        public LauncherIcon(int imgId, String text, Class activity) {
+        //public LauncherIcon(int imgId, String text, Class activity) {
+        public LauncherIcon(int imgId, int textId, Class activity) {
             super();
             this.imgId = imgId;
-            this.text = text;
+            this.textId = textId;
             this.activity = activity;
         }
     }
@@ -228,9 +230,9 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
             } else {
                 holder = (ViewHolder) v.getTag();
             }
-
+            String text = mContext.getString(ICONS[position].textId);
             holder.icon.setImageResource(ICONS[position].imgId);
-            holder.text.setText(ICONS[position].text);
+            holder.text.setText(text);
 
             return v;
         }

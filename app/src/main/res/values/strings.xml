@@ -5,6 +5,7 @@
     <string name="icelandic_sample">Þetta er prófunarsetning á íslensku fyrir talgervilinn Símarómur.</string>
     <string name="simaromur_manager">Símarómur</string>
     <string name="simaromur_voice_manager">Símarómur Voices</string>
+    <string name="simaromur_info">About Símarómur</string>
     <string name="voice_list_update">Download Voice List</string>
     <string name="todo">TODO</string>
     <string name="speak_button">Play</string>
