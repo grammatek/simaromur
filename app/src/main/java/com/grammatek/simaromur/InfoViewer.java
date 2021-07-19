@@ -69,19 +69,19 @@ public class InfoViewer extends ListActivity {
         }
         final List<String> Info = new ArrayList<String>() {
             {
-                add("Copyright");
-                add("URL");
-                add("RUNTIME_HEADER");
-                add("Android Version");
-                add("Supported ABIs");
-                add("Phone Model");
+                add(getString(R.string.info_copyright));
+                add(getString(R.string.info_url));
+                add(getString(R.string.info_runtime_header));
+                add(getString(R.string.info_android_version));
+                add(getString(R.string.info_supported_abis));
+                add(getString(R.string.info_phone_model));
             }
         };
 
         final List<String> Data = new ArrayList<String>() {
             {
-            add("© (2021) Grammatek ehf\nBased on previous work from Carnegie Mellon University © (1999-2012)");
-            add("https://github.com/grammatek/simaromur");
+            add(getString(R.string.info_about));
+            add(getString(R.string.info_repo_url));
             add("");
             add(android.os.Build.VERSION.RELEASE);
             add(String.join(", ", android.os.Build.SUPPORTED_ABIS));
@@ -90,8 +90,8 @@ public class InfoViewer extends ListActivity {
         };
 
         if (mEnableBenchmark) {
-            Info.add("Benchmark");
-            Data.add("mBenchmark + \" times faster than real time\"");
+            Info.add(getString(R.string.info_benchmark));
+            Data.add("mBenchmark + \" " + getString(R.string.info_benchmark_value) + " \"");
         }
 
         runOnUiThread(new Runnable() {
@@ -128,7 +128,7 @@ public class InfoViewer extends ListActivity {
 
         @Override
         public int getItemViewType(int position) {
-            if (values[position].equals("RUNTIME_HEADER")) {
+            if (values[position].equals(getString(R.string.info_runtime_header))) {
                 return 0;
             }
             else return 1;
@@ -146,8 +146,8 @@ public class InfoViewer extends ListActivity {
             TextView infoType = (TextView) convertView.findViewById(R.id.infotitle);
             TextView infoDetail = (TextView) convertView.findViewById(R.id.infodetail);
 
-            if (values[position].equals("RUNTIME_HEADER")) {
-                infoType.setText("Runtime Information");
+            if (values[position].equals(getString(R.string.info_runtime_header))) {
+                infoType.setText(getString(R.string.info_runtime));
                 infoType.setClickable(false);
 
                 infoType.setTextColor(getResources().getColor(R.color.themeblue));
