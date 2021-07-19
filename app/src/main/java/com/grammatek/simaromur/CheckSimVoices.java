@@ -25,15 +25,15 @@ public class CheckSimVoices extends Activity {
         int result = TextToSpeech.Engine.CHECK_VOICE_DATA_PASS;
         Intent returnData = new Intent();
 
-        // we should already have our voice list as the query is done at Application start ...
         List<com.grammatek.simaromur.db.Voice> voices = mAppRepository.getCachedVoices();
-        if (voices.isEmpty()) {
+        if (voices == null || voices.isEmpty()) {
             Log.e(LOG_TAG, "no voices available yet ?!");
             // todo: maybe we can use direct db calls and blocking network requests, as we are
             //       probably not called here inside the UI thread ?
             result = TextToSpeech.Engine.CHECK_VOICE_DATA_FAIL;
             setResult(result, returnData);
             finish();
+            return;
         }
 
         ArrayList<String> available = new ArrayList<>();
