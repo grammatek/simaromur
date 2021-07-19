@@ -8,6 +8,7 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.os.Build;
+import android.util.Log;
 
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.grammatek.simaromur.frontend.NormalizationManager;
@@ -18,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class App extends Application {
+    private final static String LOG_TAG = "Simaromur_" + App.class.getSimpleName();
     ExecutorService executorService = Executors.newFixedThreadPool(4);
     AppRepository mAppRepository;
     private FirebaseAnalytics mFirebaseAnalytics;
@@ -66,13 +68,14 @@ public class App extends Application {
 
     @Override
     public void onCreate() {
+        Log.v(LOG_TAG, "onCreate()");
         super.onCreate();
         sApplication = this;
         mConnectionChecker = new ConnectionCheck(this);
         mConnectionChecker.registerNetworkCallback();
-        mAppRepository = new AppRepository(this);
         // Obtain the FirebaseAnalytics instance.
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        mAppRepository = new AppRepository(this);
         mNormalizationManager = new NormalizationManager(this.getBaseContext());
     }
 }
