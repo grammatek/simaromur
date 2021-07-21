@@ -28,6 +28,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
             new LauncherIcon(R.drawable.simaromur_large, R.string.simaromur_voice_manager, VoiceManager.class),
             new LauncherIcon(R.drawable.custom_info_large, R.string.simaromur_info, InfoViewer.class),
             new LauncherIcon(R.drawable.feedback_large, R.string.simaromur_feedback, EmailFeedback.class),
+            new LauncherIcon(R.drawable.custom_settings_large, R.string.tts_settings_label, TTSManager.class),
     };
 
     @Override
@@ -166,13 +167,17 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-
-        Intent intent = new Intent(this, ICONS[position].activity);
-        startActivity(intent);
+        // if position points to the settings launchIcon, we don't start a new
+        // activity but simply call openTtsSettings()
+        if (ICONS[position].activity == this.getClass())
+            openTtsSettings();
+        else {
+            Intent intent = new Intent(this, ICONS[position].activity);
+            startActivity(intent);
+        }
     }
 
     static class LauncherIcon {
-        //final String text;
         final int textId;
         final int imgId;
         final Class activity;
