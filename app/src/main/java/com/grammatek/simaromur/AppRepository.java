@@ -13,14 +13,18 @@ import com.grammatek.simaromur.db.AppDataDao;
 import com.grammatek.simaromur.db.ApplicationDb;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
+import com.grammatek.simaromur.network.ConnectionCheck;
 import com.grammatek.simaromur.network.tiro.SpeakController;
 import com.grammatek.simaromur.network.tiro.VoiceController;
 import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_MP3;
 import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
@@ -32,6 +36,7 @@ import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
  */
 public class AppRepository {
     private final static String LOG_TAG = "Simaromur_" + AppRepository.class.getSimpleName();
+    private final static long NETWORK_VOICE_QUERY_TIME_MS = 1000*60*30;   // 30 min.
     private final AppDataDao mAppDataDao;
     private final VoiceDao mVoiceDao;
     private LiveData<AppData> mAppData;
@@ -42,6 +47,7 @@ public class AppRepository {
     private final SpeakController mTiroSpeakController;
     private List<VoiceResponse> mTiroVoices;
     private final ApiDbUtil mApiDbUtil;
+    ScheduledExecutorService mScheduler;
 
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
@@ -57,36 +63,38 @@ public class AppRepository {
             }
             mTiroVoices = voices;
             new updateVoicesAsyncTask(mApiDbUtil).execute(mTiroVoices);
+            new updateAppDataVoiceListTimestampAsyncTask(mAppDataDao).execute();
         }
         public void error(String errorMsg) {
             Log.e(LOG_TAG, "TiroVoiceQueryObserver()::error: " + errorMsg);
         }
     }
 
-
     // Note that in order to unit test the AppRepository, you have to remove the Application
     // dependency.
     public AppRepository(Application application) {
+        Log.v(LOG_TAG, "AppRepository()");
         ApplicationDb db = ApplicationDb.getDatabase(application);
         mAppDataDao = db.appDataDao();
         mVoiceDao = db.voiceDao();
         mApiDbUtil = new ApiDbUtil(mVoiceDao);
         mTiroSpeakController = new SpeakController();
         mTiroVoiceController = new VoiceController();
-        mAllVoices = mVoiceDao.getAllVoices();
-        mAllCachedVoices = new ArrayList<>();
-        getAllVoices().observeForever(voices -> {
-            Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
-            // Update cached voices
-            mAllCachedVoices = voices;
-        });
-        getAppData().observeForever(appData -> {
-            Log.v(LOG_TAG, "onChanged - appData currentVoice: " + appData);
+        mAppData = mAppDataDao.getLiveAppData();
+        mAppData.observeForever(appData -> {
+            Log.v(LOG_TAG, "mAppData update: " + appData);
             // Update cached appData
             mCachedAppData = appData;
         });
-        // send request far all available Tiro voices
-        streamTiroVoices("");
+        mAllVoices = mVoiceDao.getAllVoices();
+        mAllVoices.observeForever(voices -> {
+            Log.v(LOG_TAG, "mAllVoices update: " + voices);
+            // Update cached voices
+            mAllCachedVoices = voices;
+        });
+
+        mScheduler = Executors.newSingleThreadScheduledExecutor();
+        mScheduler.scheduleAtFixedRate(timerRunnable, 0, 20, TimeUnit.SECONDS);
     }
 
     /**
@@ -161,9 +169,7 @@ public class AppRepository {
      */
     public void streamTiroVoices(String languageCode) {
         Log.v(LOG_TAG, "streamTiroVoices");
-        if (mTiroVoices == null) {
-            mTiroVoiceController.streamQueryVoices(languageCode, new TiroVoiceQueryObserver());
-        }
+        mTiroVoiceController.streamQueryVoices(languageCode, new TiroVoiceQueryObserver());
     }
 
     /**
@@ -263,7 +269,7 @@ public class AppRepository {
 
         final List<Voice> availableVoicesList = getCachedVoices();
 
-        if (availableVoicesList.isEmpty()) {
+        if (availableVoicesList == null || availableVoicesList.isEmpty()) {
             Log.v(LOG_TAG, "No voices registered yet");
             return TextToSpeech.ERROR_NOT_INSTALLED_YET;
         }
@@ -370,6 +376,28 @@ public class AppRepository {
         return "";
     }
 
+    Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            Date lastUpdateTime = new Date(System.currentTimeMillis() - NETWORK_VOICE_QUERY_TIME_MS);
+            try {
+                // if update time > intervalInMillis, get new voices
+                if (mAppDataDao.voiceListUpdateTimeOlderThan(lastUpdateTime)) {
+                    if (ConnectionCheck.isNetworkConnected()) {
+                        Log.v(LOG_TAG, "voice update time expired ("+lastUpdateTime+"), fetch current list");
+                        // send request for network voice list
+                        streamTiroVoices("");
+                    } else {
+                        Log.w(LOG_TAG, "voice update time expired, no Internet connection");
+                    }
+                }
+            } catch (final Exception e) {
+                Log.e(LOG_TAG, "timerRunnable error: " + e.getMessage());
+            }
+        }
+    };
+
+
     private static class insertVoiceAsyncTask extends AsyncTask<com.grammatek.simaromur.db.Voice, Void, Void> {
         private VoiceDao mAsyncTaskDao;
 
@@ -395,4 +423,17 @@ public class AppRepository {
             return null;
         }
     }
+
+    private static class updateAppDataVoiceListTimestampAsyncTask extends AsyncTask<Void, Void, Void> {
+        private AppDataDao mAppDataDao;
+
+        updateAppDataVoiceListTimestampAsyncTask(AppDataDao appDataDao) {  mAppDataDao = appDataDao;  }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            mAppDataDao.updateVoiceListTimestamp();
+            return null;
+        }
+    }
+
 }

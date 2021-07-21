@@ -1,5 +1,7 @@
 package com.grammatek.simaromur.db;
 
+import android.util.Log;
+
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -7,8 +9,14 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import com.grammatek.simaromur.AppRepository;
+
+import java.util.Date;
+
 @Dao
 public abstract class AppDataDao {
+    private final static String LOG_TAG = "Simaromur_" + AppDataDao.class.getSimpleName();
+
     @Insert
     public abstract void insert(AppData app);
 
@@ -48,6 +56,28 @@ public abstract class AppDataDao {
     public Long getCurrentVoiceId() {
         AppData appData = getAppData();
         return appData.currentVoiceId;
+    }
+
+    /**
+     * Update voice list update date & time to now
+     */
+    public void updateVoiceListTimestamp() {
+        AppData appData = getAppData();
+        appData.simVoiceListUpdateTime = new java.util.Date();
+        Log.v(LOG_TAG, "updateVoiceListTimestamp: " + appData.simVoiceListUpdateTime);
+        update(appData);
+    }
+
+    public boolean voiceListUpdateTimeOlderThan(java.util.Date date) {
+        AppData appData = getAppData();
+        if (appData == null) {
+            return true;
+        }
+        Date lastUpdate = appData.simVoiceListUpdateTime;
+        if (lastUpdate == null) {
+            return true;
+        }
+        return (appData.simVoiceListUpdateTime.before(date));
     }
     // TODO(DS): To be continued ....
 }

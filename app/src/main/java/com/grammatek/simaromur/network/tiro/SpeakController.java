@@ -5,7 +5,10 @@ import android.util.Log;
 import com.grammatek.simaromur.audio.AudioObserver;
 import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -108,6 +111,7 @@ public class SpeakController implements Callback<ResponseBody> {
                 Log.v(LOG_TAG, "API returned: " + data.length + " bytes");
                 mAudioObserver.update(data);
             } catch (IOException e) {
+                Log.e(LOG_TAG, "Exception: " + e.getMessage());
                 e.printStackTrace();
             }
         } else {
@@ -124,7 +128,20 @@ public class SpeakController implements Callback<ResponseBody> {
     }
 
     @Override
-    public void onFailure(Call<ResponseBody> call, Throwable t) {
-        t.printStackTrace();
+    public void onFailure(@NotNull Call<ResponseBody> call, Throwable t) {
+        String errMsg = "";
+        if (t instanceof SocketTimeoutException) {
+            errMsg = "Socket timeout";
+        } else if (t instanceof IOException) {
+            errMsg = "Timeout";
+        } else {
+            if (call.isCanceled()) {
+                errMsg = "Call was cancelled";
+            } else {
+                errMsg = "Network Error :" + t.getLocalizedMessage();
+            }
+        }
+        Log.e(LOG_TAG, "onFailure: " + errMsg);
+        mAudioObserver.error(errMsg);
     }
 }

@@ -71,8 +71,7 @@ public abstract class ApplicationDb extends RoomDatabase {
         protected Void doInBackground(final Void... params) {
 
             AppData appData = mAppDataDao.getAppData();
-            if (appData == null)
-            {
+            if (appData == null) {
                 appData = new AppData();
                 appData.fliteVoiceListPath = App.getDataPath();
                 appData.simVoiceListPath = App.getVoiceDataPath();
@@ -80,18 +79,8 @@ public abstract class ApplicationDb extends RoomDatabase {
             }
 
             List<Voice> voices = mVoiceDao.getAnyVoices();
-            if (voices == null || voices.isEmpty())
-            {
-                Log.v(LOG_TAG, "PopulateDbAsync:  voices == null");
-                // fill in initial list of voices, currently via Tíro TTS web service only
-                Voice v1 = new Voice("Dóra", "Dora", "female",
-                        "is-IS", "is","clear", Voice.TYPE_TIRO, "");
-                Voice v2 = new Voice("Karl", "Karl","male",
-                        "is-IS", "is", "clear", Voice.TYPE_TIRO, "");
-                mVoiceDao.insertVoices(v1, v2);
-                Voice selectedVoice = mVoiceDao.findVoice(v2.name, v2.internalName, v2.languageCode,
-                        v2.languageName, v2.variant);
-                mAppDataDao.selectCurrentVoice(selectedVoice);
+            if (voices == null || voices.isEmpty()) {
+                Log.d(LOG_TAG, "PopulateDbAsync: no voices yet, network voices are updated async.");
             }
             return null;
         }

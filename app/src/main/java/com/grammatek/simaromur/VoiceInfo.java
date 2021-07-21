@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.grammatek.simaromur.frontend.FrontendManager;
 import com.grammatek.simaromur.frontend.NormalizationManager;
+import com.grammatek.simaromur.network.ConnectionCheck;
 
 import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_ID;
 
@@ -59,7 +60,7 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
         final Button button = findViewById(R.id.speak_button);
         // setup network status, @todo: this is very rough and doesn't do anything dynamic
         final ImageView networkAvailabilityIcon = findViewById(R.id.imageStatus);
-        if (App.getApplication().hasNetwork()) {
+        if (ConnectionCheck.isNetworkConnected()) {
             button.setEnabled(true);
             networkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
         }

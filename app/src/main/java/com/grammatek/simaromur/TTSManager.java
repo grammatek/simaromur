@@ -82,7 +82,10 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
                 if (!initEngine.equals(getApplicationContext().getPackageName())) {
                     showTtsEngineWarningDialog();
                 }
+            } else {
+                Log.i(LOG_TAG, "No default engine yet ? ");
             }
+
         } catch (final Exception e) {
             Log.e(LOG_TAG, "TTS engine default error" + e.getMessage());
         }

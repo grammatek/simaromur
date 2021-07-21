@@ -5,6 +5,7 @@ import android.util.Log;
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 import retrofit2.Call;
@@ -122,6 +123,19 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
 
     @Override
     public void onFailure(Call<List<VoiceResponse>> call, Throwable t) {
-        t.printStackTrace();
+        String errMsg = "";
+        if (t instanceof SocketTimeoutException) {
+            errMsg = "Socket timeout";
+        } else if (t instanceof IOException) {
+            errMsg = "Timeout";
+        } else {
+            if (call.isCanceled()) {
+                errMsg = "Call was cancelled";
+            } else {
+                errMsg = "Network Error :" + t.getLocalizedMessage();
+            }
+        }
+        Log.e(LOG_TAG, "onFailure: " + errMsg);
+        mVoiceListObserver.error(errMsg);
     }
 }
