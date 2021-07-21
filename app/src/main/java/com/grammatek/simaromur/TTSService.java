@@ -2,6 +2,7 @@ package com.grammatek.simaromur;
 
 import com.grammatek.simaromur.frontend.NormalizationManager;
 
+import android.media.AudioFormat;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.SynthesisRequest;
 import android.speech.tts.TextToSpeech;
@@ -13,6 +14,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static android.speech.tts.TextToSpeech.ERROR_SERVICE;
+import static com.grammatek.simaromur.audio.AudioManager.N_CHANNELS;
+import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
 
 /**
  * Implements the SIM Engine as a TextToSpeechService
@@ -28,7 +33,6 @@ public class TTSService extends TextToSpeechService {
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
     }
-
 
     // mandatory
     @Override
@@ -78,6 +82,22 @@ public class TTSService extends TextToSpeechService {
         Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/"+country+"/"+variant+"), voice: "
                 + voiceName);
         String loadedVoiceName = mRepository.getLoadedVoiceName();
+        if (loadedVoiceName.equals("")) {
+            String voiceNameToLoad = voiceName != null ? voiceName : variant;
+            if (TextToSpeech.SUCCESS == mRepository.loadVoice(voiceNameToLoad)) {
+                Log.v(LOG_TAG, "onSynthesizeText: loaded voice ("+voiceNameToLoad+")");
+                loadedVoiceName = mRepository.getLoadedVoiceName();
+            } else {
+                Log.w(LOG_TAG, "onSynthesizeText: couldn't load voice ("+voiceNameToLoad+")");
+                callback.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
+                callback.error(ERROR_SERVICE);
+                if (callback.hasStarted()) {
+                    callback.done();
+                }
+                return;
+            }
+        }
+
         if (!loadedVoiceName.equals(voiceName)) {
             Log.e(LOG_TAG, "onSynthesizeText: Loaded voice ("+loadedVoiceName+") and given voice ("+voiceName+") differ ?!");
         }
@@ -87,15 +107,37 @@ public class TTSService extends TextToSpeechService {
             NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
             String normalizedText = normalizationManager.process(text);
 
-            Log.v(LOG_TAG, text + "onSynthesizeText:  => normalized =>" + normalizedText);
-            if (normalizedText.isEmpty()) {
-                Log.i(LOG_TAG, "onSynthesizeText: finished");
+            Log.v(LOG_TAG, "onSynthesizeText: original (\"" + text + "\"), normalized (\""
+                    + normalizedText + "\")");
+            if (text.isEmpty() && normalizedText.isEmpty()) {
+                Log.i(LOG_TAG, "onSynthesizeText: finished ?");
+                playSilence(callback);
+                return;
+            } else if (normalizedText.isEmpty()) {
+                Log.i(LOG_TAG, "onSynthesizeText: normalization failed ?");
+                playSilence(callback);
                 return;
             }
             mRepository.startTiroTts(callback, voice, normalizedText, speechrate/100.0f, pitch/100.0f);
         }
         else {
             Log.e(LOG_TAG, "onSynthesizeText: unsupported voice ?!");
+        }
+    }
+
+    /**
+     * Plays silence. This seems to be sometimes needed for TTS clients to work correctly, instead of
+     * signalling synthesis errors.
+     *
+     * @param callback  TTS callback provided in the onSynthesizeText() callback
+     */
+    public static void playSilence(SynthesisCallback callback) {
+        Log.v(LOG_TAG, "playSilence() ...");
+        callback.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, 1);
+        byte[] silenceData = new byte[callback.getMaxBufferSize()/2];
+        callback.audioAvailable(silenceData, 0, silenceData.length);
+        if (callback.hasStarted()) {
+            callback.done();
         }
     }
 
