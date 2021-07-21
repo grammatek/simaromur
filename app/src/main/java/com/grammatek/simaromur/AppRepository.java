@@ -320,13 +320,13 @@ public class AppRepository {
         Log.v(LOG_TAG, "getDefaultVoiceFor: (" + iso3Language + "/" + iso3Country + "/" + variant + ")");
         String rv = null;
 
-        if (mSelectedVoice != null) {
+        if (mSelectedVoice == null) {
             Log.d(LOG_TAG, "getDefaultVoiceFor: selected voice not yet loaded");
-            Long curVoiceId = mAppDataDao.getCurrentVoiceId();
-            if (curVoiceId != 0) {
+            if (mCachedAppData != null && mCachedAppData.currentVoiceId != 0) {
                 for (final Voice voice : getCachedVoices()) {
-                    if (voice.voiceId == curVoiceId) {
+                    if (voice.voiceId == mCachedAppData.currentVoiceId) {
                         mSelectedVoice = voice;
+                        Log.d(LOG_TAG, "getDefaultVoiceFor: found preferred voice in list");
                     }
                 }
             }
