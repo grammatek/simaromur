@@ -25,12 +25,9 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     private final static int MY_DATA_CHECK_CODE = 1;
 
     static final LauncherIcon[] ICONS = {
-        // @todo: we disable the FLite based choosers, we will replace local voice management
-        //        completely
-        // new LauncherIcon(R.drawable.custom_dialog_tts, "TTS Demo", TTSDemo.class),
-        // new LauncherIcon(R.drawable.custom_dialog_manage, "FLite Voices", DownloadVoiceData.class),
-        new LauncherIcon(R.drawable.simaromur_large, R.string.simaromur_voice_manager, VoiceManager.class),
-        new LauncherIcon(R.drawable.custom_info_large, R.string.simaromur_info, InfoViewer.class),
+            new LauncherIcon(R.drawable.simaromur_large, R.string.simaromur_voice_manager, VoiceManager.class),
+            new LauncherIcon(R.drawable.custom_info_large, R.string.simaromur_info, InfoViewer.class),
+            new LauncherIcon(R.drawable.feedback_large, R.string.simaromur_feedback, EmailFeedback.class),
     };
 
     @Override
@@ -97,15 +94,15 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     private void showTtsEngineWarningDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder
-            .setMessage(R.string.tts_settings)
-            .setTitle(R.string.choose_tts_engine)
-            .setCancelable(false)
-            .setPositiveButton(R.string.doit, (dialog, id) -> {
-                openTtsSettings();
-            })
-            .setNegativeButton(R.string.not_yet, (dialog, id) -> {
-                // nothing
-            });
+                .setMessage(R.string.tts_settings)
+                .setTitle(R.string.choose_tts_engine)
+                .setCancelable(false)
+                .setPositiveButton(R.string.doit, (dialog, id) -> {
+                    openTtsSettings();
+                })
+                .setNegativeButton(R.string.not_yet, (dialog, id) -> {
+                    // nothing
+                });
         if (mWarningDialog != null) {
             mWarningDialog.cancel();
             mWarningDialog = null;
@@ -153,9 +150,9 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
      * This method is called, when the TTS system is bound to this activity. Before, onResume()
      * can be called.
      *
-     * @param requestCode   The user-defined number provided when starting the activity
-     * @param resultCode    Result code / outcome of the activity
-     * @param data          optional data from the intent
+     * @param requestCode The user-defined number provided when starting the activity
+     * @param resultCode  Result code / outcome of the activity
+     * @param data        optional data from the intent
      */
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.v(LOG_TAG, "onActivityResult: resultCode: " + resultCode);
@@ -179,7 +176,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
         final int textId;
         final int imgId;
         final Class activity;
-        
+
         public LauncherIcon(int imgId, int textId, Class activity) {
             super();
             this.imgId = imgId;
@@ -222,7 +219,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
             ViewHolder holder;
             if (v == null) {
                 LayoutInflater vi = (LayoutInflater) mContext.getSystemService(
-                    Context.LAYOUT_INFLATER_SERVICE);
+                        Context.LAYOUT_INFLATER_SERVICE);
 
                 v = vi.inflate(R.layout.dashboard_icon, null);
                 holder = new ViewHolder();
