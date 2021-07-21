@@ -11,7 +11,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.grammatek.simaromur.frontend.FrontendManager;
 import com.grammatek.simaromur.frontend.NormalizationManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
