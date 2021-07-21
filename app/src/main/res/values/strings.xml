@@ -6,6 +6,11 @@
     <string name="simaromur_manager">Símarómur</string>
     <string name="simaromur_voice_manager">Símarómur Voices</string>
     <string name="simaromur_info">About Símarómur</string>
+    <string name="simaromur_feedback">Feedback</string>
+    <string name="email_subject">Feedback on Símarómur</string>
+    <string name="email_message">Feedback: </string>
+    <string name= "send_message">Send mail …</string>
+    <string name="tts_settings_label">TTS Settings</string>
     <string name="voice_list_update">Download Voice List</string>
     <string name="todo">TODO</string>
     <string name="speak_button">Play</string>

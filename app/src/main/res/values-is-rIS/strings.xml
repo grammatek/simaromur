@@ -6,6 +6,11 @@
     <string name="simaromur_manager">Símarómur</string>
     <string name="simaromur_voice_manager">Símarómur raddir</string>
     <string name="simaromur_info">Um Símaróm</string>
+    <string name="simaromur_feedback">Ábendingar</string>
+    <string name="email_subject">Ábending vegna Símaróms</string>
+    <string name="email_message">Ábending: </string>
+    <string name= "send_message">Senda tölvupóst …</string>
+    <string name="tts_settings_label">Stillingar fyrir talgervil</string>
     <string name="voice_list_update">Sækja lista af röddum</string>
     <string name="todo">TODO</string>
     <string name="speak_button">Spila</string>
