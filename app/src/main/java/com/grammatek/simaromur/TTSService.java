@@ -15,9 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static android.speech.tts.TextToSpeech.ERROR_NETWORK;
 import static android.speech.tts.TextToSpeech.ERROR_SERVICE;
-import static android.speech.tts.TextToSpeech.ERROR_SYNTHESIS;
 import static com.grammatek.simaromur.audio.AudioManager.N_CHANNELS;
 import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
 
@@ -35,7 +33,6 @@ public class TTSService extends TextToSpeechService {
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
     }
-
 
     // mandatory
     @Override

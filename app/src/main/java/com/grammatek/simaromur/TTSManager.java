@@ -180,7 +180,6 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     }
 
     static class LauncherIcon {
-        //final String text;
         final int textId;
         final int imgId;
         final Class activity;
