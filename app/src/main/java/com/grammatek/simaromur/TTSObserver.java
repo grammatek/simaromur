@@ -36,6 +36,7 @@ public class TTSObserver implements AudioObserver {
     public void update(final byte[] ttsData) {
         if (ttsData.length == 0) {
             Log.v(LOG_TAG, "TTSObserver: Nothing to speak");
+            TTSService.playSilence(mSynthCb);
             return;
         }
 

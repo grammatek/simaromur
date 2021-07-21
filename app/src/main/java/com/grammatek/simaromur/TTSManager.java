@@ -18,6 +18,8 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.Locale;
+
 public class TTSManager extends Activity implements OnItemClickListener, TextToSpeech.OnInitListener {
     private final static String LOG_TAG = "Simaromur_Java_" + TTSManager.class.getSimpleName();
     private TextToSpeech mTtsClient;        // for querying TTS engine info
@@ -63,6 +65,9 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     @Override
     public void onInit(final int status) {
         Log.v(LOG_TAG, "onInit: status: " + status);
+        if (status == TextToSpeech.SUCCESS) {
+            mTtsClient.setLanguage(new Locale("isl", "ISL"));
+        }
     }
 
     /**
@@ -179,7 +184,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
         final int textId;
         final int imgId;
         final Class activity;
-        
+
         public LauncherIcon(int imgId, int textId, Class activity) {
             super();
             this.imgId = imgId;
