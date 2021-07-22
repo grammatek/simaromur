@@ -70,7 +70,12 @@ public class ApiDbUtil {
             Voice voice = new Voice(av.VoiceId, av.VoiceId, av.Gender, av.LanguageCode, av.LanguageName,
                     "", Voice.TYPE_TIRO, "");
             Log.v(LOG_TAG, "New contents: " + voice);
-            mVoiceDao.insertVoice(voice);
+            try {
+                mVoiceDao.insertVoice(voice);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Voice could not be added to db: " + voice);
+                Log.e(LOG_TAG, "Reason: " + e.getMessage());
+            }
         }
     }
 
