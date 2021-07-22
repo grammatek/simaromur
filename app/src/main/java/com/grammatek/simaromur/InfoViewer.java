@@ -3,6 +3,8 @@ package com.grammatek.simaromur;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -69,8 +71,9 @@ public class InfoViewer extends ListActivity {
         }
         final List<String> Info = new ArrayList<String>() {
             {
-                add(getString(R.string.info_copyright));
+                add(getString(R.string.info_app_version));
                 add(getString(R.string.info_url));
+                add(getString(R.string.info_copyright));
                 add(getString(R.string.info_runtime_header));
                 add(getString(R.string.info_android_version));
                 add(getString(R.string.info_supported_abis));
@@ -80,8 +83,17 @@ public class InfoViewer extends ListActivity {
 
         final List<String> Data = new ArrayList<String>() {
             {
-            add(getString(R.string.info_about));
+            try {
+                PackageInfo pInfo = getApplicationContext().getPackageManager()
+                        .getPackageInfo(getApplicationContext().getPackageName(), 0);
+                String version = pInfo.versionName;
+                add(version);
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+                add(getString(R.string.info_version_error));
+            }
             add(getString(R.string.info_repo_url));
+            add(getString(R.string.info_about));
             add("");
             add(android.os.Build.VERSION.RELEASE);
             add(String.join(", ", android.os.Build.SUPPORTED_ABIS));

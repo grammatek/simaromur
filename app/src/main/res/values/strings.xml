@@ -35,9 +35,11 @@
     <string name="info_runtime_header">RUNTIME_HEADER</string>
     <string name="info_runtime">Runtime information</string>
     <string name="info_android_version">Android Version</string>
+    <string name="info_app_version">Símarómur Version</string>
+    <string name="info_version_error">Error retrieving version info</string>
     <string name="info_supported_abis">Supported ABIs</string>
     <string name="info_phone_model">Phone Model</string>
-    <string name="info_about">© (2021) Grammatek ehf
+    <string name="info_about">© (2021) Grammatek ehf.
         Based on previous work from Carnegie Mellon University © (1999-2012)</string>
     <string name="info_repo_url">https://github.com/grammatek/simaromur</string>
     <string name="info_benchmark">Benchmark</string>
