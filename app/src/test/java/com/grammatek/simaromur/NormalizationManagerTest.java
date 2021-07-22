@@ -63,7 +63,7 @@ public class NormalizationManagerTest {
         testSentences.put("Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann SL þriðjudaginn 18. janúar nk. ",
                 "Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann S L þriðjudaginn átjánda janúar næstkomandi .");
         testSentences.put("„ Ég kíki daglega á facebook , karfan.is , vf.is , mbl.is , kkí , og utpabroncs.com . “ ",
-                "\" Ég kíki daglega á facebook , k a r f a n punktur is , v f punktur is , m b l punktur is , k k í , og u t p a b r o n c s punktur com . \"");
+                ", Ég kíki daglega á facebook , k a r f a n punktur is , v f punktur is , m b l punktur is , k k í , og u t p a b r o n c s punktur com . ,");
         testSentences.put("Arnór Ingvi Traustason 57. mín. Jónas Guðni, sem er 33 ára, hóf fótboltaferil sinn árið 2001.",
                 "Arnór Ingvi Traustason fimmtugasta og sjöunda mínúta . Jónas Guðni , sem er þrjátíu og þriggja ára , hóf fótboltaferil sinn árið tvö þúsund og eitt .");
         // correct version impossible, since the tagger tags "lóð" and "byggingarreit" as dative, causing "í einni lóð og einum byggingarreit" (regina original does that as well)

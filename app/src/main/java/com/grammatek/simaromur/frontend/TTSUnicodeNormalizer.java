@@ -115,7 +115,7 @@ public class TTSUnicodeNormalizer {
                             // to pause a little, try a comma
                             // TODO: we might need a more general approach to this, i.e. which
                             // symbols and punctuation chars should cause the voice to pause?
-                            else if (wrd.charAt(i) == '(' || wrd.charAt(i) == ')')
+                            else if (wrd.charAt(i) == '(' || wrd.charAt(i) == ')' || wrd.charAt(i) == '"')
                                 wrd = wrd.replace(Character.toString(wrd.charAt(i)), ",");
                             // we want to keep punctuation marks still present in the normalized
                             // string, but delete the unknown character otherwise
