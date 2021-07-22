@@ -34,7 +34,7 @@
     <string name="info_url">veffang</string>
     <string name="info_runtime_header">RUNTIME_HEADER</string>
     <string name="info_runtime">Keyrsluupplýsingar</string>
-    <string name="info_android_version">Android útáfa</string>
+    <string name="info_android_version">Android útgáfa</string>
     <string name="info_supported_abis">Studd ABIs</string>
     <string name="info_phone_model">Gerð síma</string>
     <string name="info_about">© (2021) Grammatek ehf
@@ -42,4 +42,6 @@
     <string name="info_repo_url">https://github.com/grammatek/simaromur</string>
     <string name="info_benchmark">Viðmið</string>
     <string name="info_benchmark_value">sinnum hraðar en rauntími</string>
+    <string name="info_app_version">Símarómur útgáfa</string>
+    <string name="info_version_error">Villa við að ná í uppl. um útgáfu</string>
 </resources>
