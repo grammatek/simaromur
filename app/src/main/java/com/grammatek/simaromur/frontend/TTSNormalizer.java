@@ -115,7 +115,7 @@ public class TTSNormalizer {
             // add space between upper case letters, if they do not build known Acronyms like "RÚV"
             else if (token.matches(NumberHelper.LETTERS_PTRN) && token.length() > 1) {
                 if (TTSUnicodeNormalizer.inDictionary(token))
-                    token = token.toLowerCase();
+                    token = processSpecialToken(token);
                 else
                     token = insertSpaces(token);
             }
@@ -150,6 +150,15 @@ public class TTSNormalizer {
             replaced = matcher.replaceAll(dict.get(regex));
         }
         return replaced;
+    }
+
+    // This is a hack to make sure we don't corrupt tokens that look like they should e.g.
+    // be space separated (COVID -> C O V I D), because we don't have direct access to the
+    // pronunciation dictionary on the server. Need a better workflow for this.
+    private String processSpecialToken(String token) {
+        if (token.toLowerCase().equals("covid"))
+            return "kovid";
+        return token.toLowerCase();
     }
 
     private String insertSpaces(String token) {

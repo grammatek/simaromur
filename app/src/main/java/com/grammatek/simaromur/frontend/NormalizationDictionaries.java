@@ -41,8 +41,8 @@ public class NormalizationDictionaries {
     public static final String THE_CLOCK = "(núll|eitt|tvö|þrjú|fjögur|fimm|sex|sjö|átta|níu|tíu|ellefu|tólf" +
             "|((þret|fjór|fimm|sex)tán)|((sau|á|ní)tján)|tuttugu( og (eitt|tvö|þrjú|fjögur))?)";
     // e.g. 12.345.678,59 or 34,5 etc. //TODO: this would match 12.345.1234556677,34 -> is this deliberate?
-    public static final String MEASURE_PREFIX_DIGITS = "(\\d{1,2}" + DOT + ")?(\\d{3}" + DOT + "?)*\\d+(,\\d+)?";
-    public static final String MEASURE_PREFIX_WORDS = "([Hh]undr[au]ð|HUNDR[AU]Ð|[Þþ]úsund|ÞÚSUND|[Mm]illjón(ir)?|MILLJÓN(IR)?) ";
+    public static final String MEASURE_PREFIX_DIGITS = "((\\d{1,2}" + DOT + ")?(\\d{3}" + DOT + ")*\\d{3}|\\d+)(,\\d+)?";
+    public static final String MEASURE_PREFIX_WORDS = "([Hh]undr[au]ð|HUNDR[AU]Ð|[Þþ]úsund|ÞÚSUND|[Mm]illjón(ir)?|MILLJÓN(IR)?)";
 
     // any number, (large, small, with or without thousand separators, with or without a decimal point) that does NOT end with a "1"
     public static final String NUMBER_EOS_NOT_1 = "(\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))";
@@ -287,8 +287,8 @@ public class NormalizationDictionaries {
         abbreviationDict.put(BOS + "([Þþ]" + DOT + "m" + DOT + "t" + DOT + "|Þ" + DOT + "M" + DOT + "T)" + DOT_ONE_NONE + EOS,
                 "$1þar með talið$3");
 
-        abbreviationDict.put(" ((" + MEASURE_PREFIX_DIGITS + "|" + MEASURE_PREFIX_WORDS + ")( )?\\s)(þú" + DOT_ONE_NONE + ")" +
-                "( " + LETTER + "*)?", "$1þúsund$11"); // changed from group 13 to 11
+        abbreviationDict.put(" (((" + MEASURE_PREFIX_DIGITS + "|" + MEASURE_PREFIX_WORDS + ")( )?)\\s)(þús" + DOT_ONE_NONE + ")" +
+                "( " + LETTER + "*)?", " $1þúsund$13");
         abbreviationDict.put(" ([Mm]örg )þús" + DOT_ONE_NONE + "( " + LETTER + "*)?", "$1þúsund$2");
 
         abbreviationDict.put("(\\d+" + DOT + ") [Áá]rg" + DOT + EOS, "$1 árgangur$2");

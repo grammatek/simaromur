@@ -28,11 +28,11 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "er \uF0C9";
+        String input = "Í gær greindust 78 með COVID-19";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("er .",
+        assertEquals("Í gær greindust sjötíu og átta með kovid nítján .",
                 processed);
     }
 
@@ -47,6 +47,8 @@ public class NormalizationManagerTest {
 
     private Map<String, String> getTestSentences() {
         Map<String, String> testSentences = new HashMap<>();
+        testSentences.put("Í gær greindust 78 með COVID-19",
+                "Í gær greindust sjötíu og átta með kovid nítján .");
         testSentences.put("þetta stóð í 4. gr. laga.",  "þetta stóð í fjórðu grein laga .");
         testSentences.put("Að jafnaði koma daglega um 48 rútur í Bláa Lónið .",
                 "Að jafnaði koma daglega um fjörutíu og átta rútur í Bláa Lónið .");
@@ -61,7 +63,7 @@ public class NormalizationManagerTest {
         testSentences.put("Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann SL þriðjudaginn 18. janúar nk. ",
                 "Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann S L þriðjudaginn átjánda janúar næstkomandi .");
         testSentences.put("„ Ég kíki daglega á facebook , karfan.is , vf.is , mbl.is , kkí , og utpabroncs.com . “ ",
-                "\" Ég kíki daglega á facebook , k a r f a n punktur is , v f punktur is , m b l punktur is , k k í , og u t p a b r o n c s punktur com . \"");
+                ", Ég kíki daglega á facebook , k a r f a n punktur is , v f punktur is , m b l punktur is , k k í , og u t p a b r o n c s punktur com . ,");
         testSentences.put("Arnór Ingvi Traustason 57. mín. Jónas Guðni, sem er 33 ára, hóf fótboltaferil sinn árið 2001.",
                 "Arnór Ingvi Traustason fimmtugasta og sjöunda mínúta . Jónas Guðni , sem er þrjátíu og þriggja ára , hóf fótboltaferil sinn árið tvö þúsund og eitt .");
         // correct version impossible, since the tagger tags "lóð" and "byggingarreit" as dative, causing "í einni lóð og einum byggingarreit" (regina original does that as well)
@@ -70,7 +72,7 @@ public class NormalizationManagerTest {
         testSentences.put("Einnig er gert ráð fyrir að sameina lóðir og byggingarreiti við Sjávarbraut 1 - 7 í 1 lóð og 1 byggingarreit.   Miðaverð fyrir fullorðna kr. 5500 ",
                 "Einnig er gert ráð fyrir að sameina lóðir og byggingarreiti við Sjávarbraut eitt til sjö í einni lóð og einum byggingarreit . Miðaverð fyrir fullorðna krónur fimm þúsund og fimm hundruð .");
         testSentences.put("Stolt Sea Farm (SSF), fiskeldisarmur norsku skipa- og iðnaðarsamstæðunnar Stolt-Nielsen, jók sölu sína á flatfiski um 53% á öðrum ársfjórðungi 2015.",
-                "Stolt Sea Farm ( S S F ) , fiskeldisarmur norsku skipa og iðnaðarsamstæðunnar Stolt Nielsen , jók sölu sína á flatfiski um fimmtíu og þrjú prósent á öðrum ársfjórðungi tvö þúsund og fimmtán .");
+                "Stolt Sea Farm , S S F , , fiskeldisarmur norsku skipa og iðnaðarsamstæðunnar Stolt Nielsen , jók sölu sína á flatfiski um fimmtíu og þrjú prósent á öðrum ársfjórðungi tvö þúsund og fimmtán .");
         testSentences.put("Í janúarbyrjun 1983 var stofnað nýtt hlutafélag, Víkurféttir ehf. sem tók við.",
                 "Í janúarbyrjun nítján hundruð áttatíu og þrjú var stofnað nýtt hlutafélag , Víkurféttir E H F sem tók við .");
         testSentences.put("Jarðskjálfti að stærð 3,9 varð fyrir sunnan Kleifarvatn kl. 19:50 í gærkvöldi.",
@@ -114,7 +116,7 @@ public class NormalizationManagerTest {
         //testSentences.put("Hollenska fjárfestingafyrirtækið EsBro hyggst reisa 15 ha (150.000 m²) gróðurhús til framleiðslu á tómötum",
         //        "Hollenska fjárfestingafyrirtækið EsBro hyggst reisa fimmtán hektara ( hundrað og fimmtíu þúsund fermetra ) gróðurhús til framleiðslu á tómötum");
         testSentences.put("Hollenska fjárfestingafyrirtækið EsBro hyggst reisa 15 ha (150.000 m²) gróðurhús til framleiðslu á tómötum",
-                "Hollenska fjárfestingafyrirtækið EsBro hyggst reisa fimmtán hektarar ( hundrað og fimmtíu þúsund fermetrar ) gróðurhús til framleiðslu á tómötum .");
+                "Hollenska fjárfestingafyrirtækið EsBro hyggst reisa fimmtán hektarar , hundrað og fimmtíu þúsund fermetrar , gróðurhús til framleiðslu á tómötum .");
         testSentences.put("Mynd / elg@vf.is", "Mynd skástrik e l g hjá v f punktur is .");
         testSentences.put("hefur leikið sjö leiki með U-21 árs liðinu.", "hefur leikið sjö leiki með U tuttugu og eins árs liðinu .");
         testSentences.put("er þetta í 23. skiptið sem mótið er haldið .", "er þetta í tuttugasta og þriðja skiptið sem mótið er haldið .");
@@ -127,6 +129,8 @@ public class NormalizationManagerTest {
         // both we and regina make this error with "mínútu" instead of "mínútur"
         testSentences.put("Hann bætti Íslandsmet sitt í 5.000 m kappakstri um 11 mín.",
                 "Hann bætti Íslandsmet sitt í fimm þúsund metra kappakstri um ellefu mínútu .");
+        testSentences.put("Það er rúmlega 93 þús km",
+                "Það er rúmlega níutíu og þrjú þúsund kílómetrar .");
 
         return testSentences;
     }
