@@ -111,6 +111,12 @@ public class TTSUnicodeNormalizer {
                             // we found a replacement for the non-Icelandic character
                             if (!repl.isEmpty())
                                 wrd = wrd.replace(Character.toString(wrd.charAt(i)), repl);
+                            // sounds odd if parenthesis are ignored and don't cause the tts voice
+                            // to pause a little, try a comma
+                            // TODO: we might need a more general approach to this, i.e. which
+                            // symbols and punctuation chars should cause the voice to pause?
+                            else if (wrd.charAt(i) == '(' || wrd.charAt(i) == ')')
+                                wrd = wrd.replace(Character.toString(wrd.charAt(i)), ",");
                             // we want to keep punctuation marks still present in the normalized
                             // string, but delete the unknown character otherwise
                             else if (!Character.toString(wrd.charAt(i)).matches("\\p{Punct}"))
