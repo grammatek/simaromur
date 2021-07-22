@@ -22,19 +22,14 @@ import java.util.List;
 public class FrontendManager {
     private final static String LOG_TAG = "Flite_Java_" + FrontendManager.class.getSimpleName();
 
-    private TTSUnicodeNormalizer mUnicodeNormalizer;
-    private Tokenizer mTokenizer;
+    private NormalizationManager mNormalizationManager;
     private Pronunciation mPronunciation;
-    private TTSNormalizer mNormalizer;
 
     private Context mContext;
 
-
     public FrontendManager(Context context) {
-        mUnicodeNormalizer = new TTSUnicodeNormalizer(context);
-        initializeTokenizer(context);
+        initializeNormalizationManager(context);
         initializePronunciation(context);
-        initializeNormalizer(context);
         this.mContext = context;
     }
 
@@ -46,65 +41,10 @@ public class FrontendManager {
      * @return an X-SAMPA transcription of @text
      */
     public String process(String text) {
-        String processed = text;
-        String cleaned = mUnicodeNormalizer.normalizeEncoding(processed);
-        Log.i(LOG_TAG, text + " => " + cleaned);
-        //tokenize
-        List<String> sentences = mTokenizer.detectSentences(cleaned);
-        // do we need some size restrictions here? don't want to read the bible in one go ...
-        String tokenized = getSentencesAsString(sentences);
-        Log.i(LOG_TAG, text + " => " + tokenized);
-
-        String tagged = tagText(tokenized);
-        //normalize
-        //TODO
-
-        String transcribedText = mPronunciation.transcribe(tokenized);
+        String normalized = mNormalizationManager.process(text);
+        String transcribedText = mPronunciation.transcribe(normalized);
         Log.i(LOG_TAG, text + " => " + transcribedText);
-
-        processed = transcribedText;
-        return processed;
-    }
-
-    private String tagText(String text) {
-        String tagged = text;
-        try {
-            InputStream is = mContext.getAssets().open("is-pos-maxent.bin");
-            POSModel posModel = new POSModel(is);
-            // initializing the parts-of-speech tagger with model
-            POSTaggerME posTagger = new POSTaggerME(posModel);
-
-            // Tagger tagging the tokens
-            String[] tokens = text.split(" ");
-            String tags[] = posTagger.tag(tokens);
-            // Getting the probabilities of the tags given to the tokens
-            double probs[] = posTagger.probs();
-
-            System.out.println("Token\t:\tTag\t:\tProbability\n---------------------------------------------");
-            for(int i=0;i<tokens.length;i++){
-                Log.i(LOG_TAG, tokens[i]+"\t:\t"+tags[i]+"\t:\t"+probs[i]);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return tagged;
-    }
-
-    // Joins the sentences into one string, separated by a white space. No further processing.
-    private String getSentencesAsString(List<String> sentences) {
-        StringBuilder sb = new StringBuilder();
-        for (String s : sentences) {
-            sb.append(s);
-            sb.append(" ");
-        }
-        return sb.toString();
-    }
-
-    private void initializeTokenizer(Context context) {
-        if (mTokenizer == null) {
-            mTokenizer = new Tokenizer(context);
-        }
+        return transcribedText;
     }
 
     private void initializePronunciation(Context context) {
@@ -113,10 +53,9 @@ public class FrontendManager {
         }
     }
 
-    private void initializeNormalizer(Context context) {
-        if (mNormalizer == null) {
-            mNormalizer = new TTSNormalizer();
+    private void initializeNormalizationManager(Context context) {
+        if (mNormalizationManager == null) {
+            mNormalizationManager = new NormalizationManager(context);
         }
     }
-
 }
