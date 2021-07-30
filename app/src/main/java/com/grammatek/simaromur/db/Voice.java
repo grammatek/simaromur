@@ -17,9 +17,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-// Create unique index on name, language, country, variant
+// Create unique index
 @Entity(tableName = "voice_table",
-        indices = {@Index(value = {"name", "gender", "language_code", "type"}, unique = true)})
+        indices = {@Index(value = {"internal_name", "gender", "language_code", "type"}, unique = true)})
 public class Voice {
     private final static String LOG_TAG = "Voice" + CheckSimVoices.class.getSimpleName();
     public final static String TYPE_TIRO="tiro";
