@@ -43,14 +43,16 @@ public class ApiDbUtil {
      *
      * @param apiVoices     Voice list from API endpoint
      */
-    public void updateModelVoices(List<VoiceResponse> apiVoices) {
+    public void updateApiVoices(List<VoiceResponse> apiVoices, String voiceType) {
         // we collect all potentially new voices here
         Set<VoiceResponse> newApiVoices = new HashSet<>(apiVoices);
         List<com.grammatek.simaromur.db.Voice> dbApiVoices = mVoiceDao.findNetworkVoices();
 
+        // update existing voices, in case something has changed
         for (VoiceResponse apiVoice: apiVoices) {
             for (com.grammatek.simaromur.db.Voice dbVoice:dbApiVoices) {
-                if (dbVoice.internalName.equals(apiVoice.VoiceId)) {
+                if (dbVoice.internalName.equals(apiVoice.VoiceId)
+                        && dbVoice.type.equals(voiceType)) {
                     // remove known apiVoice from set
                     assert(newApiVoices.remove(apiVoice));
 
@@ -77,6 +79,24 @@ public class ApiDbUtil {
                 Log.e(LOG_TAG, "Reason: " + e.getMessage());
             }
         }
+
+        // remove voices, that are not inside the provided API voices
+        Set<String> newApiVoiceIds = new HashSet<>();
+        for (VoiceResponse voice:apiVoices) {
+            newApiVoiceIds.add(voice.VoiceId);
+        }
+        for (Voice voice: mVoiceDao.findNetworkVoices()) {
+            if (voice.type.equals(voiceType)
+                    && (! newApiVoiceIds.contains(voice.internalName))) {
+                try {
+                    Log.v(LOG_TAG, "Deleting existing voice from db: " + voice);
+                    mVoiceDao.deleteVoices(voice);
+                } catch (Exception e) {
+                    Log.e(LOG_TAG, "Voice could not be deleted from db: " + voice);
+                    Log.e(LOG_TAG, "Reason: " + e.getMessage());
+                }
+            }
+        }
     }
 
     /**
@@ -84,10 +104,12 @@ public class ApiDbUtil {
      *
      * These are the currently used match criteria:
      *
-     *      apiVoice.VoiceId        == modelVoice.mInternalName
-     *      apiVoice.LanguageCode   == modelVoice.mLanguageCode
-     *      apiVoice.LanguageName   == modelVoice.mLanguageName
-     *      "tiro"                  == modelVoice.mType
+     *      apiVoice.VoiceId        == modelVoice.internalName
+     *      apiVoice.Name           == modelVoice.name
+     *      apiVoice.LanguageCode   == modelVoice.languageCode
+     *      apiVoice.LanguageName   == modelVoice.languageName
+     *      apiVoice.Gender         == modelVoice.gender
+     *      "tiro"                  == modelVoice.type
      *
      * @param apiVoice      API voice as returned from API endpoint
      * @param modelVoice    Model voice inside db
@@ -97,8 +119,10 @@ public class ApiDbUtil {
     static private boolean apiVoiceEqualsModel(VoiceResponse apiVoice, Voice modelVoice) {
         assert (modelVoice.voiceId != 0);   // the modelVoice should already be inside db
         return (apiVoice.VoiceId.equals(modelVoice.internalName) &&
+                apiVoice.Name.equals(modelVoice.name) &&
                 apiVoice.LanguageCode.equals(modelVoice.languageCode) &&
                 apiVoice.LanguageName.equals(modelVoice.languageName) &&
+                apiVoice.Gender.equals(modelVoice.gender) &&
                 Voice.TYPE_TIRO.equals(modelVoice.type));
     }
 }
