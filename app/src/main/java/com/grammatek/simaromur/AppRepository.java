@@ -59,10 +59,14 @@ public class AppRepository {
         public TiroVoiceQueryObserver() {}
         public void update(List<VoiceResponse> voices) {
             for (VoiceResponse voice: voices) {
+                if (voice == null) {
+                    Log.e(LOG_TAG, "Tiro API returned null voice ?!");
+                    return;
+                }
                 Log.v(LOG_TAG, "Tiro API returned: " + voice.VoiceId);
             }
             mTiroVoices = voices;
-            new updateVoicesAsyncTask(mApiDbUtil).execute(mTiroVoices);
+            new updateVoicesAsyncTask(mApiDbUtil, "tiro").execute(mTiroVoices);
             new updateAppDataVoiceListTimestampAsyncTask(mAppDataDao).execute();
         }
         public void error(String errorMsg) {
@@ -414,12 +418,16 @@ public class AppRepository {
 
     private static class updateVoicesAsyncTask extends AsyncTask<List<VoiceResponse>, Void, Void> {
         private ApiDbUtil mApiDbUtil;
+        private String mVoiceType;
 
-        updateVoicesAsyncTask(ApiDbUtil apiDbUtil) {  mApiDbUtil = apiDbUtil;  }
+        updateVoicesAsyncTask(ApiDbUtil apiDbUtil, String voiceType) {
+            mApiDbUtil = apiDbUtil;
+            mVoiceType = voiceType;
+        }
 
         @Override
         protected Void doInBackground(final List<VoiceResponse>... voices) {
-            mApiDbUtil.updateModelVoices(voices[0]);
+            mApiDbUtil.updateApiVoices(voices[0], mVoiceType);
             return null;
         }
     }

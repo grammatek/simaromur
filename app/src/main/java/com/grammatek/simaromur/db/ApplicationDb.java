@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -14,8 +15,14 @@ import com.grammatek.simaromur.App;
 
 import java.util.List;
 
-@Database(entities = {Voice.class, AppData.class},
-        version = 1, exportSchema = true)
+@Database(
+        version = 2,
+        entities = {Voice.class, AppData.class},
+        exportSchema = true,
+        autoMigrations = {
+            @AutoMigration(from = 1, to = 2)
+        }
+)
 public abstract class ApplicationDb extends RoomDatabase {
     private final static String LOG_TAG = "Simaromur_" + ApplicationDb.class.getSimpleName();
     private static ApplicationDb INSTANCE;

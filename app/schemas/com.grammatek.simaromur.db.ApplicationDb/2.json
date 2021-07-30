@@ -1,0 +1,186 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "3193313e205498f4bdfc2f29a81b63b5",
+    "entities": [
+      {
+        "tableName": "voice_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`voiceId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `gender` TEXT NOT NULL, `internal_name` TEXT NOT NULL, `language_code` TEXT NOT NULL, `language_name` TEXT NOT NULL, `variant` TEXT NOT NULL, `type` TEXT, `update_time` TEXT, `download_time` TEXT, `url` TEXT, `download_path` TEXT, `version` TEXT, `md5_sum` TEXT, `local_size` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "voiceId",
+            "columnName": "voiceId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gender",
+            "columnName": "gender",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "internalName",
+            "columnName": "internal_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "languageCode",
+            "columnName": "language_code",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "languageName",
+            "columnName": "language_name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "variant",
+            "columnName": "variant",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "updateTime",
+            "columnName": "update_time",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "downloadTime",
+            "columnName": "download_time",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "url",
+            "columnName": "url",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "downloadPath",
+            "columnName": "download_path",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "md5Sum",
+            "columnName": "md5_sum",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "size",
+            "columnName": "local_size",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "voiceId"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [
+          {
+            "name": "index_voice_table_internal_name_gender_language_code_type",
+            "unique": true,
+            "columnNames": [
+              "internal_name",
+              "gender",
+              "language_code",
+              "type"
+            ],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_voice_table_internal_name_gender_language_code_type` ON `${TABLE_NAME}` (`internal_name`, `gender`, `language_code`, `type`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "app_data_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`appDataId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `schema_version` TEXT, `current_voice_id` INTEGER NOT NULL, `flite_voice_list_path` TEXT, `flite_voice_list_update_time` TEXT, `sim_voice_list_path` TEXT, `sim_voice_list_update_time` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "appDataId",
+            "columnName": "appDataId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "schemaVersion",
+            "columnName": "schema_version",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "currentVoiceId",
+            "columnName": "current_voice_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fliteVoiceListPath",
+            "columnName": "flite_voice_list_path",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "fliteVoiceListUpdateTime",
+            "columnName": "flite_voice_list_update_time",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "simVoiceListPath",
+            "columnName": "sim_voice_list_path",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "simVoiceListUpdateTime",
+            "columnName": "sim_voice_list_update_time",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "appDataId"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3193313e205498f4bdfc2f29a81b63b5')"
+    ]
+  }
+}
