@@ -49,6 +49,10 @@ public class NormalizationManagerTest {
         Map<String, String> testSentences = new HashMap<>();
         testSentences.put("Í gær greindust 78 með COVID-19",
                 "Í gær greindust sjötíu og átta með kovid nítján .");
+        testSentences.put("Í gær greindust 78 með Covid-19",
+                "Í gær greindust sjötíu og átta með Kovid nítján .");
+        testSentences.put("Í gær greindust 78 með covid-19",
+                "Í gær greindust sjötíu og átta með kovid nítján .");
         testSentences.put("Í gær greindust 78 með CREW-19",
                 "Í gær greindust sjötíu og átta með crew nítján .");
         testSentences.put("Í gær greindust 78 með ABCD-19",
