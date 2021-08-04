@@ -61,7 +61,7 @@ public class TTSObserver implements AudioObserver {
     }
 
     public void stop() {
-        if (mSynthCb.hasStarted()) {
+        if (mSynthCb.hasStarted() && ! mSynthCb.hasFinished()) {
             mSynthCb.done();
         }
     }
