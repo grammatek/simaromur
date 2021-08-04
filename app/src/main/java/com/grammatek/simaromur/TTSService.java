@@ -80,9 +80,9 @@ public class TTSService extends TextToSpeechService {
         String text = request.getCharSequenceText().toString();
         String voiceName = request.getVoiceName();
         // we will get speechrate and pitch from the settings,
-        // but in case the retrieval of the values fails, let's store general default values first.
-        int speechrate = 100;
-        int pitch = 100;
+        // but in case the retrieval of the values fails, let's get the values from the request first.
+        int speechrate = request.getSpeechRate();
+        int pitch = request.getPitch();
         try {
             speechrate = Settings.Secure.getInt(getContentResolver(), Settings.Secure.TTS_DEFAULT_RATE);
             pitch = Settings.Secure.getInt(getContentResolver(), Settings.Secure.TTS_DEFAULT_PITCH);
