@@ -101,7 +101,7 @@ public class TTSService extends TextToSpeechService {
                 Log.w(LOG_TAG, "onSynthesizeText: couldn't load voice ("+voiceNameToLoad+")");
                 callback.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
                 callback.error(ERROR_SERVICE);
-                if (callback.hasStarted()) {
+                if (callback.hasStarted() && ! callback.hasFinished()) {
                     callback.done();
                 }
                 return;
@@ -146,7 +146,7 @@ public class TTSService extends TextToSpeechService {
         callback.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, 1);
         byte[] silenceData = new byte[callback.getMaxBufferSize()/2];
         callback.audioAvailable(silenceData, 0, silenceData.length);
-        if (callback.hasStarted()) {
+        if (callback.hasStarted() && ! callback.hasFinished()) {
             callback.done();
         }
     }

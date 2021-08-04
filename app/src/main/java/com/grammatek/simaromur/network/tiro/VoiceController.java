@@ -4,6 +4,8 @@ import android.util.Log;
 
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.List;
@@ -62,8 +64,6 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
         if (mCall != null) {
             mCall.cancel();
         }
-        mCall = null;
-        mVoiceListObserver = null;
     }
 
     /**
@@ -108,7 +108,7 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
     }
 
     @Override
-    public synchronized void onResponse(Call<List<VoiceResponse>> call, Response<List<VoiceResponse>> response) {
+    public synchronized void onResponse(@NotNull Call<List<VoiceResponse>> call, Response<List<VoiceResponse>> response) {
         assert (mVoiceListObserver != null);
         if(response.isSuccessful()) {
             List<VoiceResponse> voicesList = response.body();
@@ -122,20 +122,14 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
     }
 
     @Override
-    public void onFailure(Call<List<VoiceResponse>> call, Throwable t) {
-        String errMsg = "";
-        if (t instanceof SocketTimeoutException) {
-            errMsg = "Socket timeout";
-        } else if (t instanceof IOException) {
-            errMsg = "Timeout";
-        } else {
+    public void onFailure(@NotNull Call<List<VoiceResponse>> call, Throwable t) {
+        Log.v(LOG_TAG, "onFailure: " + t.getLocalizedMessage());
+        assert (mVoiceListObserver != null);
+        if (t instanceof IOException) {
             if (call.isCanceled()) {
-                errMsg = "Call was cancelled";
-            } else {
-                errMsg = "Network Error :" + t.getLocalizedMessage();
+                return;
             }
         }
-        Log.e(LOG_TAG, "onFailure: " + errMsg);
-        mVoiceListObserver.error(errMsg);
+        mVoiceListObserver.error(t.getLocalizedMessage());
     }
 }
