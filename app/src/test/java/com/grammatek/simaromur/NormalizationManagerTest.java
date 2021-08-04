@@ -28,11 +28,11 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Í gær greindust 78 með COVID-19";
+        String input = "Í gær greindust 78 með ABCD-19";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("Í gær greindust sjötíu og átta með kovid nítján .",
+        assertEquals("Í gær greindust sjötíu og átta með a b c d nítján .",
                 processed);
     }
 
@@ -49,6 +49,14 @@ public class NormalizationManagerTest {
         Map<String, String> testSentences = new HashMap<>();
         testSentences.put("Í gær greindust 78 með COVID-19",
                 "Í gær greindust sjötíu og átta með kovid nítján .");
+        testSentences.put("Í gær greindust 78 með Covid-19",
+                "Í gær greindust sjötíu og átta með Kovid nítján .");
+        testSentences.put("Í gær greindust 78 með covid-19",
+                "Í gær greindust sjötíu og átta með kovid nítján .");
+        testSentences.put("Í gær greindust 78 með CREW-19",
+                "Í gær greindust sjötíu og átta með crew nítján .");
+        testSentences.put("Í gær greindust 78 með ABCD-19",
+                "Í gær greindust sjötíu og átta með a b c d nítján .");
         testSentences.put("þetta stóð í 4. gr. laga.",  "þetta stóð í fjórðu grein laga .");
         testSentences.put("Að jafnaði koma daglega um 48 rútur í Bláa Lónið .",
                 "Að jafnaði koma daglega um fjörutíu og átta rútur í Bláa Lónið .");
@@ -57,11 +65,11 @@ public class NormalizationManagerTest {
         testSentences.put("Áfram hélt fjörið í síðari hálfleik og þegar 3. leikhluti var tæplega hálfnaður var staðan 64-52 .",
                 "Áfram hélt fjörið í síðari hálfleik og þegar þriðji leikhluti var tæplega hálfnaður var staðan sextíu og fjögur til fimmtíu og tvö .");
         testSentences.put("Viðeignin fer fram í sal FS og hefst klukkan 20 .",
-                "Viðeignin fer fram í sal F S og hefst klukkan tuttugu ."); // spelling error!
+                "Viðeignin fer fram í sal f s og hefst klukkan tuttugu ."); // spelling error!
         testSentences.put("Annars var verði 3500 fyrir tímann !",
                 "Annars var verði þrjú þúsund og fimm hundruð fyrir tímann !"); // spelling error
         testSentences.put("Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann SL þriðjudaginn 18. janúar nk. ",
-                "Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann S L þriðjudaginn átjánda janúar næstkomandi .");
+                "Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann s l þriðjudaginn átjánda janúar næstkomandi .");
         testSentences.put("„ Ég kíki daglega á facebook , karfan.is , vf.is , mbl.is , kkí , og utpabroncs.com . “ ",
                 ", Ég kíki daglega á facebook , k a r f a n punktur is , v f punktur is , m b l punktur is , k k í , og u t p a b r o n c s punktur com . ,");
         testSentences.put("Arnór Ingvi Traustason 57. mín. Jónas Guðni, sem er 33 ára, hóf fótboltaferil sinn árið 2001.",
@@ -72,7 +80,7 @@ public class NormalizationManagerTest {
         testSentences.put("Einnig er gert ráð fyrir að sameina lóðir og byggingarreiti við Sjávarbraut 1 - 7 í 1 lóð og 1 byggingarreit.   Miðaverð fyrir fullorðna kr. 5500 ",
                 "Einnig er gert ráð fyrir að sameina lóðir og byggingarreiti við Sjávarbraut eitt til sjö í einni lóð og einum byggingarreit . Miðaverð fyrir fullorðna krónur fimm þúsund og fimm hundruð .");
         testSentences.put("Stolt Sea Farm (SSF), fiskeldisarmur norsku skipa- og iðnaðarsamstæðunnar Stolt-Nielsen, jók sölu sína á flatfiski um 53% á öðrum ársfjórðungi 2015.",
-                "Stolt Sea Farm , S S F , , fiskeldisarmur norsku skipa og iðnaðarsamstæðunnar Stolt Nielsen , jók sölu sína á flatfiski um fimmtíu og þrjú prósent á öðrum ársfjórðungi tvö þúsund og fimmtán .");
+                "Stolt Sea Farm , s s f , , fiskeldisarmur norsku skipa og iðnaðarsamstæðunnar Stolt Nielsen , jók sölu sína á flatfiski um fimmtíu og þrjú prósent á öðrum ársfjórðungi tvö þúsund og fimmtán .");
         testSentences.put("Í janúarbyrjun 1983 var stofnað nýtt hlutafélag, Víkurféttir ehf. sem tók við.",
                 "Í janúarbyrjun nítján hundruð áttatíu og þrjú var stofnað nýtt hlutafélag , Víkurféttir E H F sem tók við .");
         testSentences.put("Jarðskjálfti að stærð 3,9 varð fyrir sunnan Kleifarvatn kl. 19:50 í gærkvöldi.",
