@@ -3,6 +3,8 @@ package com.grammatek.simaromur;
 import com.grammatek.simaromur.frontend.NormalizationManager;
 
 import android.media.AudioFormat;
+import android.provider.Settings;
+import android.speech.tts.TextToSpeech.Engine;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.SynthesisRequest;
 import android.speech.tts.TextToSpeech;
@@ -77,10 +79,18 @@ public class TTSService extends TextToSpeechService {
         String variant = request.getVariant();
         String text = request.getCharSequenceText().toString();
         String voiceName = request.getVoiceName();
+        // we will get speechrate and pitch from the settings,
+        // but in case the retrieval of the values fails, let's get the values from the request first.
         int speechrate = request.getSpeechRate();
         int pitch = request.getPitch();
+        try {
+            speechrate = Settings.Secure.getInt(getContentResolver(), Settings.Secure.TTS_DEFAULT_RATE);
+            pitch = Settings.Secure.getInt(getContentResolver(), Settings.Secure.TTS_DEFAULT_PITCH);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/"+country+"/"+variant+"), voice: "
-                + voiceName);
+                + voiceName + " speed: " + speechrate + " pitch: " + pitch);
         String loadedVoiceName = mRepository.getLoadedVoiceName();
         if (loadedVoiceName.equals("")) {
             String voiceNameToLoad = voiceName != null ? voiceName : variant;
