@@ -29,10 +29,11 @@ public class SpeakController implements Callback<ResponseBody> {
      * @param audioObserver     the audio observer to be used for available audio data / error
      */
     public synchronized void streamAudio(SpeakRequest request, AudioObserver audioObserver) {
+        Log.v(LOG_TAG, "streamAudio: request: " + request);
         if (mCall != null) {
+            Log.w(LOG_TAG, "streamAudio: warning: stopping ongoing request: " + request);
             stop();
         }
-        Log.v(LOG_TAG, "streamAudio: request: " + request);
         mCall = buildSpeakCall(request);
         mAudioObserver = audioObserver;
         // async request execution
@@ -47,11 +48,9 @@ public class SpeakController implements Callback<ResponseBody> {
         if (mCall != null) {
             mCall.cancel();
         }
-        mCall = null;
         if (mAudioObserver != null) {
             mAudioObserver.stop();
         }
-        mAudioObserver = null;
     }
 
     /**
@@ -97,7 +96,7 @@ public class SpeakController implements Callback<ResponseBody> {
     }
 
     @Override
-    public synchronized void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+    public synchronized void onResponse(@NotNull Call<ResponseBody> call, Response<ResponseBody> response) {
         assert (mAudioObserver != null);
         if (response.isSuccessful()) {
             ResponseBody body = response.body();
@@ -128,20 +127,14 @@ public class SpeakController implements Callback<ResponseBody> {
     }
 
     @Override
-    public void onFailure(@NotNull Call<ResponseBody> call, Throwable t) {
-        String errMsg = "";
-        if (t instanceof SocketTimeoutException) {
-            errMsg = "Socket timeout";
-        } else if (t instanceof IOException) {
-            errMsg = "Timeout";
-        } else {
+    public void onFailure(@NotNull Call<ResponseBody> call, @NotNull Throwable t) {
+        Log.w(LOG_TAG, "onFailure: " + t.getLocalizedMessage());
+        assert (mAudioObserver != null);
+        if (t instanceof IOException) {
             if (call.isCanceled()) {
-                errMsg = "Call was cancelled";
-            } else {
-                errMsg = "Network Error :" + t.getLocalizedMessage();
+                return;
             }
         }
-        Log.e(LOG_TAG, "onFailure: " + errMsg);
-        mAudioObserver.error(errMsg);
+        mAudioObserver.error(t.getLocalizedMessage());
     }
 }
