@@ -59,6 +59,15 @@ android {
         }
     }
 
+    sourceSets {
+        project.logger.lifecycle('$projectDir/schemas: ' + "$projectDir/schemas".toString())
+        androidTest.assets.srcDirs +=
+                files("$projectDir/schemas".toString())
+        debug.assets.srcDirs +=
+                files("$projectDir/schemas".toString())
+        release.assets.srcDirs +=
+                files("$projectDir/schemas".toString())
+    }
     buildTypes {
 
         release {
@@ -140,6 +149,8 @@ dependencies {
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'androidx.test:core:1.4.0'
+    testImplementation 'androidx.test:core-ktx:1.4.0'
+    testImplementation 'androidx.test.ext:junit-ktx:1.1.3'
     testImplementation 'org.mockito:mockito-core:1.10.19'
     testImplementation 'com.google.truth:truth:1.0'
 
