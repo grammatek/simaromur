@@ -3,12 +3,11 @@ package com.grammatek.simaromur.frontend;
 import android.content.Context;
 import android.util.Log;
 
-import opennlp.tools.postag.POSModel;
-import opennlp.tools.postag.POSTaggerME;
+import com.grammatek.simaromur.frontend.g2p.PronDictEntry;
+import com.grammatek.simaromur.frontend.g2p.Pronunciation;
+import com.grammatek.simaromur.frontend.g2p.SyllableStressAnalyzer;
 
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -73,11 +72,12 @@ public class FrontendManager {
         String resultText = text;
         resultText = mNormalizationManager.process(resultText);
         if (g2p) {
-            resultText = mPronunciation.transcribe(resultText);
+            List<PronDictEntry> transcribedEntries = mPronunciation.transcribe2Entries(resultText);
             // we can't perform syllabStress unless we have a transcribed (g2p) version of text
             if (syllabStress) {
-                resultText = mSyllabStress.label(resultText);
+                mSyllabStress.label(transcribedEntries);
             }
+            resultText = PronDictEntry.toTranscribedString(transcribedEntries);
         }
         Log.i(LOG_TAG, text + " => " + resultText);
         return resultText;

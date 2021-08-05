@@ -1,4 +1,4 @@
-package com.grammatek.simaromur.frontend;
+package com.grammatek.simaromur.frontend.g2p;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -9,27 +9,29 @@ import com.grammatek.simaromur.R;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This class manages the dictionary look-ups and the calls to g2p for unknown words
  */
 
 public class Pronunciation {
+    public static Map<String, PronDictEntry> mPronDict;
+
     private Context mContext;
     private NativeG2P mG2P;
-    private Map<String, PronDictEntry> mPronDict;
+
 
     public Pronunciation(Context context) {
         this.mContext = context;
         initializePronDict();
-        initializeG2P();
+       // initializeG2P();
     }
 
-    public String transcribe(String text) {
+    public String transcribe2String(String text) {
         String[] tokens = text.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String tok : tokens) {
@@ -40,6 +42,22 @@ public class Pronunciation {
             }
         }
         return sb.toString().trim();
+    }
+
+    public List<PronDictEntry> transcribe2Entries(String text) {
+        String[] tokens = text.split(" ");
+        List<PronDictEntry> entryList = new ArrayList<>();
+        for (String tok : tokens) {
+            PronDictEntry entry = new PronDictEntry(tok);
+            if (mPronDict.containsKey(tok)) {
+                entry.setTranscript(mPronDict.get(tok).getTranscript());
+
+            } else {
+                entry.setTranscript(mG2P.process(tok));
+            }
+            entryList.add(entry);
+        }
+        return entryList;
     }
 
     private void initializeG2P() {
