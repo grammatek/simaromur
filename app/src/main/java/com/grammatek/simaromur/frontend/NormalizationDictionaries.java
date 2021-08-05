@@ -287,8 +287,8 @@ public class NormalizationDictionaries {
         abbreviationDict.put(BOS + "([Þþ]" + DOT + "m" + DOT + "t" + DOT + "|Þ" + DOT + "M" + DOT + "T)" + DOT_ONE_NONE + EOS,
                 "$1þar með talið$3");
 
-        abbreviationDict.put(" (((" + MEASURE_PREFIX_DIGITS + "|" + MEASURE_PREFIX_WORDS + ")( )?)\\s)(þús" + DOT_ONE_NONE + ")" +
-                "( " + LETTER + "*)?", " $1þúsund$13");
+        abbreviationDict.put(" (((" + MEASURE_PREFIX_DIGITS + "|" + MEASURE_PREFIX_WORDS + ")( )?)\\s)(þús" + DOT_ONE_NONE + " )" +
+                "(" + LETTER + "*)?", " $1þúsund $13");
         abbreviationDict.put(" ([Mm]örg )þús" + DOT_ONE_NONE + "( " + LETTER + "*)?", "$1þúsund$2");
 
         abbreviationDict.put("(\\d+" + DOT + ") [Áá]rg" + DOT + EOS, "$1 árgangur$2");

@@ -28,11 +28,11 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Í gær greindust 78 með ABCD-19";
+        String input = "Það er rúmlega 93 þús km";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("Í gær greindust sjötíu og átta með a b c d nítján .",
+        assertEquals("gjörgæslurúm per hundrað þúsund íbúa .",
                 processed);
     }
 
@@ -139,6 +139,7 @@ public class NormalizationManagerTest {
                 "Hann bætti Íslandsmet sitt í fimm þúsund metra kappakstri um ellefu mínútu .");
         testSentences.put("Það er rúmlega 93 þús km",
                 "Það er rúmlega níutíu og þrjú þúsund kílómetrar .");
+        testSentences.put("gjörgæslurúm per hundrað þúsund íbúa", "gjörgæslurúm per hundrað þúsund íbúa .");
 
         return testSentences;
     }

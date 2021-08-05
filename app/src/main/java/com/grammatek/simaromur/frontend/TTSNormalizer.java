@@ -47,10 +47,10 @@ public class TTSNormalizer {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.directionDict);
             normalized = replaceFromDict(normalized, NormalizationDictionaries.hyphenDict);
         }
-        // most standard abbreviations
-        if (normalized.contains(".")) {
-            normalized = replaceFromDict(normalized, NormalizationDictionaries.abbreviationDict);
-        }
+        // most standard abbreviations - they don't necessarily contain a dot, so all sentences
+        // are tested for abbreviations
+        normalized = replaceFromDict(normalized, NormalizationDictionaries.abbreviationDict);
+
         // looking for patterns like "500 kr/kg"
         if (normalized.contains("/")) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.denominatorDict);
