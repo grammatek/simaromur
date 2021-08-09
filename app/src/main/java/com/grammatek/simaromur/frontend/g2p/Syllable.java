@@ -25,6 +25,25 @@ public class Syllable {
         mStress = 0;
     }
 
+    public boolean hasNucleus() {
+        return mHasNucleus;
+    }
+    public void setNucleus(boolean hasNucleus) {
+        mHasNucleus = hasNucleus;
+    }
+    public void setContent(String content) {
+        mContent = content.trim();
+    }
+
+    public String getContent() {
+        return mContent;
+    }
+    public void setConsCluster(String cluster) {
+        mConsCluster = cluster;
+    }
+    public String getConsCluster() {
+        return mConsCluster;
+    }
     public void append(String phoneString) {
         mContent += phoneString + " ";
     }

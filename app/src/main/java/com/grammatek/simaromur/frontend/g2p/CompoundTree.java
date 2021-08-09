@@ -7,34 +7,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * CompoundTree builds a tree structure out of a PronDictEntry which can be traversed in a preorder way.
+ * Aim is to divide an entry into compound subcomponents until each component cannot be divided
+ * further. The algorithm relies on dictionaries, i.e. if it does not find a potential head word
+ * in the head word dictionary, the segmentation will not be performed.
+ * This analysis is done to increase accuracy in syllabification and stress labeling.
+ *
+ */
 public class CompoundTree {
-
-    public final static Map<String, List<String>> HEAD_MAP = new HashMap<>();
-    static {
-        List<String> list1 = new ArrayList<>();
-        list1.add("grundvallar");
-        list1.add("úrslita");
-        HEAD_MAP.put("þýðingu", list1);
-        List<String> list2 = new ArrayList<>();
-        list2.add("göngu");
-        list2.add("inni");
-        list2.add("striga");
-        list2.add("takka");
-        HEAD_MAP.put("skór", list2);
-    }
-    public final static Map<String, List<String>> MOD_MAP = new HashMap<>();
-    static {
-        List<String> list1 = new ArrayList<>();
-        list1.add("kosti");
-        list1.add("kostum");
-        MOD_MAP.put("afar", list1);
-        List<String> list2 = new ArrayList<>();
-        list2.add("gott");
-        list2.add("góð");
-        list2.add("góður");
-        list2.add("vel");
-        MOD_MAP.put("afbragðs", list2);
-    }
 
     public static Set<Character> VOWELS = new HashSet<>();
     static {
@@ -52,10 +33,12 @@ public class CompoundTree {
         VOWELS.add('ý');
         VOWELS.add('ö');
     }
-
-    private static int MIN_COMP_LEN = 5;
-    private static int MIN_INDEX = 2; // the position from which to start searching for a head word
-    private PronDictEntry mElem;
+    // We only look at words of MIN_COMP_LEN to divide further, everything shorter will be assumed
+    // not to be a compound
+    private static final int MIN_COMP_LEN = 5;
+    private static final int MIN_INDEX = 2; // the position from which to start searching for a head word
+    // the elements of a compoundTree
+    private final PronDictEntry mElem;
     private CompoundTree mLeft;
     private CompoundTree mRight;
 
@@ -147,8 +130,8 @@ public class CompoundTree {
         String modifier = "";
         while (n < word.length() - 2) {
             String head = word.substring(n);
-            if (HEAD_MAP.containsKey(head)) {
-                if (MOD_MAP.containsKey(word.substring(0, n))) {
+            if (Pronunciation.HEAD_MAP.containsKey(head)) {
+                if (Pronunciation.MODIFIER_MAP.containsKey(word.substring(0, n))) {
                     compComponents[0] = word.substring(0, n);
                     compComponents[1] = head;
                     return compComponents;
@@ -181,8 +164,8 @@ public class CompoundTree {
     private String[] extractTranscripts(PronDictEntry entry, String compHead) {
         String[] transcripts = new String[] {"", ""};
         String headTranscr = "";
-        if (Pronunciation.mPronDict.containsKey(compHead))
-            headTranscr = Pronunciation.mPronDict.get(compHead).getTranscript();
+        if (Pronunciation.PRON_DICT.containsKey(compHead))
+            headTranscr = Pronunciation.PRON_DICT.get(compHead).getTranscript();
         else
             headTranscr = "NO_TRANSCRIPT";
 
@@ -237,4 +220,5 @@ public class CompoundTree {
         }
         return false;
     }
+
 }

@@ -36,4 +36,19 @@ public class CompoundTreeTest {
         assertEquals("striga", segmented.getLeft().getElem().getWord());
         assertEquals("skór", segmented.getRight().getElem().getWord());
     }
+
+    @Test
+    public void testExtractComponents() {
+        Pronunciation pron = new Pronunciation(context);
+        PronDictEntry entry = new PronDictEntry("flugvallarstarfsmaður",
+                "f l Y: G v a t l a r s t a r f s m a D Y r");
+        CompoundTree segmented = CompoundTree.buildTree(entry);
+
+        assertEquals("flugvallarstarfsmaður", segmented.getElem().getWord());
+        assertEquals("flugvallar", segmented.getLeft().getElem().getWord());
+        assertEquals("starfsmaður", segmented.getRight().getElem().getWord());
+        assertEquals("starfs", segmented.getRight().getLeft().getElem().getWord());
+        assertEquals("maður", segmented.getRight().getRight().getElem().getWord());
+    }
+
 }
