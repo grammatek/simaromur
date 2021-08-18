@@ -1,7 +1,13 @@
 package com.grammatek.simaromur;
 
+import android.app.AlertDialog;
 import android.app.Application;
+import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.provider.Settings;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -52,6 +58,8 @@ public class AppRepository {
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
 
+    private MediaPlayObserver mMediaPlayer;
+
     /**
      * Observer for Tiro voice query results.
      */
@@ -99,6 +107,7 @@ public class AppRepository {
 
         mScheduler = Executors.newSingleThreadScheduledExecutor();
         mScheduler.scheduleAtFixedRate(timerRunnable, 0, 20, TimeUnit.SECONDS);
+        mMediaPlayer = new MediaPlayObserver();
     }
 
     /**
@@ -189,7 +198,8 @@ public class AppRepository {
         final String SampleRate = "" + SAMPLE_RATE_MP3;
         SpeakRequest request = new SpeakRequest("standard", langCode,
                 "mp3", SampleRate, text, "text", voiceId);
-        mTiroSpeakController.streamAudio(request , new MediaPlayObserver());
+        mMediaPlayer.stop();
+        mTiroSpeakController.streamAudio(request , mMediaPlayer);
     }
 
     /**
@@ -352,6 +362,51 @@ public class AppRepository {
         }
         Log.v(LOG_TAG, "chosen default voice: (" + rv + ")");
         return rv;
+    }
+
+    public void showTtsBackendWarningDialog(Context context) {
+        //mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
+        AlertDialog warningDialog = null;
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        String audioAssetFile = "";
+        int messageId =  R.string.try_again_later;
+        if (! ConnectionCheck.isNetworkConnected()) {
+            messageId =  R.string.check_internet;
+            builder.setPositiveButton(R.string.doit, (dialog, id) -> {
+                openWifiSettings(context); })
+                    .setNegativeButton(R.string.not_yet, (dialog, id) -> {});
+            audioAssetFile = "audio/check_internet_dora.mp3";
+        } else if (! ConnectionCheck.isTTSServiceReachable()) {
+            messageId =  R.string.speech_service_not_available;
+            builder.setPositiveButton(R.string.ok, (dialog, id) -> {});
+            audioAssetFile = "audio/service_not_available.mp3";
+        }
+        builder
+                .setMessage(messageId)
+                .setTitle(R.string.speech_service_connection_problem)
+                .setCancelable(true);
+
+        if (! audioAssetFile.isEmpty()) {
+            mMediaPlayer.stop();
+            mMediaPlayer.update(context, audioAssetFile);
+        }
+
+        warningDialog = builder.create();
+        warningDialog.show();
+    }
+
+    // Open Wifi preferences
+    private void openWifiSettings(Context context) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_MAIN, null);
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.wifi.WifiSettings");
+            intent.setComponent(cn);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (ActivityNotFoundException ignored){
+            context.startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+        }
     }
 
     Voice getVoiceForName(String name) {

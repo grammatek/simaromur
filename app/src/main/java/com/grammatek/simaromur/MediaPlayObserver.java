@@ -1,5 +1,7 @@
 package com.grammatek.simaromur;
 
+import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.media.MediaDataSource;
 import android.media.MediaPlayer;
 import android.util.Log;
@@ -19,7 +21,7 @@ public class MediaPlayObserver implements AudioObserver {
     /**
      * This class transforms a byte array into a MediaDataSource consumable by the Media Player
      */
-    public static class ByteArrayMediaDataSource extends MediaDataSource {
+    private static class ByteArrayMediaDataSource extends MediaDataSource {
         private final byte[] data;
 
         public ByteArrayMediaDataSource(byte []data) {
@@ -52,6 +54,7 @@ public class MediaPlayObserver implements AudioObserver {
 
     // interface implementation
 
+    @Override
     public void update(byte[] audioData) {
         ByteArrayMediaDataSource dataSource = new ByteArrayMediaDataSource(audioData);
         try {
@@ -66,6 +69,22 @@ public class MediaPlayObserver implements AudioObserver {
             ex.printStackTrace();
         }
     }
+
+    @Override
+    public void update(Context context, String assetFilename) {
+        try {
+            AssetFileDescriptor descriptor = context.getAssets().openFd(assetFilename);
+            mMediaPlayer.reset();
+            mMediaPlayer.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
+            descriptor.close();
+            mMediaPlayer.prepare();
+            mMediaPlayer.setLooping(false);
+            mMediaPlayer.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void error(String errorMsg) {
         Log.e(LOG_TAG, "MediaPlayObserver()::error: " + errorMsg);
     }

@@ -28,7 +28,7 @@
     <string name="cancel">Hætta</string>
     <string name="doit">Virkja!</string>
     <string name="tts_settings">Áður en þú getur notað Símaróm sem skjálesara þarftu að virkja hann í stillingum fyrir talgervil</string>
-    <string name="choose_tts_engine">Mikilvægt</string>
+    <string name="important">Mikilvægt</string>
     <string name="not_yet">Ekki núna</string>
     <string name="info_copyright">Höfundarréttur</string>
     <string name="info_url">veffang</string>
@@ -44,4 +44,8 @@
     <string name="info_benchmark_value">sinnum hraðar en rauntími</string>
     <string name="info_app_version">Símarómur útgáfa</string>
     <string name="info_version_error">Villa við að ná í uppl. um útgáfu</string>
+    <string name="check_internet">Athugaðu nettengingu</string>
+    <string name="speech_service_not_available">Talgervilsþjónustan er ekki í boði eins og er</string>
+    <string name="try_again_later">Vinsamlegast reyndu aftur síðar</string>
+    <string name="speech_service_connection_problem">Símarómur nær ekki að tengjast</string>
 </resources>

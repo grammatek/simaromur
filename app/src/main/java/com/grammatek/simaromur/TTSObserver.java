@@ -1,5 +1,6 @@
 package com.grammatek.simaromur;
 
+import android.content.Context;
 import android.media.AudioFormat;
 import android.speech.tts.SynthesisCallback;
 import android.util.Log;
@@ -58,6 +59,11 @@ public class TTSObserver implements AudioObserver {
         }
         Log.v(LOG_TAG, "TTSObserver: consumed " + offset + " bytes");
         stop();
+    }
+
+    @Override
+    public void update(Context context, String assetFilename) {
+        // ignore, as we don't play from files
     }
 
     public void stop() {

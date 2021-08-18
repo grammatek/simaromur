@@ -29,7 +29,7 @@
     <string name="not_yet">Not yet</string>
     <string name="doit">Do it!</string>
     <string name="tts_settings">Before you can use Símarómur as a screen reader, you have to activate it in the Android TTS settings</string>
-    <string name="choose_tts_engine">Important</string>
+    <string name="important">Important</string>
     <string name="info_copyright">Copyright</string>
     <string name="info_url">URL</string>
     <string name="info_runtime_header">RUNTIME_HEADER</string>
@@ -44,4 +44,8 @@
     <string name="info_repo_url">https://github.com/grammatek/simaromur</string>
     <string name="info_benchmark">Benchmark</string>
     <string name="info_benchmark_value">times faster than real time</string>
+    <string name="speech_service_connection_problem">Símarómur connection problem</string>
+    <string name="speech_service_not_available">Speech synthesis services are not available at this time</string>
+    <string name="try_again_later">Please try again later</string>
+    <string name="check_internet">Please check internet connection</string>
 </resources>
