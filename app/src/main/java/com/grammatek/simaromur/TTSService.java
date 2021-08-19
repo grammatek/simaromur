@@ -174,9 +174,7 @@ public class TTSService extends TextToSpeechService {
                 playNetworkErrorOnce = false;
                 App.getAppRepository().speakAssetFile(callback, assetFileName);
             } else {
-                callback.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
-                callback.error(TextToSpeech.ERROR_NETWORK);
-                callback.done();
+                signalTtsError(callback, TextToSpeech.ERROR_NETWORK);
             }
             if (text.isEmpty()) {
                 Log.v(LOG_TAG, "onSynthesizeText: End of TTS session");
@@ -189,6 +187,22 @@ public class TTSService extends TextToSpeechService {
             playNetworkErrorOnce = true;
         }
         return true;
+    }
+
+    /**
+     * Signal TTS client a TTS error with given error code.
+     *
+     * The sequence for signalling an error seems to be important: callback.start(),
+     * callback.error(), callback.done(). Any callback.audioAvailable() call after a callback.error()
+     * is ignored.
+     *
+     * @param callback      TTS Service callback, given in onSynthesizeText()
+     * @param errorCode     Error Code to return to TTS client
+     */
+    private void signalTtsError(SynthesisCallback callback, int errorCode) {
+        callback.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
+        callback.error(errorCode);
+        callback.done();
     }
 
     /**
