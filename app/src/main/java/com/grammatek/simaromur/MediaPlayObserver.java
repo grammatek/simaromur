@@ -70,6 +70,13 @@ public class MediaPlayObserver implements AudioObserver {
         }
     }
 
+    /**
+     * Update MediaPlayer with audio asset file.
+     *
+     * @param context           Context for the MediaPlayer to be associated with
+     * @param assetFilename     Asset filename to play. This can have any format the MediaPlayer
+     *                          supports.
+     */
     @Override
     public void update(Context context, String assetFilename) {
         try {
