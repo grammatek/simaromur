@@ -40,15 +40,11 @@ public class TTSObserver implements AudioObserver {
             TTSService.playSilence(mSynthCb);
             return;
         }
-
-        if (! mSynthCb.hasStarted()) {
-            mSynthCb.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
-        }
-
         final byte[] audioData = applyPitchAndSpeed(ttsData, mPitch, mSpeed);
-
         int offset = 0;
+        startSynthesis(mSynthCb);
         final int maxBytes = mSynthCb.getMaxBufferSize();
+
         while (offset < audioData.length) {
             Log.v(LOG_TAG, "TTSObserver: offset = " + offset);
             final int bytesConsumed = Math.min(maxBytes, (audioData.length - offset));
@@ -58,7 +54,12 @@ public class TTSObserver implements AudioObserver {
             offset += bytesConsumed;
         }
         Log.v(LOG_TAG, "TTSObserver: consumed " + offset + " bytes");
-        stop();
+    }
+
+    private static void startSynthesis(SynthesisCallback mSynthCb) {
+        if (! mSynthCb.hasStarted()) {
+            mSynthCb.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
+        }
     }
 
     @Override

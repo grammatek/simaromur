@@ -26,6 +26,7 @@ import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -365,7 +366,6 @@ public class AppRepository {
     }
 
     public void showTtsBackendWarningDialog(Context context) {
-        //mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
         AlertDialog warningDialog = null;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         String audioAssetFile = "";
@@ -393,6 +393,30 @@ public class AppRepository {
 
         warningDialog = builder.create();
         warningDialog.show();
+    }
+
+    /**
+     * Play given asset file via given SynthesisCallback. This method is only valid inside an
+     * onSynthesizeText() callback.
+     *
+     * @param callback       callback given in onSynthesizeText()
+     * @param assetFilename  file to speak from assets
+     */
+    public void speakAssetFile(SynthesisCallback callback, String assetFilename) {
+        Log.v(LOG_TAG, "playAssetFile: " + assetFilename);
+        try {
+            InputStream inputStream = App.getContext().getAssets().open(assetFilename);
+            int size = inputStream.available();
+            byte[] buffer = new byte[size];
+            if (size != inputStream.read(buffer)) {
+                Log.w(LOG_TAG, "playAssetFile: not enough bytes ?");
+            }
+            TTSObserver observer=new TTSObserver(callback, (float) 1.0, (float) 1.1);
+            observer.update(buffer);
+            observer.stop();
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "playAssetFile Exception: " + e.getLocalizedMessage());
+        }
     }
 
     // Open Wifi preferences
