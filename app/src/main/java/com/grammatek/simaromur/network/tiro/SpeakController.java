@@ -109,6 +109,7 @@ public class SpeakController implements Callback<ResponseBody> {
                 byte[] data = body.bytes();
                 Log.v(LOG_TAG, "API returned: " + data.length + " bytes");
                 mAudioObserver.update(data);
+                mAudioObserver.stop();
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Exception: " + e.getMessage());
                 e.printStackTrace();
