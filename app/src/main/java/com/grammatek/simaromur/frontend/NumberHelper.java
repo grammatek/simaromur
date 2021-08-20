@@ -78,7 +78,9 @@ public class NumberHelper {
     public static final String TIME_PTRN = "^(([01]?\\d|2[0-4])[:\\.][0-5]|0)\\d$";
     public static final String SPORT_PTRN = "^(?!1\\/2)([1-9]\\d?\\/[1-9]\\d?)$";
 
-    public static final String LETTERS_PTRN = "^(?!^(RÚV|SPRON|\\-|\\.)$)[\\-\\.A-ZÁÐÉÍÓÚÝÞÆÖ]{1,5}$";
+    public static final String LETTERS_PTRN = "^(?!^(RÚV|SPRON|\\-|\\.)$)[\\-\\.A-ZÁÐÉÍÓÚÝÞÆÖ_]+$";
+    // orginal pattern, keep the line until we have tested that the above pattern works as expected
+    //public static final String LETTERS_PTRN = "^(?!^(RÚV|SPRON|\\-|\\.)$)[\\-\\.A-ZÁÐÉÍÓÚÝÞÆÖ]{1,5}$";
     public static final String ROMAN_LETTERS_PTRN = "[IVXLCDM]{5,20}";
 
     public static final String SYMBOL_PTRN = "^[^A-ZÁÐÉÍÓÚÝÞÆÖa-záðéíóúýþæö\\d]$";

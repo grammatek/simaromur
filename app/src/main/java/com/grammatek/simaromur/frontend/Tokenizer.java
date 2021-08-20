@@ -191,8 +191,8 @@ public class Tokenizer {
         // for all kinds of punctuation we need to insert spaces at the correct positions
         // Patterns
         String processedToken = token;
-        String insertSpaceAfterAnywhere = "(.*)([(\\[{\\-])(.*)";
-        String insertSpaceBeforeAnywhere = "(.+)([)\\[}\\-])(.*)";
+        String insertSpaceAfterAnywhere = "(.*)([(\\[{\\-_])(.*)";
+        String insertSpaceBeforeAnywhere = "(.+)([)\\[}\\-_])(.*)";
         String insertSpaceAfterIfBeginning = "^(\")(.+)";
         String insertSpaceBeforeIfEnd = "(.+)([\":,.!?])$";
         String insertSpaceBeforeIfEndAndPunct = "(.+)([\":,.!?])(\\s[\":,.!?])$";
