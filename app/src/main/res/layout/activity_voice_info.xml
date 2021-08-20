@@ -122,6 +122,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
+        android:contentDescription="@string/play_voice_title_description"
         android:ems="10"
         android:gravity="start|top"
         android:importantForAutofill="no"
