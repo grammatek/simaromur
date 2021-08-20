@@ -35,6 +35,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.flitemanager);
 

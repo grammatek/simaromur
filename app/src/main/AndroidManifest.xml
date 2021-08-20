@@ -23,7 +23,6 @@
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.TTS_SERVICE" />
-
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
@@ -34,12 +33,12 @@
 
         <activity
             android:name=".TTSManager"
+            android:theme="@style/AppTheme.Launcher"
             android:enabled="true"
             android:label="@string/simaromur_manager"
             android:launchMode="standard">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -68,7 +67,6 @@
             android:theme="@style/Theme.AppCompat.Light">
             <intent-filter>
                 <action android:name="android.speech.tts.engine.INSTALL_TTS_DATA" />
-
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
@@ -92,7 +90,6 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter>
                 <action android:name="android.speech.tts.engine.GET_SAMPLE_TEXT" />
-
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
