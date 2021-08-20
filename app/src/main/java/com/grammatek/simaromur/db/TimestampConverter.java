@@ -5,6 +5,7 @@ import androidx.room.TypeConverter;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -24,13 +25,12 @@ public class TimestampConverter {
         if (value != null) {
             try {
                 return df.parse(value);
-            } catch (ParseException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-            return null;
-        } else {
-            return null;
         }
+        // return current date, in case no valid date string has been provided
+        return new Date();
     }
 
     // convert Date to String
