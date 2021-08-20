@@ -12,7 +12,6 @@
     <string name= "send_message">Senda tölvupóst …</string>
     <string name="tts_settings_label">Stillingar fyrir talgervil</string>
     <string name="voice_list_update">Sækja lista af röddum</string>
-    <string name="todo">TODO</string>
     <string name="speak_button">Spila</string>
     <string name="voice_test_text">Innanlandssmitið sem greindist utan sóttkvíar í gær sýnir að veiran er ekki horfin úr samfélaginu</string>
     <string name="voice_lang_title">Tungumál</string>
@@ -48,4 +47,5 @@
     <string name="speech_service_not_available">Talgervilsþjónustan er ekki í boði eins og er</string>
     <string name="try_again_later">Vinsamlegast reyndu aftur síðar</string>
     <string name="speech_service_connection_problem">Símarómur nær ekki að tengjast</string>
+    <string name="icon_description">ýttu á tákn</string>
 </resources>
