@@ -74,8 +74,13 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
                     mUserText.setText(getResources().getString(R.string.eng_sample));
                 }
                 nameTextView.setText(mVoice.name);
-                langTextView.setText(mVoice.languageName);
-                genderTextView.setText(mVoice.gender);
+                langTextView.setText(mVoice.getLocale().getDisplayLanguage().toLowerCase());
+                if (mVoice.gender.toLowerCase().equals("Male".toLowerCase())) {
+                    genderTextView.setText(getResources().getString(R.string.male));
+                } else {
+                    genderTextView.setText(getResources().getString(R.string.female));
+                }
+
             }
         });
     }

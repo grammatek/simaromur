@@ -47,5 +47,7 @@
     <string name="speech_service_not_available">Speech synthesis services are not available at this time</string>
     <string name="try_again_later">Please try again later</string>
     <string name="check_internet">Please check internet connection</string>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
     <string name="icon_description">Please press an icon</string>
 </resources>

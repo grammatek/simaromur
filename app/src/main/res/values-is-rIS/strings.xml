@@ -47,5 +47,7 @@
     <string name="speech_service_not_available">Talgervilsþjónustan er ekki í boði eins og er</string>
     <string name="try_again_later">Vinsamlegast reyndu aftur síðar</string>
     <string name="speech_service_connection_problem">Símarómur nær ekki að tengjast</string>
+    <string name="male">karl</string>
+    <string name="female">kona</string>
     <string name="icon_description">ýttu á tákn</string>
 </resources>
