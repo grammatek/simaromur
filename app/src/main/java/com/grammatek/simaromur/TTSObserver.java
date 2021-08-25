@@ -54,6 +54,7 @@ public class TTSObserver implements AudioObserver {
             offset += bytesConsumed;
         }
         Log.v(LOG_TAG, "TTSObserver: consumed " + offset + " bytes");
+        mSynthCb.done();
     }
 
     private static void startSynthesis(SynthesisCallback mSynthCb) {
