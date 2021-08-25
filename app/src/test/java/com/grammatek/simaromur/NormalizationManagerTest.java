@@ -139,6 +139,7 @@ public class NormalizationManagerTest {
                 "Hann bætti Íslandsmet sitt í fimm þúsund metra kappakstri um ellefu mínútu .".toLowerCase());
         testSentences.put("Það er rúmlega 93 þús km",
                 "Það er rúmlega níutíu og þrjú þúsund kílómetrar .".toLowerCase());
+        testSentences.put("gjörgæslurúm per hundrað þúsund íbúa", "gjörgæslurúm per hundrað þúsund íbúa ."); 
         testSentences.put("C4CE6358DF86040CAAEEBC58951B8E133105D3369980D62D109E5B6B75CCE67C_713x0",
                 "c fjögur c e sex þúsund þrjú hundruð fimmtíu og átta d f átta sex núll fjórir núll c a a e e b c fimm átta níu fimm einn b átta e einn þrír þrír einn núll fimm d þrír þrír sex níu níu átta núll d sextíu og tvö d hundrað og níu e fimm b sex b sjötíu og fimm c c e sextíu og sjö c sjö hundruð og þrettán x núll ."
         );
