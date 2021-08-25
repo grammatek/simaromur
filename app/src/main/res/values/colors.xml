@@ -17,7 +17,7 @@
      <color name="colorPrimary">#37474f</color>
      <color name="colorPrimaryLight">#62727b</color>
      <color name="colorPrimaryDark">#102027</color>
-     <color name="colorAccent">#FEE699</color>
+     <color name="colorAccent">@android:color/white</color>
      <color name="colorTextPrimary">@android:color/white</color>
      <color name="colorScreenBackground">#102027</color>
      <color name="colorTextHint">#E0E0E0</color>

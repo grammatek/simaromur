@@ -12,7 +12,6 @@
     <string name= "send_message">Send mail …</string>
     <string name="tts_settings_label">TTS Settings</string>
     <string name="voice_list_update">Download Voice List</string>
-    <string name="todo">TODO</string>
     <string name="speak_button">Play</string>
     <string name="voice_test_text">Innanlandssmitið sem greindist utan sóttkvíar í gær sýnir að veiran er ekki horfin úr samfélaginu</string>
     <string name="voice_name_title">Name</string>
@@ -39,8 +38,7 @@
     <string name="info_version_error">Error retrieving version info</string>
     <string name="info_supported_abis">Supported ABIs</string>
     <string name="info_phone_model">Phone Model</string>
-    <string name="info_about">© (2021) Grammatek ehf.
-        Based on previous work from Carnegie Mellon University © (1999-2012)</string>
+    <string name="info_about">© (2021) Grammatek ehf.\nhttps://www.grammatek.com\nBased on previous work from Carnegie Mellon University © (1999–2012)</string>
     <string name="info_repo_url">https://github.com/grammatek/simaromur</string>
     <string name="info_benchmark">Benchmark</string>
     <string name="info_benchmark_value">times faster than real time</string>
@@ -48,4 +46,7 @@
     <string name="speech_service_not_available">Speech synthesis services are not available at this time</string>
     <string name="try_again_later">Please try again later</string>
     <string name="check_internet">Please check internet connection</string>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
+    <string name="icon_description">Please press an icon</string>
 </resources>
