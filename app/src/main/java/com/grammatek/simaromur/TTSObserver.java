@@ -1,5 +1,6 @@
 package com.grammatek.simaromur;
 
+import android.content.Context;
 import android.media.AudioFormat;
 import android.speech.tts.SynthesisCallback;
 import android.util.Log;
@@ -39,15 +40,11 @@ public class TTSObserver implements AudioObserver {
             TTSService.playSilence(mSynthCb);
             return;
         }
-
-        if (! mSynthCb.hasStarted()) {
-            mSynthCb.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
-        }
-
         final byte[] audioData = applyPitchAndSpeed(ttsData, mPitch, mSpeed);
-
         int offset = 0;
+        startSynthesis(mSynthCb);
         final int maxBytes = mSynthCb.getMaxBufferSize();
+
         while (offset < audioData.length) {
             Log.v(LOG_TAG, "TTSObserver: offset = " + offset);
             final int bytesConsumed = Math.min(maxBytes, (audioData.length - offset));
@@ -57,7 +54,17 @@ public class TTSObserver implements AudioObserver {
             offset += bytesConsumed;
         }
         Log.v(LOG_TAG, "TTSObserver: consumed " + offset + " bytes");
-        stop();
+    }
+
+    private static void startSynthesis(SynthesisCallback mSynthCb) {
+        if (! mSynthCb.hasStarted()) {
+            mSynthCb.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
+        }
+    }
+
+    @Override
+    public void update(Context context, String assetFilename) {
+        // ignore, as we don't play from files
     }
 
     public void stop() {

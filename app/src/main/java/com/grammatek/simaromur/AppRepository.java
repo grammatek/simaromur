@@ -1,7 +1,13 @@
 package com.grammatek.simaromur;
 
+import android.app.AlertDialog;
 import android.app.Application;
+import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.provider.Settings;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -20,6 +26,7 @@ import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -51,6 +58,8 @@ public class AppRepository {
 
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
+
+    private MediaPlayObserver mMediaPlayer;
 
     /**
      * Observer for Tiro voice query results.
@@ -99,6 +108,7 @@ public class AppRepository {
 
         mScheduler = Executors.newSingleThreadScheduledExecutor();
         mScheduler.scheduleAtFixedRate(timerRunnable, 0, 20, TimeUnit.SECONDS);
+        mMediaPlayer = new MediaPlayObserver();
     }
 
     /**
@@ -189,7 +199,8 @@ public class AppRepository {
         final String SampleRate = "" + SAMPLE_RATE_MP3;
         SpeakRequest request = new SpeakRequest("standard", langCode,
                 "mp3", SampleRate, text, "text", voiceId);
-        mTiroSpeakController.streamAudio(request , new MediaPlayObserver());
+        mMediaPlayer.stop();
+        mTiroSpeakController.streamAudio(request , mMediaPlayer);
     }
 
     /**
@@ -352,6 +363,74 @@ public class AppRepository {
         }
         Log.v(LOG_TAG, "chosen default voice: (" + rv + ")");
         return rv;
+    }
+
+    public void showTtsBackendWarningDialog(Context context) {
+        AlertDialog warningDialog = null;
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        String audioAssetFile = "";
+        int messageId =  R.string.try_again_later;
+        if (! ConnectionCheck.isNetworkConnected()) {
+            messageId =  R.string.check_internet;
+            builder.setPositiveButton(R.string.doit, (dialog, id) -> {
+                openWifiSettings(context); })
+                    .setNegativeButton(R.string.not_yet, (dialog, id) -> {});
+            audioAssetFile = "audio/check_internet_dora.mp3";
+        } else if (! ConnectionCheck.isTTSServiceReachable()) {
+            messageId =  R.string.speech_service_not_available;
+            builder.setPositiveButton(R.string.ok, (dialog, id) -> {});
+            audioAssetFile = "audio/service_not_available.mp3";
+        }
+        builder
+                .setMessage(messageId)
+                .setTitle(R.string.speech_service_connection_problem)
+                .setCancelable(true);
+
+        if (! audioAssetFile.isEmpty()) {
+            mMediaPlayer.stop();
+            mMediaPlayer.update(context, audioAssetFile);
+        }
+
+        warningDialog = builder.create();
+        warningDialog.show();
+    }
+
+    /**
+     * Play given asset file via given SynthesisCallback. This method is only valid inside an
+     * onSynthesizeText() callback.
+     *
+     * @param callback       callback given in onSynthesizeText()
+     * @param assetFilename  file to speak from assets
+     */
+    public void speakAssetFile(SynthesisCallback callback, String assetFilename) {
+        Log.v(LOG_TAG, "playAssetFile: " + assetFilename);
+        try {
+            InputStream inputStream = App.getContext().getAssets().open(assetFilename);
+            int size = inputStream.available();
+            byte[] buffer = new byte[size];
+            if (size != inputStream.read(buffer)) {
+                Log.w(LOG_TAG, "playAssetFile: not enough bytes ?");
+            }
+            TTSObserver observer=new TTSObserver(callback, (float) 1.0, (float) 1.1);
+            observer.update(buffer);
+            observer.stop();
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "playAssetFile Exception: " + e.getLocalizedMessage());
+        }
+    }
+
+    // Open Wifi preferences
+    private void openWifiSettings(Context context) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_MAIN, null);
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.wifi.WifiSettings");
+            intent.setComponent(cn);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (ActivityNotFoundException ignored){
+            context.startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+        }
     }
 
     Voice getVoiceForName(String name) {

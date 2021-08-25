@@ -35,6 +35,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.flitemanager);
 
@@ -101,7 +102,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder
                 .setMessage(R.string.tts_settings)
-                .setTitle(R.string.choose_tts_engine)
+                .setTitle(R.string.important)
                 .setCancelable(false)
                 .setPositiveButton(R.string.doit, (dialog, id) -> {
                     openTtsSettings();

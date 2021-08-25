@@ -1,10 +1,10 @@
 package com.grammatek.simaromur;
 
 import com.grammatek.simaromur.frontend.NormalizationManager;
+import com.grammatek.simaromur.network.ConnectionCheck;
 
 import android.media.AudioFormat;
 import android.provider.Settings;
-import android.speech.tts.TextToSpeech.Engine;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.SynthesisRequest;
 import android.speech.tts.TextToSpeech;
@@ -27,6 +27,7 @@ import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
 public class TTSService extends TextToSpeechService {
     private final static String LOG_TAG = "Simaromur_Java_" + TTSService.class.getSimpleName();
     private AppRepository mRepository;
+    private static boolean playNetworkErrorOnce = true;
 
     @Override
     public void onCreate() {
@@ -114,13 +115,19 @@ public class TTSService extends TextToSpeechService {
 
         com.grammatek.simaromur.db.Voice voice = mRepository.getVoiceForName(loadedVoiceName);
         if (voice != null) {
+            // check if network voice && for network availability
+            if (voice.type.equals("tiro")) {
+                if (! testForAndHandleNetworkVoiceIssues(callback, text, voice)) {
+                    return;
+                }
+            }
             NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
             String normalizedText = normalizationManager.process(text);
 
             Log.v(LOG_TAG, "onSynthesizeText: original (\"" + text + "\"), normalized (\""
                     + normalizedText + "\")");
             if (text.isEmpty() && normalizedText.isEmpty()) {
-                Log.i(LOG_TAG, "onSynthesizeText: finished ?");
+                Log.i(LOG_TAG, "onSynthesizeText: End of TTS session");
                 playSilence(callback);
                 return;
             } else if (normalizedText.isEmpty()) {
@@ -133,6 +140,69 @@ public class TTSService extends TextToSpeechService {
         else {
             Log.e(LOG_TAG, "onSynthesizeText: unsupported voice ?!");
         }
+    }
+
+    /**
+     * Test for network and TTS service issues. If issues were found, an appropriate message is
+     * played instead of the given text. This message is prerecorded and taken from the asset
+     * directory. No network request is done. Therefore, the given voice is ignored for playing
+     * back the message.
+     *
+     * @param callback  TTS service callback.
+     * @param text      Text as received from TTS client
+     * @param voice     The voice that is about to be used for speaking of text if no issues are found
+     *                  Parameter is used to find out if we get end of TTS session.
+     *
+     * @return  true in case no network voice issues have been found, false otherwise
+     */
+    private boolean testForAndHandleNetworkVoiceIssues(SynthesisCallback callback, String text,
+                                                       com.grammatek.simaromur.db.Voice voice)
+    {
+        String assetFileName = "";
+        if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {
+            Log.w(LOG_TAG, "onSynthesizeText: tiro voice " + voice.name +
+                    ": Network problems detected");
+            if (!ConnectionCheck.isTTSServiceReachable()) {
+                assetFileName = "audio/service_not_available_dora.pcm";
+            } else {
+                assetFileName = "audio/connection_problem_dora.pcm";
+            }
+            if (playNetworkErrorOnce) {
+                // Toggle playing network notification. The idea is to just play once the
+                // network warning notification for an ongoing TTS session and ignore any
+                // following utterances as long as the network problem exists.
+                playNetworkErrorOnce = false;
+                App.getAppRepository().speakAssetFile(callback, assetFileName);
+            } else {
+                signalTtsError(callback, TextToSpeech.ERROR_NETWORK);
+            }
+            if (text.isEmpty()) {
+                Log.v(LOG_TAG, "onSynthesizeText: End of TTS session");
+                // toggle playing network notification
+                playNetworkErrorOnce = true;
+            }
+            return false;
+        } else {
+            // toggle playing network notification
+            playNetworkErrorOnce = true;
+        }
+        return true;
+    }
+
+    /**
+     * Signal TTS client a TTS error with given error code.
+     *
+     * The sequence for signalling an error seems to be important: callback.start(),
+     * callback.error(), callback.done(). Any callback.audioAvailable() call after a callback.error()
+     * is ignored.
+     *
+     * @param callback      TTS Service callback, given in onSynthesizeText()
+     * @param errorCode     Error Code to return to TTS client
+     */
+    private void signalTtsError(SynthesisCallback callback, int errorCode) {
+        callback.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
+        callback.error(errorCode);
+        callback.done();
     }
 
     /**

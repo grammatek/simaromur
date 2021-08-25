@@ -26,6 +26,7 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
     private EditText mUserText;
     private com.grammatek.simaromur.db.Voice mVoice;
     private VoiceViewModel mVoiceViewModel;
+    private ImageView mNetworkAvailabilityIcon;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -38,7 +39,7 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
             mVoiceId = extras.getLong(EXTRA_DATA_VOICE_ID);
         }
         else {
-            String errMsg = new String("No data has been passed to activity ?!");
+            String errMsg = "No data has been passed to activity ?!";
             Log.e(LOG_TAG, errMsg);
             throw new AssertionError(errMsg);
         }
@@ -56,19 +57,11 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
         TextView genderTextView = (TextView) findViewById(R.id.textViewGender);
 
         // setup button
-        final Button button = findViewById(R.id.speak_button);
-        // setup network status, @todo: this is very rough and doesn't do anything dynamic
-        final ImageView networkAvailabilityIcon = findViewById(R.id.imageStatus);
-        if (ConnectionCheck.isNetworkConnected()) {
-            button.setEnabled(true);
-            networkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
-        }
-        else {
-            button.setEnabled(false);
-            networkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
-        }
+        Button mButton = findViewById(R.id.speak_button);
+        mButton.setEnabled(true);
+        mButton.setOnClickListener(this);
 
-        button.setOnClickListener(this);
+        mNetworkAvailabilityIcon = findViewById(R.id.imageStatus);
 
         // query DB for given voice id. On completion set appropriate UI attributes
         mVoiceViewModel.getAllVoices().observe(this, voices -> {
@@ -81,8 +74,13 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
                     mUserText.setText(getResources().getString(R.string.eng_sample));
                 }
                 nameTextView.setText(mVoice.name);
-                langTextView.setText(mVoice.languageName);
-                genderTextView.setText(mVoice.gender);
+                langTextView.setText(mVoice.getLocale().getDisplayLanguage().toLowerCase());
+                if (mVoice.gender.toLowerCase().equals("Male".toLowerCase())) {
+                    genderTextView.setText(getResources().getString(R.string.male));
+                } else {
+                    genderTextView.setText(getResources().getString(R.string.female));
+                }
+
             }
         });
     }
@@ -93,10 +91,29 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
         mVoiceViewModel.stopSpeaking(mVoice);
     }
 
+    @Override
+    public void onResume() {
+        Log.v(LOG_TAG, "onResume:");
+        super.onResume();
+        if (ConnectionCheck.isNetworkConnected()) {
+            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
+        }
+        else {
+            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
+            App.getAppRepository().showTtsBackendWarningDialog(this);
+        }
+    }
+
     // speak_button is pressed
     @Override
     public void onClick(View v) {
         Log.v(LOG_TAG, "onClick");
+        if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {
+            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
+            App.getAppRepository().showTtsBackendWarningDialog(this);
+            return;
+        }
+        mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
         String text = mUserText.getText().toString();
         NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
         String normalizedText = normalizationManager.process(text);

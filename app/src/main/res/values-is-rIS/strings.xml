@@ -12,7 +12,6 @@
     <string name= "send_message">Senda tölvupóst …</string>
     <string name="tts_settings_label">Stillingar fyrir talgervil</string>
     <string name="voice_list_update">Sækja lista af röddum</string>
-    <string name="todo">TODO</string>
     <string name="speak_button">Spila</string>
     <string name="voice_test_text">Innanlandssmitið sem greindist utan sóttkvíar í gær sýnir að veiran er ekki horfin úr samfélaginu</string>
     <string name="voice_lang_title">Tungumál</string>
@@ -20,7 +19,7 @@
     <string name="voice_gender_title">Kyn</string>
     <string name="voice_availability_title">Staða</string>
     <string name="speak_voice_title">Spila</string>
-    <string name="play_voice_title_description">Speak the shown text</string>
+    <string name="play_voice_title_description">Lesa sýndan texta</string>
     <string name="is_IS">Íslenska</string>
     <string name="en_EN">Enska</string>
     <string name="en_US">Enska</string>
@@ -28,7 +27,7 @@
     <string name="cancel">Hætta</string>
     <string name="doit">Virkja!</string>
     <string name="tts_settings">Áður en þú getur notað Símaróm sem skjálesara þarftu að virkja hann í stillingum fyrir talgervil</string>
-    <string name="choose_tts_engine">Mikilvægt</string>
+    <string name="important">Mikilvægt</string>
     <string name="not_yet">Ekki núna</string>
     <string name="info_copyright">Höfundarréttur</string>
     <string name="info_url">veffang</string>
@@ -37,11 +36,17 @@
     <string name="info_android_version">Android útgáfa</string>
     <string name="info_supported_abis">Studd ABIs</string>
     <string name="info_phone_model">Gerð síma</string>
-    <string name="info_about">© (2021) Grammatek ehf
-        Byggt á upprunalegri vinnu frá Carnegie Mellon University © (1999-2012)</string>
+    <string name="info_about">© (2021) Grammatek ehf.\nhttps://www.grammatek.com\nByggt á upprunalegri vinnu frá Carnegie Mellon University © (1999–2012)</string>
     <string name="info_repo_url">https://github.com/grammatek/simaromur</string>
     <string name="info_benchmark">Viðmið</string>
     <string name="info_benchmark_value">sinnum hraðar en rauntími</string>
     <string name="info_app_version">Símarómur útgáfa</string>
     <string name="info_version_error">Villa við að ná í uppl. um útgáfu</string>
+    <string name="check_internet">Athugaðu nettengingu</string>
+    <string name="speech_service_not_available">Talgervilsþjónustan er ekki í boði eins og er</string>
+    <string name="try_again_later">Vinsamlegast reyndu aftur síðar</string>
+    <string name="speech_service_connection_problem">Símarómur nær ekki að tengjast</string>
+    <string name="male">karl</string>
+    <string name="female">kona</string>
+    <string name="icon_description">ýttu á tákn</string>
 </resources>
