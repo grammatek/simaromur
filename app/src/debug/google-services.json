@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "204071073417",
+    "project_id": "simaromur-dbg",
+    "storage_bucket": "simaromur-dbg.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:204071073417:android:1ec85ff7e4e36219763858",
+        "android_client_info": {
+          "package_name": "com.grammatek.simaromur"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "204071073417-d3t3voibtoojm9cqhcnbe6si2fj5repu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDg1_EVD7f8wLy5s6o1GWK1K0MLPAVjqTo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "204071073417-d3t3voibtoojm9cqhcnbe6si2fj5repu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
