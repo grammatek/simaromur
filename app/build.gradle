@@ -115,6 +115,7 @@ android {
 
 dependencies {
 
+    // not yet applicable
     //implementation files('libs/opennlp-tools-1.9.3.jar')
     implementation files('libs/opennlp-tools-1.6.0.jar')
     implementation 'org.apache.commons:commons-collections4:4.4'
@@ -189,3 +190,17 @@ dependencies {
     // https://firebase.google.com/docs/android/setup#available-libraries
 
 }
+
+// Saves last modified date of bundled assets, so we can determine when
+// to copy these over to the apps data path
+task saveAllAssetDate {
+    def assetDirectory = "src/main/assets";
+    def text = ""
+    fileTree(assetDirectory).visit { FileVisitDetails details ->
+        def name = details.file.path;
+        name = name.substring(name.indexOf("assets"));
+        text += details.getLastModified() + " " + name + "\n"
+    }
+    file(assetDirectory + "/lastModified.txt").text = "" + text
+}
+build.dependsOn saveAllAssetDate
