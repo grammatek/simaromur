@@ -379,7 +379,7 @@ public class AppRepository {
         } else if (! ConnectionCheck.isTTSServiceReachable()) {
             messageId =  R.string.speech_service_not_available;
             builder.setPositiveButton(R.string.ok, (dialog, id) -> {});
-            audioAssetFile = "audio/service_not_available.mp3";
+            audioAssetFile = "audio/service_not_available_dora.mp3";
         }
         builder
                 .setMessage(messageId)
