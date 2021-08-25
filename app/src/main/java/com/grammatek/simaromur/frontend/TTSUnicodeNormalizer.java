@@ -119,7 +119,7 @@ public class TTSUnicodeNormalizer {
                                 wrd = wrd.replace(Character.toString(wrd.charAt(i)), ",");
                             // we want to keep punctuation marks still present in the normalized
                             // string, but delete the unknown character otherwise
-                            else if (!Character.toString(wrd.charAt(i)).matches("\\p{Punct}"))
+                            else if (!Character.toString(wrd.charAt(i)).matches("[.,:!?]"))
                                 wrd = wrd.replace(Character.toString(wrd.charAt(i)), "");
                         }
                     }
@@ -130,7 +130,7 @@ public class TTSUnicodeNormalizer {
                 if (!wrd.isEmpty())
                     sb.append(" ");
             }
-            normalizedSentences.add(sb.toString().trim());
+            normalizedSentences.add(sb.toString().trim().toLowerCase());
         }
         return normalizedSentences;
     }
