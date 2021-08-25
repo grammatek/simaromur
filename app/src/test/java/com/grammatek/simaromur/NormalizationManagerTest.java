@@ -28,7 +28,7 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "gjörgæslurúm per hundrað þúsund íbúa";
+        String input = "Í gær greindust 78 með ABCD-19";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
