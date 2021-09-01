@@ -31,6 +31,8 @@
     <string name="important">Important</string>
     <string name="info_copyright">Copyright</string>
     <string name="info_url">URL</string>
+    <string name="info_privacy_notice">Privacy notice</string>
+    <string name="info_privacy_notice_url">https://www.grammatek.com/legal#simaromur</string>
     <string name="info_runtime_header">RUNTIME_HEADER</string>
     <string name="info_runtime">Runtime information</string>
     <string name="info_android_version">Android Version</string>

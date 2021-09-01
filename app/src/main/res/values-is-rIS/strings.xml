@@ -49,4 +49,6 @@
     <string name="male">karl</string>
     <string name="female">kona</string>
     <string name="icon_description">ýttu á tákn</string>
+    <string name="info_privacy_notice">Persónuvernd</string>
+    <string name="info_privacy_notice_url">https://www.grammatek.com/legal#simaromur</string>
 </resources>
