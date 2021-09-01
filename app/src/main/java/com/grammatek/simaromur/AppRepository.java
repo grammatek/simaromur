@@ -131,7 +131,6 @@ public class AppRepository {
      */
     public AppData getCachedAppData() {
         Log.v(LOG_TAG, "getCachedAppData");
-        assert(mCachedAppData.appDataId != 0);
         return mCachedAppData;
     }
 
@@ -480,6 +479,32 @@ public class AppRepository {
         }
     };
 
+    /**
+     * Set the accept privacy notice boolean in AppData table
+     *
+     * @param setter    true for accepting the privacy notice, false for not accepting it
+     */
+    public void doAcceptPrivacyNotice(Boolean setter) {
+        Log.v(LOG_TAG, "insertVoice");
+        new doAcceptPrivacyNoticeAsyncTask(mAppDataDao).execute(setter);
+    }
+
+    /**
+     * Asynchronously update the database for the privacy notice acceptance flag
+     */
+    private static class doAcceptPrivacyNoticeAsyncTask extends AsyncTask<Boolean, Void, Void> {
+        private AppDataDao mAsyncTaskDao;
+
+        doAcceptPrivacyNoticeAsyncTask(AppDataDao dao) {
+            mAsyncTaskDao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(final Boolean... params) {
+            mAsyncTaskDao.doAcceptPrivacyNotice(params[0]);
+            return null;
+        }
+    }
 
     private static class insertVoiceAsyncTask extends AsyncTask<com.grammatek.simaromur.db.Voice, Void, Void> {
         private VoiceDao mAsyncTaskDao;

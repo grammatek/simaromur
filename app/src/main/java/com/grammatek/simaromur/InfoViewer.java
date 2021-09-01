@@ -74,6 +74,7 @@ public class InfoViewer extends ListActivity {
                 add(getString(R.string.info_app_version));
                 add(getString(R.string.info_url));
                 add(getString(R.string.info_copyright));
+                add(getString(R.string.info_privacy_notice));
                 add(getString(R.string.info_runtime_header));
                 add(getString(R.string.info_android_version));
                 add(getString(R.string.info_supported_abis));
@@ -94,6 +95,7 @@ public class InfoViewer extends ListActivity {
             }
             add(getString(R.string.info_repo_url));
             add(getString(R.string.info_about));
+            add(getString(R.string.info_privacy_notice_url));
             add("");
             add(android.os.Build.VERSION.RELEASE);
             add(String.join(", ", android.os.Build.SUPPORTED_ABIS));

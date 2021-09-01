@@ -1,6 +1,7 @@
 package com.grammatek.simaromur;
 
 import androidx.room.AutoMigration;
+import androidx.room.RoomOpenHelper;
 import androidx.room.testing.MigrationTestHelper;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
@@ -58,11 +59,25 @@ public class TestRoomDbMigration {
     }
 
     @Test
+    public void migrationFrom2To3() throws IOException {
+        // Create the database in version 2
+        SupportSQLiteDatabase db =
+                testHelper.createDatabase(TEST_DB_NAME, 2);
+        db.execSQL("INSERT INTO app_data_table VALUES (1, '2', 1, '/flite/voices', 'today'," +
+                " '/sim/voices', 'today')");
+
+        db.execSQL("INSERT INTO voice_table VALUES (1, 'Álfur', 'male', 'Alfur', 'is-IS', 'Íslenska(icelandic)'," +
+                " '', 'tiro', 'now', 'now', 'http://someurl', 'downloadpath', 'API1', 'nomd5sum', 0)");
+        db.close();
+        testHelper.runMigrationsAndValidate(TEST_DB_NAME, 3, true, ApplicationDb.MIGRATION_2_3);
+    }
+
+    @Test
     public void TestDBV2() throws IOException {
         // Create DB in V2
         SupportSQLiteDatabase db =
                 testHelper.createDatabase(TEST_DB_NAME, 2);
-        db.execSQL("INSERT INTO app_data_table VALUES (1, '1', 2, '/flite/voices', 'today'," +
+        db.execSQL("INSERT INTO app_data_table VALUES (1, '2', 2, '/flite/voices', 'today'," +
                 " '/sim/voices', 'today')");
 
         db.execSQL("INSERT INTO voice_table VALUES (1, 'Álfur', 'male', 'Alfur', 'is-IS', 'Íslenska(icelandic)'," +
@@ -85,4 +100,19 @@ public class TestRoomDbMigration {
 
         db.close();
     }
+
+    @Test
+    public void TestDBV3() throws IOException {
+        // Create DB in V2
+        SupportSQLiteDatabase db =
+                testHelper.createDatabase(TEST_DB_NAME, 3);
+        db.execSQL("INSERT INTO app_data_table VALUES (1, '3', 2, '/flite/voices', 'today'," +
+                " '/sim/voices', 'today', 1)");
+
+        db.execSQL("INSERT INTO voice_table VALUES (1, 'Álfur', 'male', 'Alfur', 'is-IS', 'Íslenska(icelandic)'," +
+                " '', 'tiro', 'now', 'now', 'http://someurl', 'downloadpath', 'API1', 'nomd5sum', 0)");
+
+        db.close();
+    }
+
 }
