@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.LayoutInflater;
@@ -17,6 +20,8 @@ import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.grammatek.simaromur.db.AppData;
 
 import java.util.Locale;
 
@@ -118,10 +123,33 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
         mWarningDialog.show();
     }
 
+    /**
+     * Shows TTS Engine warning and refers user to Android TTS service settings.
+     */
+    private void showPrivacyNoticeDialog() {
+        final SpannableString s = new SpannableString(getResources().getString(R.string.privacy_notice));
+        Linkify.addLinks(s, Linkify.ALL);
+
+        AlertDialog d = new AlertDialog.Builder(this)
+                .setMessage(s)
+                .setTitle(R.string.important)
+                .setCancelable(false)
+                .setPositiveButton(R.string.ok, (dialog, id) -> {
+                    App.getAppRepository().doAcceptPrivacyNotice(true);
+                })
+                .create();
+        d.show();
+        ((TextView) d.findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
+    }
+
     @Override
     public void onResume() {
         Log.v(LOG_TAG, "onResume:");
         super.onResume();
+        AppData appData = App.getAppRepository().getCachedAppData();
+        if (appData != null && !appData.privacyInfoDialogAccepted) {
+            showPrivacyNoticeDialog();
+        }
         checkDefaultEngine();
     }
 

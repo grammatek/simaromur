@@ -44,6 +44,7 @@
     <string name="info_repo_url">https://github.com/grammatek/simaromur</string>
     <string name="info_benchmark">Benchmark</string>
     <string name="info_benchmark_value">times faster than real time</string>
+    <string name="privacy_notice">Símarómur sends text to a 3rdparty speech service to convert it to spoken language. Neither the text, nor the audio data or your IP address are stored on the mobile phone or on these servers. Please visit https://www.grammatek.com/legal#simaromur for further reference.</string>
     <string name="speech_service_connection_problem">Símarómur connection problem</string>
     <string name="speech_service_not_available">Speech synthesis services are not available at this time</string>
     <string name="try_again_later">Please try again later</string>
