@@ -35,7 +35,7 @@ android {
 
     defaultConfig {
         applicationId "com.grammatek.simaromur"
-        minSdkVersion 24
+        minSdkVersion 26
         targetSdkVersion 30
         versionCode 15
         versionName "1.0-beta4.1"
