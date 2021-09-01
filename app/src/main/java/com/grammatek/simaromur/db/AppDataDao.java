@@ -35,6 +35,18 @@ public abstract class AppDataDao {
     @Query("SELECT * FROM app_data_table ORDER BY ROWID ASC LIMIT 1")
     public abstract LiveData<AppData> getLiveAppData();
 
+    // Return boolean, if privacy notice has been accepted
+    public Boolean hasAcceptedPrivacyNotice() {
+        return getAppData().privacyInfoDialogAccepted;
+    }
+
+    // Sets boolean for privacy notice acceptance
+    public void doAcceptPrivacyNotice(Boolean setter) {
+        AppData appData = getAppData();
+        appData.privacyInfoDialogAccepted = setter;
+        update(appData);
+    }
+
     /**
      * Updates current voice in AppData table.
      *

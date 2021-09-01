@@ -1,5 +1,6 @@
 package com.grammatek.simaromur.db;
 
+import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -47,6 +48,11 @@ public class AppData {
     @TypeConverters({TimestampConverter.class})
     public Date simVoiceListUpdateTime;
 
+    // boolean for privacy info dialog acceptance of the user
+    @ColumnInfo(name = "privacy_info_dialog_accepted", defaultValue = "0")
+    @NonNull
+    public Boolean privacyInfoDialogAccepted = false;
+
     @Override
     public String toString() {
         return "AppData{" +
@@ -57,6 +63,7 @@ public class AppData {
                 ", fliteVoiceListUpdateTime=" + fliteVoiceListUpdateTime +
                 ", simVoiceListPath='" + simVoiceListPath + '\'' +
                 ", simVoiceListUpdateTime=" + simVoiceListUpdateTime +
+                ", privacyInfoDialogAccepted=" + privacyInfoDialogAccepted +
                 '}';
     }
 }

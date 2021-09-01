@@ -24,7 +24,7 @@ import java.util.List;
 )
 public abstract class ApplicationDb extends RoomDatabase {
     private final static String LOG_TAG = "Simaromur_" + ApplicationDb.class.getSimpleName();
-    static final int LATEST_VERSION = 2;
+    static final int LATEST_VERSION = 3;
     private static ApplicationDb INSTANCE;
 
     public abstract AppDataDao appDataDao();
@@ -40,7 +40,13 @@ public abstract class ApplicationDb extends RoomDatabase {
             database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_voice_table_internal_name_gender_language_code_type` ON voice_table (`internal_name`, `gender`, `language_code`, `type`)");
         }
     };
-
+    static public final Migration MIGRATION_2_3 = new Migration(2, 3){  // v2 => 3
+        @Override
+        public void migrate(SupportSQLiteDatabase database){
+            database.execSQL("ALTER TABLE app_data_table "
+                    + " ADD COLUMN privacy_info_dialog_accepted INTEGER NOT NULL DEFAULT(0)");
+        }
+    };
     public static ApplicationDb getDatabase(final Context context) {
         Log.v(LOG_TAG, "getDatabase");
         if (INSTANCE == null) {
@@ -48,7 +54,7 @@ public abstract class ApplicationDb extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             ApplicationDb.class, "application_db")
-                            .addMigrations(MIGRATION_1_2)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                             // Wipes and rebuilds instead of migrating if no Migration object.
                             .fallbackToDestructiveMigration()
                             .allowMainThreadQueries()
