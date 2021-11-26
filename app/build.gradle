@@ -5,6 +5,13 @@ plugins {
     id 'com.google.firebase.crashlytics'
 }
 
+repositories {
+    jcenter()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
+}
+
 def getFliteDir() {
     Properties properties = new Properties()
     properties.load(new File(rootDir.absolutePath + "/local.properties").newDataInputStream())
@@ -31,7 +38,7 @@ android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
     // use specific NDK version
-    ndkVersion '22.1.7171670'
+    ndkVersion '23.1.7779620'
 
     defaultConfig {
         applicationId "com.grammatek.simaromur"
@@ -92,6 +99,7 @@ android {
     }
     externalNativeBuild {
         cmake {
+            version "3.18.1"
             path "src/main/cpp/CMakeLists.txt"
         }
     }
@@ -188,6 +196,14 @@ dependencies {
 
     // Add the dependencies for any other desired Firebase products
     // https://firebase.google.com/docs/android/setup#available-libraries
+
+    // Add PyTorch dependencies
+    implementation 'org.pytorch:pytorch_android_lite:1.10.0'
+
+    // Add Tensorflow lite dependencies
+    implementation 'org.tensorflow:tensorflow-lite:2.6.0'
+    implementation 'org.tensorflow:tensorflow-lite-support:0.3.0'
+    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.6.0'
 
 }
 
