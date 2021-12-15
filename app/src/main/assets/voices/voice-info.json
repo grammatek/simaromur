@@ -1,0 +1,37 @@
+{
+  "description": "Voice list of all voices packaged inside assets. This list is hand-crafted.",
+  "voices": [
+    {
+      "name": "Alfur",
+      "language": "is.IS",
+      "engine": "torchscript",
+      "version": "0.0.1",
+      "voice-generator": {
+        "description": "Dummy test input for vocoder, NOT a real FastSpeech 2 model",
+        "file": "mel_postnet.input-0_0_1.pt",
+        "type": "dummy",
+        "phoneme-type": "x-sampa",
+        "md5sum": "26a561f7392d6977051893558e149f90"
+      },
+      "vocoder": {
+        "description": "Melgan Vocoder",
+        "file": "melgan_lite_alfur-0_0_1.pt",
+        "type": "melgan",
+        "md5sum": "0892656387e57ceb17169026fa572b77"
+      }
+    },
+    {
+      "name": "Alfur",
+      "language": "is.IS",
+      "engine": "flite",
+      "version": "0.0.1",
+      "voice-generator": {
+        "description": "Phoneme based voice trained on IPA",
+        "file": "lvl_is_phoneme_alfur-0_0_1.flitevox",
+        "type": "phoneme",
+        "phoneme-type": "ipa",
+        "md5sum": "3f2aeb9d33550585aad8754b59b569db"
+      }
+    }
+  ]
+}
