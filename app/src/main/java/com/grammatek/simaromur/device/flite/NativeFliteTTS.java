@@ -34,12 +34,13 @@
 /*               Date:  June 2012                                        */
 /*************************************************************************/
 
-package com.grammatek.simaromur;
+package com.grammatek.simaromur.device.flite;
 
 import java.io.File;
 
-import android.content.Context;
 import android.util.Log;
+
+import com.grammatek.simaromur.App;
 
 public class NativeFliteTTS {
 	private final static String LOG_TAG = "Simaromur_Java_" + NativeFliteTTS.class.getSimpleName();
@@ -49,14 +50,12 @@ public class NativeFliteTTS {
 		nativeClassInit();
 	}
 
-	private final Context mContext;
 	private final SynthReadyCallback mCallback;
     private final String mDatapath;
     private boolean mInitialized = false;
 
-	public NativeFliteTTS(Context context, SynthReadyCallback callback) {
+	public NativeFliteTTS(SynthReadyCallback callback) {
 		mDatapath = new File(App.getDataPath()).getParent();
-		mContext = context;
 		mCallback = callback;
 		attemptInit();
 	}
@@ -95,6 +94,12 @@ public class NativeFliteTTS {
 		return nativeGetBenchmark();
 	}
 
+    /**
+     * This is called from the JNI layer. In case there is a callback registered at construction
+     * of the object, this callback is called here.
+     *
+     * @param audioData byte buffer containing Flite TTS audio data
+     */
     private void nativeSynthCallback(byte[] audioData) {
         if (mCallback == null)
             return;
@@ -117,7 +122,6 @@ public class NativeFliteTTS {
 		}
 		Log.i(LOG_TAG, "Initialized Flite");
 		mInitialized = true;
-
     }
 
     private long mNativeData;

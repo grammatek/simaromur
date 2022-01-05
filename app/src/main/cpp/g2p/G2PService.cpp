@@ -55,14 +55,14 @@ JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
 }
 
 JNIEXPORT jboolean
-JNICALL Java_com_grammatek_simaromur_NativeG2P_nativeClassInit(
+JNICALL Java_com_grammatek_simaromur_device_NativeG2P_nativeClassInit(
         JNIEnv * env, jclass cls) {
     FIELD_mNativeData = env->GetFieldID(cls, "mNativeData", "J");
     return JNI_TRUE;
 }
 
 JNIEXPORT jboolean
-JNICALL Java_com_grammatek_simaromur_NativeG2P_nativeCreate(
+JNICALL Java_com_grammatek_simaromur_device_NativeG2P_nativeCreate(
         JNIEnv *env, jobject object, jstring path) {
 
     const char *path_string = env->GetStringUTFChars(path, 0);
@@ -78,7 +78,7 @@ JNICALL Java_com_grammatek_simaromur_NativeG2P_nativeCreate(
 }
 
 JNIEXPORT jboolean
-JNICALL Java_com_grammatek_simaromur_NativeG2P_nativeDestroy(
+JNICALL Java_com_grammatek_simaromur_device_NativeG2P_nativeDestroy(
         JNIEnv *env, jobject object) {
     uint64_t jni_data_address = env->GetLongField(object, FIELD_mNativeData);
     auto* jni_data = reinterpret_cast<G2PJNIData*>(jni_data_address);
@@ -86,7 +86,7 @@ JNICALL Java_com_grammatek_simaromur_NativeG2P_nativeDestroy(
 }
 
 JNIEXPORT jstring
-JNICALL Java_com_grammatek_simaromur_NativeG2P_nativeProcess(
+JNICALL Java_com_grammatek_simaromur_device_NativeG2P_nativeProcess(
         JNIEnv *env, jobject object, jstring aText) {
     uint64_t jni_data_address = env->GetLongField(object, FIELD_mNativeData);
     auto* jni_data = reinterpret_cast<G2PJNIData*>(jni_data_address);

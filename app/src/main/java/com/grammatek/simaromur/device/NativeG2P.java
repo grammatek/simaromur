@@ -1,8 +1,10 @@
-package com.grammatek.simaromur;
+package com.grammatek.simaromur.device;
 
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
+
+import com.grammatek.simaromur.App;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -44,8 +46,7 @@ public class NativeG2P {
             return;
         }
 
-        // @todo: extract all files from assets and write them to the
-        //        common data path
+        // @todo: don't copy assets, we can use it directly
         copyAssets("g2p");
 
         // create the native interface
@@ -62,6 +63,7 @@ public class NativeG2P {
      *
      * @todo: opimization : Add additional file to assets, that marks the version and MD5 sum of each
      *        of the files. We don't want to copy assets each time this application starts
+     * @todo: move to a common place, this is very generic
      * @param assetSubPath  Path inside assets where to look for G2P specific files
      */
     private void copyAssets(String assetSubPath) {
