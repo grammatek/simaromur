@@ -19,7 +19,7 @@
         "path": "fastspeech_qnnpack-0_0_1.pt",
         "type": "fastspeech2",
         "phoneme_type": "x-sampa",
-        "md5sum": "b6fdedaaaa0140373e9cc99a5153ac46"
+        "md5sum": "737b6d85c10119e7ad495359c5249720"
       },
       {
         "description": "Melgan Vocoder",

@@ -46,8 +46,8 @@ public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.Voic
         holder.voiceItemView.setText(current.name);
     }
 
-    void setVoices(List<com.grammatek.simaromur.db.Voice> words){
-        mVoices = words;
+    void setVoices(List<com.grammatek.simaromur.db.Voice> voices){
+        mVoices = voices;
         notifyDataSetChanged();
     }
 

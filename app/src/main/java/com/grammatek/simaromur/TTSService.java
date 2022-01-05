@@ -15,6 +15,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.MissingResourceException;
 import java.util.Set;
 
 import static android.speech.tts.TextToSpeech.ERROR_SERVICE;
@@ -249,6 +250,21 @@ public class TTSService extends TextToSpeechService {
             }
             Voice ttsVoice = new Voice(voice.name, voice.getLocale(), quality, latency,
                     needsNetwork, features);
+            String voiceLanguage = "";
+            try {
+                voiceLanguage = voice.getLocale().getISO3Language();
+            } catch (MissingResourceException e) {
+                Log.w(LOG_TAG, "Couldn't retrieve ISO 639-2/T language code for locale: "
+                        + voice.getLocale(), e);
+            }
+
+            String voiceCountry = "";
+            try {
+                voiceCountry = voice.getLocale().getISO3Country();
+            } catch (MissingResourceException e) {
+                Log.w(LOG_TAG, "Couldn't retrieve ISO 3166 country code for locale: "
+                        + voice.getLocale(), e);
+            }
             announcedVoiceList.add(ttsVoice);
             Log.v(LOG_TAG, "onGetVoices: " + ttsVoice);
         }
