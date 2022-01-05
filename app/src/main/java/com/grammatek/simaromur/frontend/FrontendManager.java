@@ -3,13 +3,7 @@ package com.grammatek.simaromur.frontend;
 import android.content.Context;
 import android.util.Log;
 
-import opennlp.tools.postag.POSModel;
-import opennlp.tools.postag.POSTaggerME;
-
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
+import com.grammatek.simaromur.device.SymbolsLvLIs;
 
 /**
  * The FrontendManager processes raw input text and prepares it for the TTSEngine.
@@ -43,6 +37,13 @@ public class FrontendManager {
     public String process(String text) {
         String normalized = mNormalizationManager.process(text);
         String transcribedText = mPronunciation.transcribe(normalized);
+
+        // replace special characters
+        transcribedText = transcribedText.replaceAll("\\.", SymbolsLvLIs.SymbolShortPause);
+        // TODO DS: ?
+        transcribedText = transcribedText.replaceAll(",", SymbolsLvLIs.SymbolShortPause);
+        transcribedText = transcribedText.replaceAll("\\s{2,}", " ");
+
         Log.i(LOG_TAG, text + " => " + transcribedText);
         return transcribedText;
     }
