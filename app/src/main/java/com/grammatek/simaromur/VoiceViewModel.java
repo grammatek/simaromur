@@ -66,10 +66,19 @@ public class VoiceViewModel extends AndroidViewModel {
 
     // Start speaking, i.e. make a speak request async.
     public void startSpeaking(Voice voice, String text, float speed, float pitch) {
-        if (voice.type.equals(Voice.TYPE_TIRO)) {
-            mRepository.startTiroSpeak(voice.internalName, text, voice.languageCode, speed, pitch);
-        } else {
-            // other voice types follow here ..
+        switch (voice.type) {
+            case Voice.TYPE_TIRO:
+                mRepository.startTiroSpeak(voice.internalName, text, voice.languageCode, speed, pitch);
+                break;
+            case Voice.TYPE_TORCH:
+                mRepository.startTorchSpeak(voice, text, speed, pitch);
+                break;
+            case Voice.TYPE_FLITE:
+                mRepository.startFliteSpeak(voice.internalName, text, voice.languageCode, speed, pitch);
+                break;
+            default:
+                // other voice types follow here ..
+                break;
         }
     }
 

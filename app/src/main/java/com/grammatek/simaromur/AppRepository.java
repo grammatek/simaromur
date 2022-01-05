@@ -19,6 +19,11 @@ import com.grammatek.simaromur.db.AppDataDao;
 import com.grammatek.simaromur.db.ApplicationDb;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
+import com.grammatek.simaromur.device.TTSEngineController;
+import com.grammatek.simaromur.device.TTSEnginePyTorch;
+import com.grammatek.simaromur.frontend.FrontendManager;
+import com.grammatek.simaromur.device.AssetVoiceManager;
+import com.grammatek.simaromur.device.pojo.DeviceVoice;
 import com.grammatek.simaromur.network.ConnectionCheck;
 import com.grammatek.simaromur.network.tiro.SpeakController;
 import com.grammatek.simaromur.network.tiro.VoiceController;
@@ -27,6 +32,7 @@ import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -54,7 +60,10 @@ public class AppRepository {
     private final SpeakController mTiroSpeakController;
     private List<VoiceResponse> mTiroVoices;
     private final ApiDbUtil mApiDbUtil;
+    private final AssetVoiceManager mAVM;
     ScheduledExecutorService mScheduler;
+    FrontendManager mFrontend;
+    TTSEngineController mTTSEngineController;
 
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
@@ -85,12 +94,15 @@ public class AppRepository {
 
     // Note that in order to unit test the AppRepository, you have to remove the Application
     // dependency.
-    public AppRepository(Application application) {
+    public AppRepository(Application application) throws IOException {
         Log.v(LOG_TAG, "AppRepository()");
         ApplicationDb db = ApplicationDb.getDatabase(application);
         mAppDataDao = db.appDataDao();
         mVoiceDao = db.voiceDao();
         mApiDbUtil = new ApiDbUtil(mVoiceDao);
+        mAVM = new AssetVoiceManager(App.getContext());
+        mFrontend = new FrontendManager(App.getContext());
+        mTTSEngineController = new TTSEngineController(App.getContext().getAssets(), mFrontend);
         mTiroSpeakController = new SpeakController();
         mTiroVoiceController = new VoiceController();
         mAppData = mAppDataDao.getLiveAppData();
@@ -108,6 +120,7 @@ public class AppRepository {
 
         mScheduler = Executors.newSingleThreadScheduledExecutor();
         mScheduler.scheduleAtFixedRate(timerRunnable, 0, 20, TimeUnit.SECONDS);
+        mScheduler.schedule(assetVoiceRunnable, 1, TimeUnit.SECONDS);
         mMediaPlayer = new MediaPlayObserver();
     }
 
@@ -234,6 +247,32 @@ public class AppRepository {
         }
     }
 
+    public void startTorchSpeak(Voice voice, String text, float speed, float pitch) {
+        try {
+            mTTSEngineController.LoadEngine(voice);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        mTTSEngineController.StartSpeak(text, speed, pitch, SAMPLE_RATE_WAV);
+    }
+
+    public void startFliteSpeak(String voiceId, String text, String langCode, float speed, float pitch) {
+        mMediaPlayer.stop();
+        // mTiroSpeakController.streamAudio(request , mMediaPlayer);
+    }
+
+    /**
+     * Request to update local voices.
+     *
+     * @param languageCode  language code, e.g. "is-IS"
+     *
+     */
+    public void getLocalVoices(String languageCode) {
+        Log.v(LOG_TAG, "getLocalVoices");
+        mTiroVoiceController.streamQueryVoices(languageCode, new TiroVoiceQueryObserver());
+    }
+
     /**
      * Insert a voice into the db.
      *
@@ -245,8 +284,7 @@ public class AppRepository {
     }
 
     /**
-     * Loads given voice, e.g. from disk. Can also to network request to see, if the voice is
-     * available.
+     * Loads given voice, e.g. from disk. Can also access network to query voice availability.
      *
      * @param voiceName     Name of the voice to load
      *
@@ -475,6 +513,32 @@ public class AppRepository {
                 }
             } catch (final Exception e) {
                 Log.e(LOG_TAG, "timerRunnable error: " + e.getMessage());
+            }
+        }
+    };
+
+    /**
+     * Update the Db according to Asset voices
+     */
+    Runnable assetVoiceRunnable = new Runnable() {
+        @Override
+        public void run() {
+            List<Voice> aVoices = mAVM.getVoiceDbList();
+            List<Voice> aVoicesInDb = mVoiceDao.getAssetVoices();
+            List<Voice> toDeleteVoices = new ArrayList<>(aVoicesInDb);
+
+            // delete all voices that don't exist anymore
+            toDeleteVoices.removeAll(aVoices);
+            mVoiceDao.deleteVoices(toDeleteVoices.toArray(new Voice[]{}));
+
+            for (Voice voice : aVoices) {
+                if (! mVoiceDao.findVoiceWithName(voice.name).isEmpty()) {
+                    // update existing voices
+                    mVoiceDao.updateVoices(voice);
+                } else {
+                    // enter new voices
+                    mVoiceDao.insertVoice(voice);
+                }
             }
         }
     };

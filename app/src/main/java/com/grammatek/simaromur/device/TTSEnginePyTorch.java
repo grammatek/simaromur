@@ -94,17 +94,9 @@ public class TTSEnginePyTorch implements TTSEngine {
         long[] textTensorShape = {1, sampa2VecInput.length};
         Tensor textTensor = Tensor.fromBlob(textTensorBuffer, textTensorShape);
 
-        // lenTensor
-        // IntBuffer lenTensorBuffer = Tensor.allocateIntBuffer(1);
-        // lenTensorBuffer.put((int) textTensor.shape()[1]);
-        // long[] lenTensorShape = {1, 1};
-        // Tensor lenTensor = Tensor.fromBlob(lenTensorBuffer, lenTensorShape);
-
-        IValue textTensorIValue = IValue.from(textTensor);
-        //IValue lenTensorIValue = IValue.from(lenTensor);
-
-        //final IValue melganInput = mAcousticModel.forward(textTensorIValue, IValue.from(1.0), IValue.from(1.0), IValue.from(1.0));
-        final IValue melganInput = mAcousticModel.forward(textTensorIValue);
+        Log.v(LOG_TAG, "Inference start ...");
+        final IValue melganInput = mAcousticModel.forward(IValue.from(textTensor));
+        Log.v(LOG_TAG, "Inference textTensor");
 
         // TODO: - use result for feeding melgan vocoder
         //       - transform vocoder result to byte[] buffer

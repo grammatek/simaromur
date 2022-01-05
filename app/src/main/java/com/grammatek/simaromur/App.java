@@ -15,6 +15,7 @@ import com.grammatek.simaromur.frontend.NormalizationManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,7 +23,7 @@ public class App extends Application {
     private final static String LOG_TAG = "Simaromur_" + App.class.getSimpleName();
     ExecutorService executorService = Executors.newFixedThreadPool(4);
     AppRepository mAppRepository;
-    private FirebaseAnalytics mFirebaseAnalytics;
+    private static FirebaseAnalytics sFirebaseAnalytics;
     private static App sApplication;
 
     private NormalizationManager mNormalizationManager;
@@ -74,8 +75,13 @@ public class App extends Application {
         mConnectionChecker = new ConnectionCheck(this);
         mConnectionChecker.registerNetworkCallback();
         // Obtain the FirebaseAnalytics instance.
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-        mAppRepository = new AppRepository(this);
+        sFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        try {
+            mAppRepository = new AppRepository(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+            // bad, see https://stackoverflow.com/questions/8943288/how-to-implement-uncaughtexception-android#answer-8943671
+        }
         mNormalizationManager = new NormalizationManager(this.getBaseContext());
     }
 }
