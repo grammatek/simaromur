@@ -1,5 +1,6 @@
 package com.grammatek.simaromur.db;
 
+import android.content.res.AssetManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -9,8 +10,14 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
-import com.grammatek.simaromur.CheckSimVoices;
+import com.grammatek.simaromur.FileUtils;
+import com.grammatek.simaromur.device.pojo.DeviceVoice;
+import com.grammatek.simaromur.device.pojo.DeviceVoiceFile;
 
+import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -21,14 +28,13 @@ import java.util.Locale;
 @Entity(tableName = "voice_table",
         indices = {@Index(value = {"internal_name", "gender", "language_code", "type"}, unique = true)})
 public class Voice {
-    private final static String LOG_TAG = "Voice" + CheckSimVoices.class.getSimpleName();
-    public final static String TYPE_TIRO="tiro";
-    public final static String TYPE_CG="clustergen";
-    public final static String TYPE_CLUNITS="clunits";
-    public final static String TYPE_NEURAL="neural";
+    private final static String LOG_TAG = "Simaromur_Java_" + Voice.class.getSimpleName();
+    public final static String TYPE_TIRO = "tiro";
+    public final static String TYPE_TORCH = "torchscript";
+    public final static String TYPE_TFLOW = "tensorflow";
+    public final static String TYPE_FLITE = "flite";
 
-    static final List<String> voiceTypes = Arrays.asList(TYPE_TIRO, TYPE_CG,
-            TYPE_CLUNITS, TYPE_NEURAL);
+    public static final List<String> Types = Arrays.asList(TYPE_TIRO, TYPE_FLITE, TYPE_TORCH, TYPE_TFLOW);
     static final String SEP = "-";
 
     @PrimaryKey(autoGenerate = true)
@@ -70,7 +76,7 @@ public class Voice {
     public String variant;
 
     // Voice type (verified)
-    // local voices: "clustergen", "clunits", "neural"
+    // local voices: "clustergen", "clunits", "torchscript", "phoneme"
     // network voices: "tiro"
     @ColumnInfo(name = "type")
     public String type;
@@ -80,12 +86,12 @@ public class Voice {
     @TypeConverters({TimestampConverter.class})
     public Date updateTime;
 
-    // download date/time for non-network voice
+    // download date/time for non-network downloadable voice
     @ColumnInfo(name = "download_time")
     @TypeConverters({TimestampConverter.class})
     public Date downloadTime;
 
-    // the http URL of a downloadable voice, empty for a network voice
+    // the http URL of a downloadable voice, empty for a network voice or voice packaged via assets
     @ColumnInfo(name = "url")
     public String url;
 
@@ -98,8 +104,8 @@ public class Voice {
     @ColumnInfo(name = "version")
     public String version;
 
-    // MD5 checksum of downloaded voice as String, empty if not yet downloaded or in case of a
-    // network voice
+    // MD5 checksum of downloaded/packaged voice as String, empty if not yet downloaded or in case
+    // of a network voice
     @ColumnInfo(name = "md5_sum") public String md5Sum;
 
     // file size if local voice file, 0 means not yet downloaded or network voice
@@ -121,16 +127,50 @@ public class Voice {
         this.languageCode = languageCode;
         this.languageName = languageName;
         this.variant = variant;
-        if (voiceTypes.contains(type)) {
+        if (Types.contains(type)) {
             this.type = type;
         }
         else {
-            throw new AssertionError("Given type not valid !");
+            throw new AssertionError("Given voice type (" + type + ") not valid !");
         }
         this.url = url;
         this.updateTime = new Date();
     }
 
+    // Constructor for DeviceVoice parameter
+    public Voice(AssetManager assetManager, DeviceVoice voice) throws IOException {
+        this.name = voice.Name;
+        this.internalName = voice.Name;
+        this.gender = voice.Gender;
+        this.languageCode = voice.Language;
+        this.languageName = voice.LanguageName;
+        this.variant = voice.Name;
+        if (Types.contains(voice.Type)) {
+            this.type = voice.Type;
+        }
+        else {
+            throw new AssertionError("Given voice type (" + voice.Type + ") not valid !");
+        }
+        this.url = "assets";    // => maintained by AssetVoiceManager
+        this.version = voice.Version;
+
+        // collect info from the related asset files
+        LocalDateTime latestUpdateTime = Instant.ofEpochMilli(0).atZone(ZoneOffset.UTC).toLocalDateTime();
+        this.downloadPath = "";
+        this.md5Sum = "";
+        for (DeviceVoiceFile file: voice.Files) {
+            final LocalDateTime assetDate = FileUtils.getAssetDate(assetManager, "voices/" + file.Path);
+            if (assetDate.compareTo(latestUpdateTime) > 0) {
+                latestUpdateTime = assetDate;
+            }
+            // these Strings need to be split via "\n" to be usable again
+            this.downloadPath = this.downloadPath.concat(file.Path + "\n");
+            this.md5Sum = this.md5Sum.concat(file.Md5Sum + "\n");
+        }
+        this.updateTime = Date.from(latestUpdateTime.toInstant(ZoneOffset.UTC));
+    }
+
+    @NonNull
     @Override
     public String toString() {
         return "Voice{" +

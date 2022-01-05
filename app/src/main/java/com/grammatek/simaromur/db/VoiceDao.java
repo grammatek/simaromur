@@ -47,8 +47,11 @@ public interface VoiceDao {
     @Query("SELECT * FROM voice_table WHERE type LIKE 'tiro' ")
     public List<Voice> findNetworkVoices();
 
-    @Query("SELECT * FROM voice_table WHERE type in ('clustergen', 'clunit', 'neural') ")
-    public List<Voice> findLocalVoices();
+    // Return voices registered in Assets
+    @Query("SELECT * FROM voice_table WHERE url in ('assets') ")
+    public List<Voice> getAssetVoices();
 
-    // TODO(DS): To be continued ....
+    // Return voices according to list of given types
+    @Query("SELECT * FROM voice_table WHERE type in (:localTypeNames)")
+    public List<Voice> getVoicesForType(List<String> localTypeNames);
 }
