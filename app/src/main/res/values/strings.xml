@@ -25,7 +25,7 @@
     <string name="en_US">U.S. English</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
-    <string name="not_yet">Not yet</string>
+    <string name="not_yet">No thanks</string>
     <string name="doit">Do it!</string>
     <string name="tts_settings">Before you can use Símarómur as a screen reader, you have to activate it in the Android TTS settings</string>
     <string name="important">Important</string>
@@ -44,7 +44,9 @@
     <string name="info_repo_url">https://github.com/grammatek/simaromur</string>
     <string name="info_benchmark">Benchmark</string>
     <string name="info_benchmark_value">times faster than real time</string>
-    <string name="privacy_notice">Símarómur sends text to a 3rdparty speech service to convert it to spoken language. Neither the text, nor the audio data or your IP address are stored on the mobile phone or on these servers. Please visit https://www.grammatek.com/legal#simaromur for further reference.</string>
+    <string name="privacy_notice">Símarómur sends text to a 3rdparty speech service to convert it to spoken language. Neither the text, nor the audio data or your IP address are stored on the mobile phone or on these servers.\n\nPlease visit our privacy policy at https://www.grammatek.com/legal#simaromur</string>
+    <string name="crashlytics_title">Improve Símarómur</string>
+    <string name="crashlytics_notice">To improve Símarómur, you can enable anonymous usage statistics and crash reports to be gathered via a third party: Google Firebase. If you consent, your IP Address is stored only for this purpose.\n\nYou can revoke your consent anytime, by deselecting your consent in the Info screen\n\n\nPlease visit our privacy policy at https://www.grammatek.com/legal#simaromur</string>
     <string name="speech_service_connection_problem">Símarómur connection problem</string>
     <string name="speech_service_not_available">Speech synthesis services are not available at this time</string>
     <string name="try_again_later">Please try again later</string>

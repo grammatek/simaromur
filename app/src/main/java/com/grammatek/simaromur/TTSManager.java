@@ -129,14 +129,33 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     private void showPrivacyNoticeDialog() {
         final SpannableString s = new SpannableString(getResources().getString(R.string.privacy_notice));
         Linkify.addLinks(s, Linkify.ALL);
-
         AlertDialog d = new AlertDialog.Builder(this)
-                .setMessage(s)
                 .setTitle(R.string.important)
-                .setCancelable(false)
+                .setMessage(s)
                 .setPositiveButton(R.string.ok, (dialog, id) -> {
                     App.getAppRepository().doAcceptPrivacyNotice(true);
+                    showCrashlyticsPrivacyNoticeDialog();
                 })
+                .setCancelable(false)
+                .create();
+        d.show();
+        ((TextView) d.findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
+    }
+
+    private void showCrashlyticsPrivacyNoticeDialog() {
+        final SpannableString s = new SpannableString(getResources().getString(R.string.crashlytics_notice));
+        Linkify.addLinks(s, Linkify.ALL);
+
+        AlertDialog d = new AlertDialog.Builder(this)
+                .setTitle(R.string.crashlytics_title)
+                .setMessage(s)
+                .setPositiveButton(R.string.doit, (dialog, id) -> {
+                    App.getFirebaseCrashlytics().setCrashlyticsCollectionEnabled(true);
+                })
+                .setNegativeButton(R.string.not_yet, (dialog, id) -> {
+                    App.getFirebaseCrashlytics().setCrashlyticsCollectionEnabled(false);
+                })
+                .setCancelable(false)
                 .create();
         d.show();
         ((TextView) d.findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
