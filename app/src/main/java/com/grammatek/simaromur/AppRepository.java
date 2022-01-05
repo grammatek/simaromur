@@ -20,10 +20,8 @@ import com.grammatek.simaromur.db.ApplicationDb;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
 import com.grammatek.simaromur.device.TTSEngineController;
-import com.grammatek.simaromur.device.TTSEnginePyTorch;
 import com.grammatek.simaromur.frontend.FrontendManager;
 import com.grammatek.simaromur.device.AssetVoiceManager;
-import com.grammatek.simaromur.device.pojo.DeviceVoice;
 import com.grammatek.simaromur.network.ConnectionCheck;
 import com.grammatek.simaromur.network.tiro.SpeakController;
 import com.grammatek.simaromur.network.tiro.VoiceController;
@@ -257,9 +255,14 @@ public class AppRepository {
         mTTSEngineController.StartSpeak(text, speed, pitch, SAMPLE_RATE_WAV);
     }
 
-    public void startFliteSpeak(String voiceId, String text, String langCode, float speed, float pitch) {
-        mMediaPlayer.stop();
-        // mTiroSpeakController.streamAudio(request , mMediaPlayer);
+    public void startFliteSpeak(Voice voice, String text, String langCode, float speed, float pitch) {
+        try {
+            mTTSEngineController.LoadEngine(voice);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        mTTSEngineController.StartSpeak(text, speed, pitch, SAMPLE_RATE_WAV);
     }
 
     /**

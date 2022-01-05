@@ -74,7 +74,7 @@ public class VoiceViewModel extends AndroidViewModel {
                 mRepository.startTorchSpeak(voice, text, speed, pitch);
                 break;
             case Voice.TYPE_FLITE:
-                mRepository.startFliteSpeak(voice.internalName, text, voice.languageCode, speed, pitch);
+                mRepository.startFliteSpeak(voice, text, text, speed, pitch);
                 break;
             default:
                 // other voice types follow here ..
