@@ -62,12 +62,10 @@ FliteEngine::Voice *currentVoice = nullptr;
 
 /* BEGIN VOICE SPECIFIC CODE */
 
-// Declarations
-extern "C" void usenglish_init(cst_voice *v);
-extern "C" cst_lexicon *cmulex_init(void);
+// Forward declarations
 
-extern "C" void cmu_indic_lang_init(cst_voice *v);
-extern "C" cst_lexicon *cmu_indic_lex_init(void);
+extern "C" cst_lexicon *cmu_grapheme_lex_init(void);
+extern "C" void cmu_grapheme_lang_init(cst_voice *v);
 
 static float getTimeDiff(const timespec &start, const timespec &end);
 
@@ -79,9 +77,9 @@ void setVoiceList()
         LOGW("Voices already initialized!");
         return;
     }
+
     LOGI("Starting setVoiceList");
-    flite_add_lang("eng", usenglish_init, cmulex_init);
-    flite_add_lang("cmu_indic_lang", cmu_indic_lang_init, cmu_indic_lex_init);
+    flite_add_lang("cmu_grapheme_lang", cmu_grapheme_lang_init, cmu_grapheme_lex_init);
     loadedVoices = new FliteEngine::Voices(0,  // Max number of voices is the first argument.
                                            FliteEngine::ONLY_ONE_VOICE_REGISTERED);
     if (loadedVoices == nullptr)
@@ -203,10 +201,10 @@ init(void *engine, android_tts_synth_cb_t synthDoneCBPtr, const char *engineConf
     LOGI("TtsEngine::init start");
     LOGI("Compilation Build Date: %s %s", __DATE__, __TIME__);
 
-    // First make sure we receive the data directory. That's very crucial.
+    // First make sure we receive the voice file. That's very crucial.
     if ((engineConfig != nullptr) && (strlen(engineConfig) > 0))
     {
-        snprintf(flite_voxdir_path, sizeof(flite_voxdir_path), "%s/%s", engineConfig, "data");
+        snprintf(flite_voxdir_path, sizeof(flite_voxdir_path), "%s", engineConfig);
     }
     else
     {
