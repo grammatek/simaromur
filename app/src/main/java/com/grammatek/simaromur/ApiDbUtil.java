@@ -39,9 +39,10 @@ public class ApiDbUtil {
     }
 
     /**
-     * Updates all model voices from given Api voices.
+     * Updates all model voices from given Api voices of given type.
      *
      * @param apiVoices     Voice list from API endpoint
+     * @param voiceType     Voice type to be used, only voices of that type are updated
      */
     public void updateApiVoices(List<VoiceResponse> apiVoices, String voiceType) {
         // we collect all potentially new voices here
