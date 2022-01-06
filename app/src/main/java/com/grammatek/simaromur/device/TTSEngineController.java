@@ -1,9 +1,11 @@
 package com.grammatek.simaromur.device;
 
 import android.content.res.AssetManager;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import com.grammatek.simaromur.App;
+import com.grammatek.simaromur.audio.AudioManager;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
 import com.grammatek.simaromur.frontend.FrontendManager;
@@ -23,6 +25,7 @@ public class TTSEngineController {
     TTSEngine mEngine;
     final ExecutorService mExecutorService;
     final FrontendManager mFrontend;
+    final TTSAudioControl mTTSAudioControl;
 
     /**
      * Constructor
@@ -36,6 +39,7 @@ public class TTSEngineController {
         mAVM = new AssetVoiceManager(App.getContext());
         mCurrentVoice = null;
         mFrontend = frontend;
+        mTTSAudioControl = new TTSAudioControl(22050);
         // only need one concurrent thread
         mExecutorService = Executors.newSingleThreadExecutor();
     }
@@ -89,7 +93,7 @@ public class TTSEngineController {
      * Stop speaking. Ignored in case currently no speak execution is done.
      */
     public void StopSpeak() {
-        // TODO: how to stop current ongoing speak task ? Set a few variables ? What is the "official" way ?
+        mTTSAudioControl.stop();
     }
 
     public class SpeakTask implements Runnable {
@@ -112,11 +116,15 @@ public class TTSEngineController {
 
         public void run() {
             Log.v(LOG_SPEAK_TASK_TAG, "run() called");
+            assert(sampleRate == mEngine.GetSampleRate());
+
             // Frontend processing
             String sampas = mFrontend.process(text);
-            byte[] bytes = mEngine.SpeakToWav(sampas, speed, pitch, sampleRate);
+            byte[] pcmBytes16Bit22kHz = mEngine.SpeakToPCM(sampas, sampleRate);
+            byte[] audio = AudioManager.applyPitchAndSpeed(pcmBytes16Bit22kHz, sampleRate, pitch, speed);
 
             // Media player: use wav
+            mTTSAudioControl.play(new TTSAudioControl.AudioEntry(audio));
         }
     }
 }

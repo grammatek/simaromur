@@ -252,7 +252,13 @@ public class AppRepository {
             e.printStackTrace();
             return;
         }
-        mTTSEngineController.StartSpeak(text, speed, pitch, SAMPLE_RATE_WAV);
+        // use the sample rate from the Engine
+        mTTSEngineController.StartSpeak(text, speed, pitch, 22050);
+    }
+
+    public void stopTorchSpeak() {
+        // use the sample rate from the Engine
+        mTTSEngineController.StopSpeak();
     }
 
     public void startFliteSpeak(Voice voice, String text, String langCode, float speed, float pitch) {

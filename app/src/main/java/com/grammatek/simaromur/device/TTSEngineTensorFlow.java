@@ -17,7 +17,7 @@ public class TTSEngineTensorFlow implements TTSEngine {
         interpreter = new Interpreter(modelFile);
     }
 
-    public byte[] SpeakToWav(String sampas, float pitch, float speed, int sampleRate) {
+    public byte[] SpeakToPCM(String sampas, int sampleRate) {
         // TODO: these input/output data types need to be changed according to the model
         Map<String, Object> inputs = new HashMap<>();
         inputs.put("sampa", sampas);
@@ -31,5 +31,10 @@ public class TTSEngineTensorFlow implements TTSEngine {
         }
 
         return new byte[16];
+    }
+
+    @Override
+    public int GetSampleRate() {
+        return 22050;
     }
 }

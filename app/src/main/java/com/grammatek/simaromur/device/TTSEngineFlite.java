@@ -57,7 +57,12 @@ public class TTSEngineFlite  implements TTSEngine {
     }
 
     @Override
-    public byte[] SpeakToWav(String sampas, float speed, float pitch, int sampleRate) {
+    public byte[] SpeakToPCM(String sampas, int sampleRate) {
         return new byte[0];
+    }
+
+    @Override
+    public int GetSampleRate() {
+        return 22050;
     }
 }

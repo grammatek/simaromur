@@ -3,6 +3,7 @@ package com.grammatek.simaromur.device;
 import android.content.res.AssetManager;
 import android.util.Log;
 
+import com.grammatek.simaromur.audio.AudioManager;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
 import com.grammatek.simaromur.device.pojo.DeviceVoiceFile;
 
@@ -12,6 +13,8 @@ import org.pytorch.Module;
 import org.pytorch.Tensor;
 
 import java.nio.IntBuffer;
+import java.time.Duration;
+import java.time.Instant;
 
 public class TTSEnginePyTorch implements TTSEngine {
     private final static String LOG_TAG = "Simaromur_" + TTSEnginePyTorch.class.getSimpleName();
@@ -84,10 +87,11 @@ public class TTSEnginePyTorch implements TTSEngine {
     }
 
     @Override
-    public byte[] SpeakToWav(String sampas, float speed, float pitch, int sampleRate) {
+    public byte[] SpeakToPCM(String sampas, int sampleRate) {
         Log.v(LOG_TAG, "Speak: " + sampas);
-        int[] sampa2VecInput = SymbolsLvLIs.MapSymbolsToVec(SymbolsLvLIs.Type.TYPE_SAMPA, sampas);
+        Instant startTime = Instant.now();
 
+        int[] sampa2VecInput = SymbolsLvLIs.MapSymbolsToVec(SymbolsLvLIs.Type.TYPE_SAMPA, sampas);
         // textTensor
         IntBuffer textTensorBuffer = Tensor.allocateIntBuffer(sampa2VecInput.length);
         textTensorBuffer.put(sampa2VecInput);
@@ -97,12 +101,19 @@ public class TTSEnginePyTorch implements TTSEngine {
         Log.v(LOG_TAG, "Inference start ...");
         final IValue melganInput = mAcousticModel.forward(IValue.from(textTensor));
         Log.v(LOG_TAG, "Inference textTensor");
-
-        // TODO: - use result for feeding melgan vocoder
-        //       - transform vocoder result to byte[] buffer
-        //       - apply speed/pitch ( => move it again outside to Controller ?)
-        //       - return byte buffer
-        return new byte[16];
+        // vocoder produces 22.05 kHz PCM float values between -32768.0 .. 32767.0
+        final IValue voiceOutput = mVocoderModel.runMethod("inference", melganInput);
+        Log.v(LOG_TAG, "Inference voiceOuput");
+        float[] samples = voiceOutput.toTensor().getDataAsFloatArray();
+        Instant stopTime = Instant.now();
+        final long timeElapsed = Duration.between(startTime, stopTime).toMillis();
+        Log.v(LOG_TAG, "Inference ran for " + timeElapsed / 1000.0F + " secs, " +
+                samples.length * 1000.0F / timeElapsed / GetSampleRate() + " x real-time");
+        return AudioManager.pcmFloatTo16BitPCMWithDither(samples, true);
     }
 
+    @Override
+    public int GetSampleRate() {
+        return 22050;
+    }
 }

@@ -88,6 +88,8 @@ public class VoiceViewModel extends AndroidViewModel {
     public void stopSpeaking(Voice voice) {
         if (voice.type.equals(Voice.TYPE_TIRO)) {
             mRepository.stopTiroSpeak();
+        } else if (voice.type.equals(Voice.TYPE_TORCH)) {
+            mRepository.stopTorchSpeak();
         } else {
             // other voice types follow here ..
         }
