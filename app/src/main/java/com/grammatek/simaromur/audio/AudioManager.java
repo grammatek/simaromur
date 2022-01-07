@@ -211,60 +211,62 @@ public class AudioManager {
 
 
     /**
-     * This is a simple implementation of highpass triangular-PDF dither (a good general-purpose
+     * This is a simple implementation of a highpass triangular-PDF dither (a good general-purpose
      * dither) with optional 2nd-order noise shaping (which lowers the noise floor by 11dB below
-     * 0.1 Fs).
-     * The code assumes input data is in the range +1 to -1 and doesn't check for overloads!
+     * 0.1 Fs) which is applied to the given float values before converting them to 16 bit big
+     * endian PCM short values returned as bytes.
      *
-     * To save time when generating dither for multiple channels you can re-use lower bits of a
-     * previous random number instead of calling rand() again. e.g. r3=(r1 & 0x7F)<<8;
+     * @param pcmFloats         pcm floats [-normalizedValue .. normalizedValue]
+     * @param normalizedValue   normalization value used for the pcmFloats input buffer, e.g. 1.0
+     * @param doNoiseShaping    true: apply noise shaping, false: don't apply noise shaping
      *
-     * @param pcmFloats     pcm floats [-1.0 .. 1.0]
      * @return  byte array PCM big endian
      *
      * Reference: https://www.musicdsp.org/en/latest/Other/61-dither-code.html
      */
-    static public byte[] pcmFloatTo16BitPCMWithDither(float[] pcmFloats, boolean doNoiseShaping) {
-        final short RAND_MAX = 0x7fff;
-        final int bits = 16;
-        final int ByteRate = bits / 8;
+    static public byte[] pcmFloatTo16BitPCMWithDither(float[] pcmFloats, float normalizedValue, boolean doNoiseShaping) {
+        final int Bits = 16;
+        final int ByteRate = Bits / 8;
+        // set to 0.0f for no noise shaping
+        final float s = doNoiseShaping ? 0.5f : 0.0f;
+        final int maxRange = (int) Math.pow(2, Bits-1) - 1;     // signed number range
+        final float w = (float) maxRange - 20;   // conversion value: leave headroom
+        final float wi= 1.0f / w;
+        final float d = wi / maxRange;  // dither amplitude (2 lsb)
+        final float o = wi * 0.5f;      // remove dc offset
+
+        Log.v(LOG_TAG, "Convert & dither " + pcmFloats.length + " float samples to " + Bits + " bit wav ...");
         ByteBuffer buffer = ByteBuffer.allocate(pcmFloats.length * ByteRate);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         Random random = new Random();
-        Log.v(LOG_TAG, "Convert & dither" + pcmFloats.length + " float samples to " + bits + " bit wav ...");
 
-        // set to 0.0f for no noise shaping
-        final float s = doNoiseShaping ? 0.5f : 0.0f;
-        final float w = (float) Math.pow(2, bits-1);   // word length (usually bits=16)
-        final float wi= 1.0f / w;
-        final float d = wi / RAND_MAX;  // dither amplitude (2 lsb)
-        final float o = wi * 0.5f;      // remove dc offset
         // rectangular-PDF random numbers
-        int   r1 = random.nextInt(RAND_MAX), r2;
-        float s1 = 0, s2 = 0;           // error feedback buffers
+        int   r1 = random.nextInt(maxRange), r2;
+        float s1 = 0, s2 = 0;                   // error feedback buffers
         int nClipped = 0;
         for (float in : pcmFloats) {
             r2 = r1;                            // can make HP-TRI dither by
-            r1 = random.nextInt(RAND_MAX);      // subtracting previous rand()
+            r1 = random.nextInt(maxRange);      // subtracting previous rand()
 
-            in /= 20000.0;                      // TODO DS: as long as our model is normalized with 20000 ...
+            if (normalizedValue != 1.0f)
+                in /= normalizedValue;          // denormalize to 1.0
             in += s * (s1 + s1 - s2);           // error feedback
-            float tmp = in + o + d * (float)(r1 - r2); // dc offset and dither
+            float tmp = in + o + d * (r1 - r2); // dc offset and dither
 
-            float res = w * tmp;
+            // asymmetric conversion according to valid range of a short value
+            float res = (tmp > 0.0) ? (w - 1) * tmp : w * tmp;
+
             // detect clipping
-            if (res > w-1) {
-                res = w-1;
+            if (res > maxRange) {
+                res = maxRange;
                 nClipped++;
-            } else if (res < -w) {
-                res = -w;
+            } else if (res < -maxRange-1) {
+                res = -maxRange-1;
                 nClipped++;
             }
-            short out = (short)(res);           // truncate downwards
-            if (tmp < 0.0f) out--;              // this is faster than floor()
-
+            short out = (short) Math.round(res);
             s2 = s1;
-            s1 = in - wi * (float) out;         // error
+            s1 = in - wi * out;                 // error
             buffer.putShort(out);
         }
         if (nClipped > 0) {
