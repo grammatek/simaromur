@@ -158,6 +158,7 @@ public class Voice {
         LocalDateTime latestUpdateTime = Instant.ofEpochMilli(0).atZone(ZoneOffset.UTC).toLocalDateTime();
         this.downloadPath = "";
         this.md5Sum = "";
+
         for (DeviceVoiceFile file: voice.Files) {
             final LocalDateTime assetDate = FileUtils.getAssetDate(assetManager, "voices/" + file.Path);
             if (assetDate.compareTo(latestUpdateTime) > 0) {
@@ -168,6 +169,8 @@ public class Voice {
             this.md5Sum = this.md5Sum.concat(file.Md5Sum + "\n");
         }
         this.updateTime = Date.from(latestUpdateTime.toInstant(ZoneOffset.UTC));
+        this.downloadTime = this.updateTime;
+        this.size = 1000000; // dummy size
     }
 
     @NonNull
@@ -217,7 +220,7 @@ public class Voice {
             rv = true;
         } else {
             // local voice sanity checks ...
-            if ((this.size > 0) && ((! this.md5Sum.isEmpty()))) {
+            if (! this.md5Sum.isEmpty()) {
                 // Check download date to be valid
                 Calendar cal = Calendar.getInstance();
                 cal.setLenient(false);
@@ -225,7 +228,9 @@ public class Voice {
                 try {
                     cal.getTime();
                     rv = true;
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                    Log.w(LOG_TAG, "isAvailable("+this.name+"): invalid downloadTime detected");
+                }
             }
         }
         return rv;

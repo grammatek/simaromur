@@ -2,9 +2,11 @@ package com.grammatek.simaromur.device;
 
 import android.content.res.AssetManager;
 import android.provider.MediaStore;
+import android.speech.tts.SynthesisCallback;
 import android.util.Log;
 
 import com.grammatek.simaromur.App;
+import com.grammatek.simaromur.TTSObserver;
 import com.grammatek.simaromur.audio.AudioManager;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
@@ -40,7 +42,7 @@ public class TTSEngineController {
         mCurrentVoice = null;
         mFrontend = frontend;
         mTTSAudioControl = new TTSAudioControl(22050);
-        // only need one concurrent thread
+        // we only need one thread per Audio setting
         mExecutorService = Executors.newSingleThreadExecutor();
     }
 
@@ -55,7 +57,8 @@ public class TTSEngineController {
         DeviceVoice devVoice = mAVM.getInfoForVoice(voice.name);
         switch (voice.type) {
             case Voice.TYPE_TIRO:
-                throw new IllegalArgumentException("TYPE_TIRO not supported for on-device TTS engines");
+                Log.v(LOG_TAG, "LoadEngine: Voice.TYPE_TIRO not supported");
+                break;
             case Voice.TYPE_TORCH:
                 if (mEngine == null || devVoice != mCurrentVoice) {
                     Log.v(LOG_TAG, "LoadEngine: " + devVoice.Type);
@@ -90,6 +93,22 @@ public class TTSEngineController {
     }
 
     /**
+     * Start to speak given text with given voice and use given callback for applying the synthesized
+     * output.
+     */
+    public void StartSpeak(TTSObserver observer, String text) {
+        if (mEngine == null || mCurrentVoice == null) {
+            String errorMsg = "No TTS engine loaded !";
+            Log.e(LOG_TAG, errorMsg);
+            throw new RuntimeException(errorMsg);
+        }
+
+        SpeakTask speakTask = new SpeakTask(observer, text);
+        Log.v(LOG_TAG, "StartSpeak: scheduling new SpeakTask");
+        mExecutorService.execute(speakTask);
+    }
+
+    /**
      * Stop speaking. Ignored in case currently no speak execution is done.
      */
     public void StopSpeak() {
@@ -102,7 +121,18 @@ public class TTSEngineController {
         float speed;
         float pitch;
         int sampleRate;
+        TTSObserver observer;
 
+        /**
+         * This initializes a SpeakTask for direct speak synthesis.
+         *
+         * @param text          raw text to be spoken
+         * @param speed         speed multiplier, i.e. how many times faster/slower than normal voice
+         *                      speed
+         * @param pitch         pitch multiplier of voice, how many times higher/lower than normal voice
+         *                      pitch
+         * @param sampleRate    sample rate to use for the synthesis
+         */
         public SpeakTask(String text, float speed, float pitch, int sampleRate) {
             this.text = text;
             this.speed = speed;
@@ -110,21 +140,50 @@ public class TTSEngineController {
             this.sampleRate = sampleRate;
         }
 
+        /**
+         * This initializes a SpeakTask for use via given observer. The observer needs to be already
+         * initialized with pitch, speed & sample rate
+         *
+         * @param observer      Observer that gets the synthesized PCM data
+         * @param text          raw text to be spoken
+         */
+        public SpeakTask(TTSObserver observer, String text) {
+            this.text = text;
+            this.observer = observer;
+            // pitch & speed & sampleRate is applied by observer
+            this.speed = 1.0f;
+            this.pitch = 1.0f;
+            this.sampleRate = mEngine.GetSampleRate();
+        }
+
+        /**
+         * Getter for the text given in constructor.
+         *
+         * @return  Text as given in constructor
+         */
         public String getText() {
             return text;
         }
 
+        /**
+         * This will run the synthesis and call either a given callback or use the AudioController
+         * to directly play the synthesized voice.
+         */
         public void run() {
             Log.v(LOG_SPEAK_TASK_TAG, "run() called");
             assert(sampleRate == mEngine.GetSampleRate());
 
             // Frontend processing
             String sampas = mFrontend.process(text);
-            byte[] pcmBytes16Bit22kHz = mEngine.SpeakToPCM(sampas, sampleRate);
-            byte[] audio = AudioManager.applyPitchAndSpeed(pcmBytes16Bit22kHz, sampleRate, pitch, speed);
+            byte[] pcmBytes16Bit = mEngine.SpeakToPCM(sampas, sampleRate);
 
-            // Media player: use wav
-            mTTSAudioControl.play(new TTSAudioControl.AudioEntry(audio));
+            if (observer == null) {
+                byte[] audio = AudioManager.applyPitchAndSpeed(pcmBytes16Bit, sampleRate, pitch, speed);
+                // Media player: use wav
+                mTTSAudioControl.play(new TTSAudioControl.AudioEntry(audio));
+            } else {
+                observer.update(pcmBytes16Bit);
+            }
         }
     }
 }

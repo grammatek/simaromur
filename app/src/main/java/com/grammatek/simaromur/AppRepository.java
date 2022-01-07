@@ -261,6 +261,17 @@ public class AppRepository {
         mTTSEngineController.StopSpeak();
     }
 
+    public void startTorchTTS(SynthesisCallback synthCb, Voice voice, String text, float speed, float pitch) {
+        try {
+            mTTSEngineController.LoadEngine(voice);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        // use the sample rate from the Engine
+        mTTSEngineController.StartSpeak(new TTSObserver(synthCb, pitch, speed, 22050), text);
+    }
+
     public void startFliteSpeak(Voice voice, String text, String langCode, float speed, float pitch) {
         try {
             mTTSEngineController.LoadEngine(voice);
@@ -307,6 +318,14 @@ public class AppRepository {
         for (final Voice voice:voices) {
             if (voice.name.equals(voiceName)) {
                 Log.v(LOG_TAG, "SUCCESS");
+                if (voice.type.equals(Voice.TYPE_TORCH) || voice.type.equals(Voice.TYPE_FLITE)) {
+                    try {
+                        mTTSEngineController.LoadEngine(voice);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return TextToSpeech.ERROR_NOT_INSTALLED_YET;
+                    }
+                }
                 mSelectedVoice = voice;
                 mAppDataDao.selectCurrentVoice(voice);
                 return TextToSpeech.SUCCESS;
@@ -457,7 +476,7 @@ public class AppRepository {
             if (size != inputStream.read(buffer)) {
                 Log.w(LOG_TAG, "playAssetFile: not enough bytes ?");
             }
-            TTSObserver observer=new TTSObserver(callback, (float) 1.0, (float) 1.1);
+            TTSObserver observer = new TTSObserver(callback, (float) 1.0, (float) 1.1);
             observer.update(buffer);
             observer.stop();
         } catch (Exception e) {

@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.frontend.NormalizationManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
@@ -95,12 +96,16 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
     public void onResume() {
         Log.v(LOG_TAG, "onResume:");
         super.onResume();
-        if (ConnectionCheck.isNetworkConnected()) {
-            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
-        }
-        else {
-            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
-            App.getAppRepository().showTtsBackendWarningDialog(this);
+        if (mVoice.type.equals(Voice.TYPE_TIRO)) {
+            if (ConnectionCheck.isNetworkConnected()) {
+                mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
+            }
+            else {
+                mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
+                App.getAppRepository().showTtsBackendWarningDialog(this);
+            }
+        } else if (mVoice.type.equals(Voice.TYPE_TORCH)) {
+            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_playing_solid);
         }
     }
 
@@ -108,15 +113,25 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
     @Override
     public void onClick(View v) {
         Log.v(LOG_TAG, "onClick");
-        if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {
-            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
-            App.getAppRepository().showTtsBackendWarningDialog(this);
+        String normalizedText = "";
+        String text = mUserText.getText().toString();
+        if (mVoice.type.equals(Voice.TYPE_TIRO)) {
+            if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {
+                mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
+                App.getAppRepository().showTtsBackendWarningDialog(this);
+                return;
+            }
+            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
+            NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
+            normalizedText = normalizationManager.process(text);
+        } else if (mVoice.type.equals(Voice.TYPE_TORCH)) {
+            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_playing_solid);
+            // normalization is done in the Engine itself
+            normalizedText = text;
+        } else {
+            Log.w(LOG_TAG, "Selected voice type " + mVoice.type + " not yet supported !");
             return;
         }
-        mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
-        String text = mUserText.getText().toString();
-        NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
-        String normalizedText = normalizationManager.process(text);
         Log.v(LOG_TAG, "Text to speak: " + normalizedText);
         mVoiceViewModel.startSpeaking(mVoice, normalizedText, 1.0f, 1.0f);
     }

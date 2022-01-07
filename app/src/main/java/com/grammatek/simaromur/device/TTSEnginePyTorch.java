@@ -106,11 +106,13 @@ public class TTSEnginePyTorch implements TTSEngine {
         final IValue voiceOutput = mVocoderModel.runMethod("inference", melganInput);
         Log.v(LOG_TAG, "Inference voiceOuput");
         float[] samples = voiceOutput.toTensor().getDataAsFloatArray();
+        byte[] bytes = AudioManager.pcmFloatTo16BitPCMWithDither(samples, 20000.0f, true);
         Instant stopTime = Instant.now();
+
         final long timeElapsed = Duration.between(startTime, stopTime).toMillis();
-        Log.v(LOG_TAG, "Inference ran for " + timeElapsed / 1000.0F + " secs, " +
+        Log.v(LOG_TAG, "Voice generation ran for " + timeElapsed / 1000.0F + " secs, " +
                 samples.length * 1000.0F / timeElapsed / GetSampleRate() + " x real-time");
-        return AudioManager.pcmFloatTo16BitPCMWithDither(samples, 20000.0f, true);
+        return bytes;
     }
 
     @Override

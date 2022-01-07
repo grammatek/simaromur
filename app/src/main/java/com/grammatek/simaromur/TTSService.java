@@ -67,7 +67,7 @@ public class TTSService extends TextToSpeechService {
     @Override
     protected synchronized void onStop() {
         Log.i(LOG_TAG, "onStop");
-        // @todo stop ongoing speec request, i.e. unregister observers
+        // @todo stop ongoing speak request, i.e. unregister observers
     }
 
     // mandatory
@@ -116,27 +116,34 @@ public class TTSService extends TextToSpeechService {
 
         com.grammatek.simaromur.db.Voice voice = mRepository.getVoiceForName(loadedVoiceName);
         if (voice != null) {
-            // check if network voice && for network availability
-            if (voice.type.equals("tiro")) {
-                if (! testForAndHandleNetworkVoiceIssues(callback, text, voice)) {
-                    return;
-                }
-            }
-            NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
-            String normalizedText = normalizationManager.process(text);
-
-            Log.v(LOG_TAG, "onSynthesizeText: original (\"" + text + "\"), normalized (\""
-                    + normalizedText + "\")");
-            if (text.isEmpty() && normalizedText.isEmpty()) {
+            if (text.isEmpty()) {
                 Log.i(LOG_TAG, "onSynthesizeText: End of TTS session");
                 playSilence(callback);
                 return;
-            } else if (normalizedText.isEmpty()) {
-                Log.i(LOG_TAG, "onSynthesizeText: normalization failed ?");
-                playSilence(callback);
-                return;
             }
-            mRepository.startTiroTts(callback, voice, normalizedText, speechrate/100.0f, pitch/100.0f);
+
+            // check if network voice && for network availability
+            if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TIRO)) {
+                if (! testForAndHandleNetworkVoiceIssues(callback, text, voice)) {
+                    return;
+                }
+                NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
+                String normalizedText = normalizationManager.process(text);
+
+                Log.v(LOG_TAG, "onSynthesizeText: original (\"" + text + "\"), normalized (\""
+                        + normalizedText + "\")");
+                if (normalizedText.isEmpty()) {
+                    Log.i(LOG_TAG, "onSynthesizeText: normalization failed ?");
+                    playSilence(callback);
+                    return;
+                }
+                mRepository.startTiroTts(callback, voice, normalizedText, speechrate/100.0f,
+                        pitch/100.0f);
+            } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TORCH)) {
+                mRepository.startTorchTTS(callback, voice, text, speechrate/100.0f,pitch/100.0f);
+            } else {
+                Log.e(LOG_TAG, "Voice type currently unsupported: " + voice.type);
+            }
         }
         else {
             Log.e(LOG_TAG, "onSynthesizeText: unsupported voice ?!");
@@ -247,6 +254,9 @@ public class TTSService extends TextToSpeechService {
                 latency = Voice.LATENCY_VERY_HIGH;
                 features.add(TextToSpeech.Engine.KEY_FEATURE_NETWORK_RETRIES_COUNT);
                 needsNetwork = true;
+            } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TORCH)) {
+                latency = Voice.LATENCY_VERY_HIGH;
+                needsNetwork = false;
             }
             Voice ttsVoice = new Voice(voice.name, voice.getLocale(), quality, latency,
                     needsNetwork, features);
