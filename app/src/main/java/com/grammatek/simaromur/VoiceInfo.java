@@ -56,12 +56,12 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
         mVoiceViewModel = new ViewModelProvider(this, factory).get(VoiceViewModel.class);
 
         // fill in the default user text
-        mUserText = (EditText) findViewById(R.id.speakable_text);
+        mUserText = findViewById(R.id.speakable_text);
 
-        TextView nameTextView = (TextView) findViewById(R.id.textViewName);
-        TextView langTextView = (TextView) findViewById(R.id.textViewLanguage);
-        TextView genderTextView = (TextView) findViewById(R.id.textViewGender);
-        TextView typeTextView = (TextView) findViewById(R.id.textViewType);
+        TextView nameTextView = findViewById(R.id.textViewName);
+        TextView langTextView = findViewById(R.id.textViewLanguage);
+        TextView genderTextView = findViewById(R.id.textViewGender);
+        TextView typeTextView = findViewById(R.id.textViewType);
 
         // setup button
         Button mButton = findViewById(R.id.speak_button);
@@ -123,7 +123,7 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
     @Override
     public void onClick(View v) {
         Log.v(LOG_TAG, "onClick");
-        String normalizedText = "";
+        String normalizedText;
         String text = mUserText.getText().toString();
         if (mVoice.type.equals(Voice.TYPE_TIRO)) {
             if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {

@@ -9,17 +9,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidParameterException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 
 public class FileUtils {
     private final static String LOG_TAG = "Simaromur_" + FileUtils.class.getSimpleName();

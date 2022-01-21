@@ -65,7 +65,6 @@ public class MediaPlayObserver implements AudioObserver {
             mMediaPlayer.start();
             // @todo: implement MediaPlayer completion callbacks for visual feedback
         } catch (IOException ex) {
-            String s = ex.toString();
             ex.printStackTrace();
         }
     }

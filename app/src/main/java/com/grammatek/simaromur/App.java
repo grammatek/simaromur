@@ -12,12 +12,9 @@ import com.grammatek.simaromur.network.ConnectionCheck;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class App extends Application {
     private final static String LOG_TAG = "Simaromur_" + App.class.getSimpleName();
-    ExecutorService executorService = Executors.newFixedThreadPool(4);
     AppRepository mAppRepository;
     private static FirebaseAnalytics sFirebaseAnalytics;
     private static FirebaseCrashlytics sFirebaseCrashlytics;

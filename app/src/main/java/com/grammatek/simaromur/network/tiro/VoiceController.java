@@ -9,7 +9,6 @@ import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 

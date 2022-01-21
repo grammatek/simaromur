@@ -30,7 +30,6 @@ import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -65,7 +64,7 @@ public class AppRepository {
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
 
-    private MediaPlayObserver mMediaPlayer;
+    private final MediaPlayObserver mMediaPlayer;
 
     /**
      * Observer for Tiro voice query results.
@@ -114,10 +113,11 @@ public class AppRepository {
             mAllCachedVoices = voices;
         });
 
-        mScheduler = Executors.newSingleThreadScheduledExecutor();
-        mScheduler.scheduleAtFixedRate(timerRunnable, 0, 20, TimeUnit.SECONDS);
-        mScheduler.schedule(assetVoiceRunnable, 1, TimeUnit.SECONDS);
         mMediaPlayer = new MediaPlayObserver();
+
+        mScheduler = Executors.newSingleThreadScheduledExecutor();
+        mScheduler.scheduleAtFixedRate(networkVoicesUpdateRunnable, 0, 60, TimeUnit.SECONDS);
+        mScheduler.schedule(assetVoiceRunnable, 1, TimeUnit.SECONDS);
     }
 
     /**
@@ -266,27 +266,6 @@ public class AppRepository {
     }
 
     /**
-     * Request to update local voices.
-     *
-     * @param languageCode  language code, e.g. "is-IS"
-     *
-     */
-    public void getLocalVoices(String languageCode) {
-        Log.v(LOG_TAG, "getLocalVoices");
-        mTiroVoiceController.streamQueryVoices(languageCode, new TiroVoiceQueryObserver());
-    }
-
-    /**
-     * Insert a voice into the db.
-     *
-     * @param voice Voice to be saved into db
-     */
-    public void insertVoice(com.grammatek.simaromur.db.Voice voice) {
-        Log.v(LOG_TAG, "insertVoice");
-        new insertVoiceAsyncTask(mVoiceDao).execute(voice);
-    }
-
-    /**
      * Loads given voice, e.g. from disk. Can also access network to query voice availability.
      *
      * @param voiceName     Name of the voice to load
@@ -414,14 +393,13 @@ public class AppRepository {
     }
 
     public void showTtsBackendWarningDialog(Context context) {
-        AlertDialog warningDialog = null;
+        AlertDialog warningDialog;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         String audioAssetFile = "";
         int messageId =  R.string.try_again_later;
         if (! ConnectionCheck.isNetworkConnected()) {
             messageId =  R.string.check_internet;
-            builder.setPositiveButton(R.string.doit, (dialog, id) -> {
-                openWifiSettings(context); })
+            builder.setPositiveButton(R.string.doit, (dialog, id) -> openWifiSettings(context))
                     .setNegativeButton(R.string.not_yet, (dialog, id) -> {});
             audioAssetFile = "audio/check_internet_dora.mp3";
         } else if (! ConnectionCheck.isTTSServiceReachable()) {
@@ -472,7 +450,8 @@ public class AppRepository {
         try {
             Intent intent = new Intent(Intent.ACTION_MAIN, null);
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
-            ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.wifi.WifiSettings");
+            ComponentName cn = new ComponentName("com.android.settings",
+                    "com.android.settings.wifi.WifiSettings");
             intent.setComponent(cn);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
@@ -490,16 +469,6 @@ public class AppRepository {
         return null;
     }
 
-    Voice getVoiceForLocale(String iso3Language, String iso3Country, String variant) {
-        for (final Voice voice : getCachedVoices()) {
-            // if the voice is the exact fit for given parameters, return it directly
-            if (voice.supportsIso3(iso3Language, iso3Country, variant)) {
-                return voice;
-            }
-        }
-        return null;
-    }
-
     String getLoadedVoiceName() {
         if (mSelectedVoice != null) {
             return mSelectedVoice.name;
@@ -507,7 +476,10 @@ public class AppRepository {
         return "";
     }
 
-    Runnable timerRunnable = new Runnable() {
+    /**
+     * Update DB according to network voice
+     */
+    Runnable networkVoicesUpdateRunnable = new Runnable() {
         @Override
         public void run() {
             Date lastUpdateTime = new Date(System.currentTimeMillis() - NETWORK_VOICE_QUERY_TIME_MS);
@@ -535,12 +507,12 @@ public class AppRepository {
         @Override
         public void run() {
             // delete all voices
-            List<Voice> allDbVoices = mVoiceDao.getAnyVoices();
+            final List<Voice> allDbVoices = mVoiceDao.getAnyVoices();
             for (Voice voice : allDbVoices) {
                 mVoiceDao.deleteVoices(voice);
             }
 
-            List<Voice> assetVoices = mAVM.getVoiceDbList();
+            final List<Voice> assetVoices = mAVM.getVoiceDbList();
             for (Voice voice : assetVoices) {
                 // enter new voices
                 mVoiceDao.insertVoice(voice);
@@ -562,7 +534,7 @@ public class AppRepository {
      * Asynchronously update the database for the privacy notice acceptance flag
      */
     private static class doAcceptPrivacyNoticeAsyncTask extends AsyncTask<Boolean, Void, Void> {
-        private AppDataDao mAsyncTaskDao;
+        private final AppDataDao mAsyncTaskDao;
 
         doAcceptPrivacyNoticeAsyncTask(AppDataDao dao) {
             mAsyncTaskDao = dao;
@@ -575,38 +547,25 @@ public class AppRepository {
         }
     }
 
-    private static class insertVoiceAsyncTask extends AsyncTask<com.grammatek.simaromur.db.Voice, Void, Void> {
-        private VoiceDao mAsyncTaskDao;
-
-        insertVoiceAsyncTask(VoiceDao dao) {
-            mAsyncTaskDao = dao;
-        }
-
-        @Override
-        protected Void doInBackground(final Voice... params) {
-            mAsyncTaskDao.insertVoice(params[0]);
-            return null;
-        }
-    }
-
     private static class updateVoicesAsyncTask extends AsyncTask<List<VoiceResponse>, Void, Void> {
-        private ApiDbUtil mApiDbUtil;
-        private String mVoiceType;
+        private final ApiDbUtil mApiDbUtil;
+        private final String mVoiceType;
 
         updateVoicesAsyncTask(ApiDbUtil apiDbUtil, String voiceType) {
             mApiDbUtil = apiDbUtil;
             mVoiceType = voiceType;
         }
 
+        @SafeVarargs
         @Override
-        protected Void doInBackground(final List<VoiceResponse>... voices) {
+        protected final Void doInBackground(final List<VoiceResponse>... voices) {
             mApiDbUtil.updateApiVoices(voices[0], mVoiceType);
             return null;
         }
     }
 
     private static class updateAppDataVoiceListTimestampAsyncTask extends AsyncTask<Void, Void, Void> {
-        private AppDataDao mAppDataDao;
+        private final AppDataDao mAppDataDao;
 
         updateAppDataVoiceListTimestampAsyncTask(AppDataDao appDataDao) {  mAppDataDao = appDataDao;  }
 

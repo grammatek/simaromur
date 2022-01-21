@@ -1,5 +1,7 @@
 package com.grammatek.simaromur.network.tiro.pojo;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
 /*
@@ -58,6 +60,7 @@ public class SpeakRequest {
         this.VoiceId = voiceId;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "SpeakRequest{" +

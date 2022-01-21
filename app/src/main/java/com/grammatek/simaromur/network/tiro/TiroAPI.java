@@ -13,8 +13,8 @@ import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 public interface TiroAPI {
-    public static final String SERVER = "tts.tiro.is";
-    final String URL = "https://" + SERVER + "/v0/";
+    String SERVER = "tts.tiro.is";
+    String URL = "https://" + SERVER + "/v0/";
 
     @GET("voices")
     Call<List<VoiceResponse>> queryVoices(@Query("LanguageCode") String languageCode);

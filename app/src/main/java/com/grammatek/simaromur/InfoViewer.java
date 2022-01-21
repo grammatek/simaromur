@@ -112,17 +112,13 @@ public class InfoViewer extends ListActivity {
             Data.add("mBenchmark + \" " + getString(R.string.info_benchmark_value) + " \"");
         }
 
-        runOnUiThread(new Runnable() {
-
-            @Override
-            public void run() {
-                String[] dataArray = new String[Data.size()];
-                Data.toArray(dataArray);
-                String[] infoArray = new String[Info.size()];
-                Info.toArray(infoArray);
-                setListAdapter(new SettingsArrayAdapter(InfoViewer.this,
-                        infoArray, dataArray));
-            }
+        runOnUiThread(() -> {
+            String[] dataArray = new String[Data.size()];
+            Data.toArray(dataArray);
+            String[] infoArray = new String[Info.size()];
+            Info.toArray(infoArray);
+            setListAdapter(new SettingsArrayAdapter(InfoViewer.this,
+                    infoArray, dataArray));
         });
 
     }
@@ -161,8 +157,8 @@ public class InfoViewer extends ListActivity {
                 convertView = inflater.inflate(R.layout.flite_info, parent, false);
             }
 
-            TextView infoType = (TextView) convertView.findViewById(R.id.infotitle);
-            TextView infoDetail = (TextView) convertView.findViewById(R.id.infodetail);
+            TextView infoType = convertView.findViewById(R.id.infotitle);
+            TextView infoDetail = convertView.findViewById(R.id.infodetail);
 
             if (values[position].equals(getString(R.string.info_runtime_header))) {
                 infoType.setText(getString(R.string.info_runtime));

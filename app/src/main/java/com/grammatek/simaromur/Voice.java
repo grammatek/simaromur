@@ -54,7 +54,7 @@ public class Voice {
 	private String mVoiceLanguage;
 	private String mVoiceCountry;
 	private String mVoiceVariant;
-	private boolean mIsValidVoice;
+	private final boolean mIsValidVoice;
 	private String mVoicePath;
 	private boolean mIsVoiceAvailable;
 

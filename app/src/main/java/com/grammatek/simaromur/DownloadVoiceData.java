@@ -36,14 +36,11 @@
 
 package com.grammatek.simaromur;
 
-import java.io.File;
-import java.util.List;
-
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.ListActivity;
-import android.content.Context;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -56,12 +53,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.TextView;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import java.io.File;
+import java.util.List;
 
 /* Download user-requested voice data for Flite
  *
@@ -112,9 +111,9 @@ public class DownloadVoiceData extends ListActivity {
 
 	private class VoiceListAdapter extends BaseAdapter {
 
-		private Context mContext;
+		private final Context mContext;
 		private List<Voice> mVoiceList;
-		private LayoutInflater mInflater;
+		private final LayoutInflater mInflater;
 
 		public VoiceListAdapter(Context context) {
 			mContext = context;
@@ -159,7 +158,7 @@ public class DownloadVoiceData extends ListActivity {
 
 			((TextView) convertView.findViewById(R.id.voice_manager_voice_language)).setText(mVoiceList.get(position).getDisplayLanguage());
 			((TextView) convertView.findViewById(R.id.voice_manager_voice_variant)).setText(mVoiceList.get(position).getVariant());
-			final ImageButton actionButton = (ImageButton) convertView.findViewById(R.id.voice_manager_action_image);
+			final ImageButton actionButton = convertView.findViewById(R.id.voice_manager_action_image);
 			actionButton.setImageResource(mVoiceList.get(position).isAvailable() ?
 					R.drawable.ic_action_delete : R.drawable.ic_action_download);
 			actionButton.setVisibility(View.VISIBLE);
@@ -243,14 +242,6 @@ public class DownloadVoiceData extends ListActivity {
 		} else {
 			Log.e("value", "PERMISSION_GRANTED is false.");
 			return false;
-		}
-	}
-
-	private void requestPermission() {
-		if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-			Toast.makeText(this, "Write External Storage permission allows us to store voices. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
-		} else {
-			ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
 		}
 	}
 
