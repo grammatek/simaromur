@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Set;
 
 public class ApiDbUtil {
+    // Appended to voice name to expose the network type in the voice settings screen
+    public final static String NET_VOICE_SUFFIX = " net";
+
     private final static String LOG_TAG = "Simaromur_" + ApiDbUtil.class.getSimpleName();
     VoiceDao mVoiceDao;
 
@@ -30,7 +33,7 @@ public class ApiDbUtil {
         Log.v(LOG_TAG, "Updating voice: " + modelVoice);
         Log.v(LOG_TAG, "With: " + apiVoice);
         assert (modelVoice.voiceId != 0);   // the modelVoice should already be inside db
-        modelVoice.name = apiVoice.Name;
+        modelVoice.name = apiVoice.Name.concat(NET_VOICE_SUFFIX);
         modelVoice.internalName = apiVoice.VoiceId;
         modelVoice.languageCode = apiVoice.LanguageCode;
         modelVoice.languageName = apiVoice.LanguageName;
@@ -70,7 +73,7 @@ public class ApiDbUtil {
         // create new voices from our list of unknown voices
         for (VoiceResponse av:newApiVoices) {
             Log.v(LOG_TAG, "Creating new voice from " + av);
-            Voice voice = new Voice(av.VoiceId, av.VoiceId, av.Gender, av.LanguageCode, av.LanguageName,
+            Voice voice = new Voice(av.Name, av.VoiceId, av.Gender, av.LanguageCode, av.LanguageName,
                     "", Voice.TYPE_TIRO, "");
             Log.v(LOG_TAG, "New contents: " + voice);
             try {

@@ -23,7 +23,7 @@ public interface VoiceDao {
     @Delete
     void deleteVoices(Voice... voices);
 
-    @Query("SELECT * FROM voice_table as voices order by voices.internal_name asc")
+    @Query("SELECT * FROM voice_table as voices order by voices.type desc, voices.internal_name asc")
     public LiveData<List<Voice>> getAllVoices();
 
     /**

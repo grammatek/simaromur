@@ -17,6 +17,7 @@
     <string name="voice_name_title">Name</string>
     <string name="voice_gender_title">Gender</string>
     <string name="voice_availability_title">Status</string>
+    <string name="voice_type">Type</string>
     <string name="speak_voice_title">Play</string>
     <string name="play_voice_title_description">Speak the shown text</string>
     <string name="voice_lang_title">Language</string>
@@ -54,4 +55,6 @@
     <string name="male">Male</string>
     <string name="female">Female</string>
     <string name="icon_description">Please press an icon</string>
+    <string name="type_local">Device Voice</string>
+    <string name="type_network">Network Voice</string>
 </resources>

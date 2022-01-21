@@ -56,7 +56,6 @@ public class AppRepository {
     private List<com.grammatek.simaromur.db.Voice> mAllCachedVoices;
     private final VoiceController mTiroVoiceController;
     private final SpeakController mTiroSpeakController;
-    private List<VoiceResponse> mTiroVoices;
     private final ApiDbUtil mApiDbUtil;
     private final AssetVoiceManager mAVM;
     ScheduledExecutorService mScheduler;
@@ -81,8 +80,7 @@ public class AppRepository {
                 }
                 Log.v(LOG_TAG, "Tiro API returned: " + voice.VoiceId);
             }
-            mTiroVoices = voices;
-            new updateVoicesAsyncTask(mApiDbUtil, "tiro").execute(mTiroVoices);
+            new updateVoicesAsyncTask(mApiDbUtil, "tiro").execute(voices);
             new updateAppDataVoiceListTimestampAsyncTask(mAppDataDao).execute();
         }
         public void error(String errorMsg) {
@@ -167,21 +165,6 @@ public class AppRepository {
     public final List<com.grammatek.simaromur.db.Voice> getCachedVoices() {
         Log.v(LOG_TAG, "getCachedVoices");
         return mAllCachedVoices;
-    }
-
-    /**
-     * Returns list of all Tiro voices from its API endpoint.
-     *
-     * @param languageCode  language code, e.g. "is-IS"
-     *
-     * @return  list of all cached Tiro API voices.
-     */
-    public List<VoiceResponse> queryTiroVoices(String languageCode) throws IOException {
-        Log.v(LOG_TAG, "queryTiroVoices");
-        if (mTiroVoices == null) {
-            streamTiroVoices(languageCode);
-        }
-        return mTiroVoices;
     }
 
     /**
@@ -551,22 +534,16 @@ public class AppRepository {
     Runnable assetVoiceRunnable = new Runnable() {
         @Override
         public void run() {
-            List<Voice> aVoices = mAVM.getVoiceDbList();
-            List<Voice> aVoicesInDb = mVoiceDao.getAssetVoices();
-            List<Voice> toDeleteVoices = new ArrayList<>(aVoicesInDb);
+            // delete all voices
+            List<Voice> allDbVoices = mVoiceDao.getAnyVoices();
+            for (Voice voice : allDbVoices) {
+                mVoiceDao.deleteVoices(voice);
+            }
 
-            // delete all voices that don't exist anymore
-            toDeleteVoices.removeAll(aVoices);
-            mVoiceDao.deleteVoices(toDeleteVoices.toArray(new Voice[]{}));
-
-            for (Voice voice : aVoices) {
-                if (! mVoiceDao.findVoiceWithName(voice.name).isEmpty()) {
-                    // update existing voices
-                    mVoiceDao.updateVoices(voice);
-                } else {
-                    // enter new voices
-                    mVoiceDao.insertVoice(voice);
-                }
+            List<Voice> assetVoices = mAVM.getVoiceDbList();
+            for (Voice voice : assetVoices) {
+                // enter new voices
+                mVoiceDao.insertVoice(voice);
             }
         }
     };

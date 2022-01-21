@@ -1,5 +1,7 @@
 package com.grammatek.simaromur;
 
+import android.annotation.SuppressLint;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -29,6 +31,7 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
     private VoiceViewModel mVoiceViewModel;
     private ImageView mNetworkAvailabilityIcon;
 
+    @SuppressLint("SourceLockedOrientationActivity")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.v(LOG_TAG, "onCreate");
@@ -44,6 +47,8 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
             Log.e(LOG_TAG, errMsg);
             throw new AssertionError(errMsg);
         }
+        // layout doesn't work for landscape
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         // create our instance of the view model
         ViewModelProvider.Factory factory =
@@ -56,6 +61,7 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
         TextView nameTextView = (TextView) findViewById(R.id.textViewName);
         TextView langTextView = (TextView) findViewById(R.id.textViewLanguage);
         TextView genderTextView = (TextView) findViewById(R.id.textViewGender);
+        TextView typeTextView = (TextView) findViewById(R.id.textViewType);
 
         // setup button
         Button mButton = findViewById(R.id.speak_button);
@@ -76,12 +82,16 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
                 }
                 nameTextView.setText(mVoice.name);
                 langTextView.setText(mVoice.getLocale().getDisplayLanguage().toLowerCase());
-                if (mVoice.gender.toLowerCase().equals("Male".toLowerCase())) {
+                if (mVoice.gender.equalsIgnoreCase("male")) {
                     genderTextView.setText(getResources().getString(R.string.male));
                 } else {
                     genderTextView.setText(getResources().getString(R.string.female));
                 }
-
+                if (mVoice.type.equalsIgnoreCase("tiro")) {
+                    typeTextView.setText(getResources().getString(R.string.type_network));
+                } else {
+                    typeTextView.setText(getResources().getString(R.string.type_local));
+                }
             }
         });
     }
@@ -105,7 +115,7 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
                 App.getAppRepository().showTtsBackendWarningDialog(this);
             }
         } else if (mVoice.type.equals(Voice.TYPE_TORCH)) {
-            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_playing_solid);
+            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_action_send);
         }
     }
 
@@ -125,7 +135,7 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
             NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
             normalizedText = normalizationManager.process(text);
         } else if (mVoice.type.equals(Voice.TYPE_TORCH)) {
-            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_playing_solid);
+            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_action_send);
             // normalization is done in the Engine itself
             normalizedText = text;
         } else {

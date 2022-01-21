@@ -140,7 +140,7 @@ public class Voice {
     // Constructor for DeviceVoice parameter
     public Voice(AssetManager assetManager, DeviceVoice voice) throws IOException {
         this.name = voice.Name;
-        this.internalName = voice.Name;
+        this.internalName = voice.InternalName;
         this.gender = voice.Gender;
         this.languageCode = voice.Language;
         this.languageName = voice.LanguageName;

@@ -11,6 +11,8 @@ import java.util.List;
 public class DeviceVoice {
     @SerializedName("name")
     public String Name;
+    @SerializedName("internal_name")
+    public String InternalName;
     @SerializedName("description")
     public String Description;
     @SerializedName("language")
@@ -26,9 +28,10 @@ public class DeviceVoice {
     @SerializedName("files")
     public List<DeviceVoiceFile> Files;
 
-    public DeviceVoice(String name, String description, String language, String languageName,
-                       String gender, String type, String version, ArrayList<DeviceVoiceFile> files) {
+    public DeviceVoice(String name, String internalName, String description, String language,
+                       String languageName, String gender, String type, String version, ArrayList<DeviceVoiceFile> files) {
         this.Name = name;
+        this.InternalName = internalName;
         this.Description = description;
         this.Language = language;
         this.LanguageName = languageName;
@@ -43,6 +46,7 @@ public class DeviceVoice {
     public String toString() {
         return "DeviceVoice{" +
                 "name='" + Name + '\'' +
+                ", internal_name='" + InternalName + '\'' +
                 ", description='" + Description + '\'' +
                 ", language='" + Language + '\'' +
                 ", language_name='" + LanguageName + '\'' +
@@ -61,7 +65,7 @@ public class DeviceVoice {
      */
     public Voice convertToDbVoice() {
         return new Voice(this.Name,
-                this.Name,
+                this.InternalName,
                 this.Gender,
                 this.Language,
                 this.LanguageName,
