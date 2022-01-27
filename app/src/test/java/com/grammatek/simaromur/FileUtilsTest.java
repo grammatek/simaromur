@@ -19,8 +19,8 @@ import static org.junit.Assert.assertNotEquals;
 @RunWith(RobolectricTestRunner.class)
 public class FileUtilsTest {
     private final static String LOG_TAG = "Simarómur_Test_" + FileUtilsTest.class.getSimpleName();
-    private final Context context = ApplicationProvider.getApplicationContext();
-    private final AssetManager assetManager = context.getAssets();
+    private final static Context context = ApplicationProvider.getApplicationContext();
+    private final static AssetManager assetManager = context.getAssets();
 
     @Test
     public void readAssetDateList_Test() {
@@ -50,5 +50,4 @@ public class FileUtilsTest {
             assert(false);
         }
     }
-
 }

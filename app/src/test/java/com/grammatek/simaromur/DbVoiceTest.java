@@ -22,8 +22,7 @@ import com.grammatek.simaromur.db.Voice;
 @RunWith(RobolectricTestRunner.class)
 public class DbVoiceTest {
     private final static String LOG_TAG = "Simarómur_Test_" + FileUtilsTest.class.getSimpleName();
-    private final Context context = ApplicationProvider.getApplicationContext();
-    private final AssetManager assetManager = context.getAssets();
+    private final static Context context = ApplicationProvider.getApplicationContext();
     private AssetVoiceManager avm;
 
     public DbVoiceTest() {
@@ -43,6 +42,7 @@ public class DbVoiceTest {
         DeviceVoices deviceVoiceList = avm.getVoiceList();
         assert(deviceVoiceList.Voices.size() > 0);
         try {
+            final AssetManager assetManager = context.getAssets();
             for (DeviceVoice deviceVoice:deviceVoiceList.Voices) {
                 voiceList.add(new Voice(assetManager, deviceVoice));
             }
@@ -51,5 +51,6 @@ public class DbVoiceTest {
         catch(IOException e) {
             assert(false);
         }
+        avm = null;
     }
 }

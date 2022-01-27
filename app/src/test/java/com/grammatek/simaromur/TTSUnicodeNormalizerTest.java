@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 @Config(sdk = {Build.VERSION_CODES.P})
 public class TTSUnicodeNormalizerTest {
 
-    private final Context context = ApplicationProvider.getApplicationContext();
+    private final static Context context = ApplicationProvider.getApplicationContext();
 
     @Test
     public void unicodeNormalizingTest() {

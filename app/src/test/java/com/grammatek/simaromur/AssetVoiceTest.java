@@ -15,32 +15,17 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 @RunWith(RobolectricTestRunner.class)
 public class AssetVoiceTest {
     private final static String LOG_TAG = "Simarómur_Test_" + AssetVoiceTest.class.getSimpleName();
-    private final Context context = ApplicationProvider.getApplicationContext();
-    private AssetVoiceManager avm;
 
-    public AssetVoiceTest() {
-        try {
-            avm = new AssetVoiceManager(context);
-        }
-        catch (IOException e) {
-            Log.e(LOG_TAG, "Exception in test: " +  e.toString());
-        }
-    }
+    public AssetVoiceTest() { }
 
     @Test
-    public void AssetVoiceManager_isInstantiated() {
-        assertNotNull(avm);
-    }
-
-    @Test
-    public void AssetVoiceManager_IterateVoiceList() {
-        DeviceVoices voiceList = avm.getVoiceList();
+    public void AssetVoiceManager_IterateVoiceList() throws IOException {
+        Context context = ApplicationProvider.getApplicationContext();
+        final AssetVoiceManager avm = new AssetVoiceManager(context);
+        final DeviceVoices voiceList = avm.getVoiceList();
         assert(voiceList.Voices.size() > 0);
         for (DeviceVoice voice:voiceList.Voices) {
             Log.v(LOG_TAG, voice.toString());

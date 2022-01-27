@@ -1,7 +1,5 @@
 package com.grammatek.simaromur;
 
-import androidx.room.AutoMigration;
-import androidx.room.RoomOpenHelper;
 import androidx.room.testing.MigrationTestHelper;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
@@ -10,7 +8,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.grammatek.simaromur.db.ApplicationDb;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,7 +15,6 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 
 import static junit.framework.TestCase.fail;
-import static org.junit.Assert.assertEquals;
 
 /**
  * ERoom database migration tests
