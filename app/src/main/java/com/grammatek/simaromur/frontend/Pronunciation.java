@@ -3,7 +3,7 @@ package com.grammatek.simaromur.frontend;
 import android.content.Context;
 import android.content.res.Resources;
 
-import com.grammatek.simaromur.NativeG2P;
+import com.grammatek.simaromur.device.NativeG2P;
 import com.grammatek.simaromur.R;
 
 import java.io.BufferedReader;
