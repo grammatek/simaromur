@@ -52,7 +52,8 @@ jobs:
       - name: "Build the app"
         run: |
           git submodule update --init
-          ./gradlew build
+          ./gradlew assemble
+          ./gradlew build -x test
       - name: Archive reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v2
