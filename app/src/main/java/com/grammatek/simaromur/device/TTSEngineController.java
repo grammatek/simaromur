@@ -1,8 +1,7 @@
 package com.grammatek.simaromur.device;
 
 import android.content.res.AssetManager;
-import android.provider.MediaStore;
-import android.speech.tts.SynthesisCallback;
+import android.media.AudioFormat;
 import android.util.Log;
 
 import com.grammatek.simaromur.App;
@@ -41,7 +40,8 @@ public class TTSEngineController {
         mAVM = new AssetVoiceManager(App.getContext());
         mCurrentVoice = null;
         mFrontend = frontend;
-        mTTSAudioControl = new TTSAudioControl(22050);
+        mTTSAudioControl = new TTSAudioControl(22050, AudioFormat.CHANNEL_OUT_MONO,
+                AudioFormat.ENCODING_PCM_16BIT);
         // we only need one thread per Audio setting
         mExecutorService = Executors.newSingleThreadExecutor();
     }
@@ -80,16 +80,18 @@ public class TTSEngineController {
     /**
      * Start to speak given text with given voice.
      */
-    public void StartSpeak(String text, float speed, float pitch, int sampleRate) {
+    public SpeakTask StartSpeak(String text, float speed, float pitch, int sampleRate,
+                           TTSAudioControl.AudioFinishedObserver observer) {
         if (mEngine == null || mCurrentVoice == null) {
             String errorMsg = "No TTS engine loaded !";
             Log.e(LOG_TAG, errorMsg);
             throw new RuntimeException(errorMsg);
         }
 
-        SpeakTask speakTask = new SpeakTask(text, speed, pitch, sampleRate);
+        SpeakTask speakTask = new SpeakTask(text, speed, pitch, sampleRate, observer);
         Log.v(LOG_TAG, "StartSpeak: scheduling new SpeakTask");
         mExecutorService.execute(speakTask);
+        return speakTask;
     }
 
     /**
@@ -111,8 +113,11 @@ public class TTSEngineController {
     /**
      * Stop speaking. Ignored in case currently no speak execution is done.
      */
-    public void StopSpeak() {
+    public void StopSpeak(TTSEngineController.SpeakTask speakTask) {
         mTTSAudioControl.stop();
+        if (speakTask != null) {
+            speakTask.stop();
+        }
     }
 
     public class SpeakTask implements Runnable {
@@ -122,6 +127,8 @@ public class TTSEngineController {
         float pitch;
         int sampleRate;
         TTSObserver observer;
+        TTSAudioControl.AudioFinishedObserver audioObserver;
+        boolean isStopped = false;
 
         /**
          * This initializes a SpeakTask for direct speak synthesis.
@@ -133,11 +140,13 @@ public class TTSEngineController {
          *                      pitch
          * @param sampleRate    sample rate to use for the synthesis
          */
-        public SpeakTask(String text, float speed, float pitch, int sampleRate) {
+        public SpeakTask(String text, float speed, float pitch, int sampleRate,
+                         TTSAudioControl.AudioFinishedObserver audioObserver) {
             this.text = text;
             this.speed = speed;
             this.pitch = pitch;
             this.sampleRate = sampleRate;
+            this.audioObserver = audioObserver;
         }
 
         /**
@@ -149,6 +158,7 @@ public class TTSEngineController {
          */
         public SpeakTask(TTSObserver observer, String text) {
             this.text = text;
+            this.audioObserver = null;
             this.observer = observer;
             // pitch & speed & sampleRate is applied by observer
             this.speed = 1.0f;
@@ -168,6 +178,7 @@ public class TTSEngineController {
         /**
          * This will run the synthesis and call either a given callback or use the AudioController
          * to directly play the synthesized voice.
+         * @TODO: unify observers
          */
         public void run() {
             Log.v(LOG_SPEAK_TASK_TAG, "run() called");
@@ -175,15 +186,24 @@ public class TTSEngineController {
 
             // Frontend processing
             String sampas = mFrontend.process(text);
+            if (isStopped) return;
             byte[] pcmBytes16Bit = mEngine.SpeakToPCM(sampas, sampleRate);
-
+            if (isStopped) return;
             if (observer == null) {
                 byte[] audio = AudioManager.applyPitchAndSpeed(pcmBytes16Bit, sampleRate, pitch, speed);
+                if (isStopped) return;
                 // Media player: use wav
-                mTTSAudioControl.play(new TTSAudioControl.AudioEntry(audio));
+                mTTSAudioControl.play(new TTSAudioControl.AudioEntry(audio, audioObserver));
             } else {
                 observer.update(pcmBytes16Bit);
             }
+        }
+
+        /**
+         * Stops a SpeakTask before it's been queued and the observers are called
+         */
+        public void stop() {
+            isStopped = true;
         }
     }
 }

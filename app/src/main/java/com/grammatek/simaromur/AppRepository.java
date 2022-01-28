@@ -19,6 +19,7 @@ import com.grammatek.simaromur.db.AppDataDao;
 import com.grammatek.simaromur.db.ApplicationDb;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
+import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.device.TTSEngineController;
 import com.grammatek.simaromur.frontend.FrontendManager;
 import com.grammatek.simaromur.device.AssetVoiceManager;
@@ -44,6 +45,7 @@ import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
  * Abstracted application repository as promoted by the Architecture Guide.
  * https://developer.android.com/topic/libraries/architecture/guide.html
  */
+//@Singleton
 public class AppRepository {
     private final static String LOG_TAG = "Simaromur_" + AppRepository.class.getSimpleName();
     private final static long NETWORK_VOICE_QUERY_TIME_MS = 1000*60*30;   // 30 min.
@@ -188,12 +190,13 @@ public class AppRepository {
      * @param speed     speed to use for the voice audio
      * @param pitch     pitch to use for the voice audio
      */
-    public void startTiroSpeak(String voiceId, String text, String langCode, float speed, float pitch) {
+    public void startTiroSpeak(String voiceId, String text, String langCode, float speed, float pitch,
+                               TTSAudioControl.AudioFinishedObserver finishedObserver) {
         final String SampleRate = "" + SAMPLE_RATE_MP3;
         SpeakRequest request = new SpeakRequest("standard", langCode,
                 "mp3", SampleRate, text, "text", voiceId);
         mMediaPlayer.stop();
-        mTiroSpeakController.streamAudio(request , mMediaPlayer);
+        mTiroSpeakController.streamAudio(request , mMediaPlayer, finishedObserver);
     }
 
     /**
@@ -222,26 +225,27 @@ public class AppRepository {
             final String SampleRate = "" + SAMPLE_RATE_WAV;
             SpeakRequest request = new SpeakRequest("standard", voice.languageCode,
                     "pcm", SampleRate, text, "text", voice.internalName);
-            mTiroSpeakController.streamAudio(request , new TTSObserver(synthCb, pitch, speed));
+            mTiroSpeakController.streamAudio(request , new TTSObserver(synthCb, pitch, speed), null);
         } else {
             Log.e(LOG_TAG, "startTiroTts: given voice is null ?!");
         }
     }
 
-    public void startTorchSpeak(Voice voice, String text, float speed, float pitch) {
+    public TTSEngineController.SpeakTask startDeviceSpeak(Voice voice, String text, float speed,
+                              float pitch, TTSAudioControl.AudioFinishedObserver observer) {
         try {
             mTTSEngineController.LoadEngine(voice);
         } catch (IOException e) {
             e.printStackTrace();
-            return;
+            return null;
         }
         // use the sample rate from the Engine
-        mTTSEngineController.StartSpeak(text, speed, pitch, 22050);
+        return mTTSEngineController.StartSpeak(text, speed, pitch, 22050, observer);
     }
 
-    public void stopTorchSpeak() {
+    public void stopDeviceSpeak(TTSEngineController.SpeakTask speakTask) {
         // use the sample rate from the Engine
-        mTTSEngineController.StopSpeak();
+        mTTSEngineController.StopSpeak(speakTask);
     }
 
     public void startTorchTTS(SynthesisCallback synthCb, Voice voice, String text, float speed, float pitch) {
@@ -253,16 +257,6 @@ public class AppRepository {
         }
         // use the sample rate from the Engine
         mTTSEngineController.StartSpeak(new TTSObserver(synthCb, pitch, speed, 22050), text);
-    }
-
-    public void startFliteSpeak(Voice voice, String text, String langCode, float speed, float pitch) {
-        try {
-            mTTSEngineController.LoadEngine(voice);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        mTTSEngineController.StartSpeak(text, speed, pitch, SAMPLE_RATE_WAV);
     }
 
     /**

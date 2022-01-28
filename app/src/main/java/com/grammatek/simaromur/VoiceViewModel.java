@@ -7,6 +7,8 @@ import androidx.lifecycle.LiveData;
 
 import com.grammatek.simaromur.db.AppData;
 import com.grammatek.simaromur.db.Voice;
+import com.grammatek.simaromur.device.TTSAudioControl;
+import com.grammatek.simaromur.device.TTSEngineController;
 
 import java.util.List;
 import java.util.Objects;
@@ -19,6 +21,7 @@ public class VoiceViewModel extends AndroidViewModel {
     private final static String LOG_TAG = "Simaromur_" + VoiceViewModel.class.getSimpleName();
 
     private final AppRepository mRepository;
+    private TTSEngineController.SpeakTask mDevSpeakTask = null;
 
     // these variables are for data caching
     private AppData mAppData;                       // application data
@@ -65,16 +68,16 @@ public class VoiceViewModel extends AndroidViewModel {
     }
 
     // Start speaking, i.e. make a speak request async.
-    public void startSpeaking(Voice voice, String text, float speed, float pitch) {
+    public void startSpeaking(Voice voice, String text, float speed, float pitch,
+                              TTSAudioControl.AudioFinishedObserver finishedObserver) {
         switch (voice.type) {
             case Voice.TYPE_TIRO:
-                mRepository.startTiroSpeak(voice.internalName, text, voice.languageCode, speed, pitch);
+                mRepository.startTiroSpeak(voice.internalName, text, voice.languageCode, speed,
+                        pitch, finishedObserver);
                 break;
             case Voice.TYPE_TORCH:
-                mRepository.startTorchSpeak(voice, text, speed, pitch);
-                break;
-            case Voice.TYPE_FLITE:
-                mRepository.startFliteSpeak(voice, text, text, speed, pitch);
+            case Voice.TYPE_FLITE:  // FALLTHROUGH
+                mDevSpeakTask = mRepository.startDeviceSpeak(voice, text, speed, pitch, finishedObserver);
                 break;
             default:
                 // other voice types follow here ..
@@ -89,9 +92,10 @@ public class VoiceViewModel extends AndroidViewModel {
         if (voice.type.equals(Voice.TYPE_TIRO)) {
             mRepository.stopTiroSpeak();
         } else if (voice.type.equals(Voice.TYPE_TORCH)) {
-            mRepository.stopTorchSpeak();
+            mRepository.stopDeviceSpeak(mDevSpeakTask);
         } else {
             // other voice types follow here ..
         }
+        mDevSpeakTask = null;
     }
 }

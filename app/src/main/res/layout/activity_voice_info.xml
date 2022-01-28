@@ -138,7 +138,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:contentDescription="@string/play_voice_title_description"
         android:ems="10"
         android:gravity="start|top"
         android:importantForAutofill="no"
@@ -163,4 +162,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/speakable_text" />
+
+    <ProgressBar
+        android:id="@+id/progressBarPlay"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:indeterminate="true"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/speak_button"
+        app:layout_constraintEnd_toEndOf="@+id/speak_button"
+        app:layout_constraintStart_toStartOf="@+id/speak_button"
+        app:layout_constraintTop_toTopOf="@+id/speak_button" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

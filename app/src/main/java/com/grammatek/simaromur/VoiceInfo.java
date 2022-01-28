@@ -8,12 +8,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.grammatek.simaromur.db.Voice;
+import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.frontend.NormalizationManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
@@ -22,7 +24,7 @@ import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_ID;
 /**
  * This class displays an info screen for a voice.
  */
-public class VoiceInfo  extends AppCompatActivity implements View.OnClickListener {
+public class VoiceInfo extends AppCompatActivity {
     private final static String LOG_TAG = "Simaromur_" + VoiceInfo.class.getSimpleName();
 
     private long mVoiceId;
@@ -63,10 +65,13 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
         TextView genderTextView = findViewById(R.id.textViewGender);
         TextView typeTextView = findViewById(R.id.textViewType);
 
-        // setup button
-        Button mButton = findViewById(R.id.speak_button);
-        mButton.setEnabled(true);
-        mButton.setOnClickListener(this);
+        // setup button / spinner
+        Button button = findViewById(R.id.speak_button);
+        button.setEnabled(true);
+        button.setOnClickListener(this::onPlayClicked);
+        ProgressBar pg = findViewById(R.id.progressBarPlay);
+        pg.setVisibility(View.INVISIBLE);
+        pg.setOnClickListener(this::onSpinnerClicked);
 
         mNetworkAvailabilityIcon = findViewById(R.id.imageStatus);
 
@@ -119,10 +124,20 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
         }
     }
 
+    /**
+     * Implements an observer to toggle the "Play" button for showing a circular spinner and back
+     * again in case audio playback is finished.
+     */
+    class AudioToggleObserver implements TTSAudioControl.AudioFinishedObserver {
+        @Override
+        public void update() {
+            runOnUiThread(VoiceInfo.this::toggleSpeakButton);
+        }
+    }
+
     // speak_button is pressed
-    @Override
-    public void onClick(View v) {
-        Log.v(LOG_TAG, "onClick");
+    public void onPlayClicked(View v) {
+        Log.v(LOG_TAG, "onPlayClicked");
         String normalizedText;
         String text = mUserText.getText().toString();
         if (mVoice.type.equals(Voice.TYPE_TIRO)) {
@@ -141,7 +156,31 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
             Log.w(LOG_TAG, "Selected voice type " + mVoice.type + " not yet supported !");
             return;
         }
+        toggleSpeakButton();
         Log.v(LOG_TAG, "Text to speak: " + normalizedText);
-        mVoiceViewModel.startSpeaking(mVoice, normalizedText, 1.0f, 1.0f);
+        mVoiceViewModel.startSpeaking(mVoice, normalizedText, 1.0f, 1.0f, new AudioToggleObserver());
+    }
+
+    // circle spinner is pressed
+    public void onSpinnerClicked(View v) {
+        Log.v(LOG_TAG, "onSpinnerClicked");
+        mVoiceViewModel.stopSpeaking(mVoice);
+        toggleSpeakButton();
+    }
+
+    /**
+     * Toggles Speak button to spinning if it was visible before, or the spinning wheel to the
+     * play button back again otherwise.
+     */
+    private void toggleSpeakButton() {
+        Button button = findViewById(R.id.speak_button);
+        ProgressBar pg = findViewById(R.id.progressBarPlay);
+        if (button.getVisibility() == View.VISIBLE) {
+            button.setVisibility(View.INVISIBLE);
+            pg.setVisibility(View.VISIBLE);
+        } else {
+            pg.setVisibility(View.INVISIBLE);
+            button.setVisibility(View.VISIBLE);
+        }
     }
 }

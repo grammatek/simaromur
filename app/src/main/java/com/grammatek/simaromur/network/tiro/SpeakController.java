@@ -3,12 +3,12 @@ package com.grammatek.simaromur.network.tiro;
 import android.util.Log;
 
 import com.grammatek.simaromur.audio.AudioObserver;
+import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -18,6 +18,7 @@ import retrofit2.Response;
 public class SpeakController implements Callback<ResponseBody> {
     private final static String LOG_TAG = "Simaromur_Tiro" + SpeakController.class.getSimpleName();
     private AudioObserver mAudioObserver;       // Audio observer given in streamAudio()
+    private TTSAudioControl.AudioFinishedObserver mAudioFinishedObserver;
     private Call<ResponseBody> mCall;           // Caller object created in streamAudio(),
                                                 // saved for being cancelable via stop().
 
@@ -28,7 +29,7 @@ public class SpeakController implements Callback<ResponseBody> {
      * @param request           the request to be sent to the Tiro Speak API
      * @param audioObserver     the audio observer to be used for available audio data / error
      */
-    public synchronized void streamAudio(SpeakRequest request, AudioObserver audioObserver) {
+    public synchronized void streamAudio(SpeakRequest request, AudioObserver audioObserver, TTSAudioControl.AudioFinishedObserver audioFinishedObserver) {
         Log.v(LOG_TAG, "streamAudio: request: " + request);
         if (mCall != null) {
             Log.w(LOG_TAG, "streamAudio: warning: stopping ongoing request: " + request);
@@ -36,6 +37,7 @@ public class SpeakController implements Callback<ResponseBody> {
         }
         mCall = buildSpeakCall(request);
         mAudioObserver = audioObserver;
+        mAudioFinishedObserver = audioFinishedObserver;
         // async request execution
         mCall.enqueue(this);
     }
@@ -124,6 +126,7 @@ public class SpeakController implements Callback<ResponseBody> {
             }
             mAudioObserver.error(errMsg);
         }
+        mAudioFinishedObserver.update();
     }
 
     @Override
