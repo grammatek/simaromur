@@ -115,7 +115,7 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
                 App.getAppRepository().showTtsBackendWarningDialog(this);
             }
         } else if (mVoice.type.equals(Voice.TYPE_TORCH)) {
-            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_action_send);
+            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_action_download);
         }
     }
 
@@ -135,7 +135,6 @@ public class VoiceInfo  extends AppCompatActivity implements View.OnClickListene
             NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
             normalizedText = normalizationManager.process(text);
         } else if (mVoice.type.equals(Voice.TYPE_TORCH)) {
-            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_action_send);
             // normalization is done in the Engine itself
             normalizedText = text;
         } else {
