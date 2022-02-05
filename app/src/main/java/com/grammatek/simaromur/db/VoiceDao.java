@@ -7,6 +7,8 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import com.grammatek.simaromur.device.pojo.DeviceVoice;
+
 import java.util.List;
 
 @Dao
@@ -54,4 +56,8 @@ public interface VoiceDao {
     // Return voices according to list of given types
     @Query("SELECT * FROM voice_table WHERE type in (:localTypeNames)")
     public List<Voice> getVoicesForType(List<String> localTypeNames);
+
+    // Return voice belonging to given voice id
+    @Query("SELECT * FROM voice_table WHERE voiceId in (:voiceId)")
+    Voice findVoiceWithId(long voiceId);
 }

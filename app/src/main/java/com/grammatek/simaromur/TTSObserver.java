@@ -6,6 +6,7 @@ import android.speech.tts.SynthesisCallback;
 import android.util.Log;
 
 import com.grammatek.simaromur.audio.AudioObserver;
+import com.grammatek.simaromur.network.ConnectionCheck;
 
 import static android.speech.tts.TextToSpeech.ERROR_NETWORK;
 import static com.grammatek.simaromur.audio.AudioManager.N_CHANNELS;
@@ -19,7 +20,15 @@ public class TTSObserver implements AudioObserver {
     private final float mPitch;
     private final float mSpeed;
     private int mSampleRate = SAMPLE_RATE_WAV;
+    private boolean mUsesNetwork = false;
 
+    /**
+     * Constructor called for device voice synthesis
+     * @param synthCb       Callback to feed audio chunks with for playback
+     * @param pitch         Audio pitch factor
+     * @param speed         Audio speed factor
+     * @param sampleRate    Sample rate used for the audio playback
+     */
     public TTSObserver(SynthesisCallback synthCb, float pitch, float speed, int sampleRate) {
         mSynthCb = synthCb;
         mPitch = pitch;
@@ -27,10 +36,17 @@ public class TTSObserver implements AudioObserver {
         mSampleRate = sampleRate;
     }
 
+    /**
+     * Constructor called for network voice synthesis.
+     * @param synthCb       Callback to feed audio chunks with for playback
+     * @param pitch         Audio pitch factor
+     * @param speed         Audio speed factor
+     */
     public TTSObserver(SynthesisCallback synthCb, float pitch, float speed) {
         mSynthCb = synthCb;
         mPitch = pitch;
         mSpeed = speed;
+        mUsesNetwork = true;
     }
 
     // interface implementation
@@ -50,7 +66,7 @@ public class TTSObserver implements AudioObserver {
         }
         final byte[] audioData = applyPitchAndSpeed(ttsData, mPitch, mSpeed);
         int offset = 0;
-        startSynthesis(mSynthCb, mSampleRate);
+        startSynthesis(mSynthCb, mSampleRate, mUsesNetwork);
         final int maxBytes = mSynthCb.getMaxBufferSize();
 
         while (offset < audioData.length) {
@@ -65,7 +81,13 @@ public class TTSObserver implements AudioObserver {
         mSynthCb.done();
     }
 
-    private static void startSynthesis(SynthesisCallback mSynthCb, int sampleRate) {
+    private static void startSynthesis(SynthesisCallback mSynthCb, int sampleRate, boolean usesNetwork) {
+        if (usesNetwork && !ConnectionCheck.isTTSServiceReachable()) {
+            Log.e(LOG_TAG, "TTSObserver error: Service is not reachable ?!");
+            mSynthCb.error(ERROR_NETWORK);
+            // TODO: play connection problem wav ?
+            return;
+        }
         if (! mSynthCb.hasStarted()) {
             mSynthCb.start(sampleRate, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
         }

@@ -107,7 +107,7 @@ public class SpeakController implements Callback<ResponseBody> {
                 // @todo: body.bytes() loads the whole response into memory. We should change this
                 //        to body.byteStream() to support streamed responses without further
                 //        network delays. Then we'd need to handle the end of response via a special
-                //        done() call in the observer.
+                //        done() call in the observer. (or e.g. mAudioFinishedObserver ?)
                 byte[] data = body.bytes();
                 Log.v(LOG_TAG, "API returned: " + data.length + " bytes");
                 mAudioObserver.update(data);
@@ -126,7 +126,10 @@ public class SpeakController implements Callback<ResponseBody> {
             }
             mAudioObserver.error(errMsg);
         }
-        mAudioFinishedObserver.update();
+        // not yet used when executed via TTS service
+        if (mAudioFinishedObserver != null) {
+            mAudioFinishedObserver.update();
+        }
     }
 
     @Override

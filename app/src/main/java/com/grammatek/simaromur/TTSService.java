@@ -3,6 +3,7 @@ package com.grammatek.simaromur;
 import com.grammatek.simaromur.frontend.NormalizationManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
+import android.content.Intent;
 import android.media.AudioFormat;
 import android.provider.Settings;
 import android.speech.tts.SynthesisCallback;
@@ -15,12 +16,16 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.Set;
 
 import static android.speech.tts.TextToSpeech.ERROR_SERVICE;
+import static android.speech.tts.TextToSpeech.LANG_MISSING_DATA;
 import static com.grammatek.simaromur.audio.AudioManager.N_CHANNELS;
 import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
+
+import androidx.lifecycle.LiveData;
 
 /**
  * Implements the SIM Engine as a TextToSpeechService
@@ -33,17 +38,28 @@ public class TTSService extends TextToSpeechService {
     @Override
     public void onCreate() {
         Log.i(LOG_TAG, "onCreate()");
+
         mRepository = App.getAppRepository();
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
+        mRepository.streamTiroVoices("");
+
+        Locale[] locales = Locale.getAvailableLocales();
     }
 
     // mandatory
     @Override
     protected synchronized int onIsLanguageAvailable(String language, String country, String variant) {
-        Log.i(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+")");
-        // @todo: we should return LANG_MISSING_DATA, for network voices without network
-        return mRepository.isLanguageAvailable(language, country, variant);
+        Log.v(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+")");
+        if (variant.endsWith(ApiDbUtil.NET_VOICE_SUFFIX)) {
+            if (!ConnectionCheck.isTTSServiceReachable()) {
+                Log.v(LOG_TAG, "onIsLanguageAvailable: TTS API NOT reachable");
+                return LANG_MISSING_DATA;
+            }
+        }
+        int rv = mRepository.isLanguageAvailable(language, country, variant);
+        Log.v(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+"): " + rv);
+        return rv;
     }
 
     // @todo: seems to be deprecated, but still it's mandatory to implement it ...
@@ -55,12 +71,18 @@ public class TTSService extends TextToSpeechService {
     }
 
     // mandatory
-    // @todo: What should we do here instead of checking the language ? Should we check
-    //        for network connectivity ? And then return LANG_MISSING_DATA ?
     @Override
     protected synchronized int onLoadLanguage(String language, String country, String variant) {
         Log.i(LOG_TAG, "onLoadLanguage("+language+","+country+","+variant+")");
-        return onIsLanguageAvailable(language, country, variant);
+        if (variant.endsWith(ApiDbUtil.NET_VOICE_SUFFIX)) {
+            if (!ConnectionCheck.isTTSServiceReachable()) {
+                Log.v(LOG_TAG, "onLoadLanguage: TTS API NOT reachable");
+                return LANG_MISSING_DATA;
+            }
+        }
+        int rv = onIsLanguageAvailable(language, country, variant);
+        Log.i(LOG_TAG, "onLoadLanguage: returns " + rv);
+        return rv;
     }
 
     // mandatory
@@ -95,6 +117,7 @@ public class TTSService extends TextToSpeechService {
                 + voiceName + " speed: " + speechrate + " pitch: " + pitch);
         String loadedVoiceName = mRepository.getLoadedVoiceName();
         if (loadedVoiceName.equals("")) {
+            // This happens the first time the service comes up
             String voiceNameToLoad = voiceName != null ? voiceName : variant;
             if (TextToSpeech.SUCCESS == mRepository.loadVoice(voiceNameToLoad)) {
                 Log.v(LOG_TAG, "onSynthesizeText: loaded voice ("+voiceNameToLoad+")");
@@ -111,7 +134,13 @@ public class TTSService extends TextToSpeechService {
         }
 
         if (!loadedVoiceName.equals(voiceName)) {
-            Log.e(LOG_TAG, "onSynthesizeText: Loaded voice ("+loadedVoiceName+") and given voice ("+voiceName+") differ ?!");
+            // Here we bump into the following problem: Android TTS doesn't officially support multiple voices for
+            // the same locale, nor voices that return a different locale than Locale.getAvailableLocales(). Nevertheless
+            // we return multiple voices for is_IS, by using the voice name as the variant of the assigned locale. To stick
+            // to a voice given us in onLoadVoice(), we need to persist this as our default voice for is_IS. The method
+            // onLoadVoice() seems to only be called when the user chooses a voice via the TTS settings, not if the service
+            // starts. By persisting the loaded voice name, we can use it immediately without onLoadVoice() being called.
+            Log.w(LOG_TAG, "onSynthesizeText: Loaded voice ("+loadedVoiceName+") and given voice ("+voiceName+") differ ?!");
         }
 
         com.grammatek.simaromur.db.Voice voice = mRepository.getVoiceForName(loadedVoiceName);
@@ -234,7 +263,7 @@ public class TTSService extends TextToSpeechService {
     {
         Log.i(LOG_TAG, "onGetDefaultVoiceNameFor("+language+","+country+","+variant+")");
         String defaultVoice = mRepository.getDefaultVoiceFor(language, country, variant);
-        Log.i(LOG_TAG, "onGetDefaultVoiceNameFor: " + defaultVoice);
+        Log.i(LOG_TAG, "onGetDefaultVoiceNameFor: voice name is " + defaultVoice);
         return defaultVoice;
     }
 
@@ -287,7 +316,7 @@ public class TTSService extends TextToSpeechService {
         Log.i(LOG_TAG, "onIsValidVoiceName("+name+")");
         for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
             if (voice.name.equals(name)) {
-                Log.v(LOG_TAG, "SUCCESS");
+                Log.v(LOG_TAG, "voice name is valid");
                 return TextToSpeech.SUCCESS;
             }
         }
@@ -307,12 +336,12 @@ public class TTSService extends TextToSpeechService {
     {
         Log.i(LOG_TAG, "onLoadVoice("+name+")");
         if (onIsValidVoiceName(name) == TextToSpeech.SUCCESS) {
-            Log.v(LOG_TAG, "SUCCESS");
             if (TextToSpeech.SUCCESS == mRepository.loadVoice(name)) {
+                Log.v(LOG_TAG, "voice loading successful");
                 return TextToSpeech.SUCCESS;
             }
         }
-        Log.e(LOG_TAG, "ERROR");
+        Log.e(LOG_TAG, "Voice loading FAILED");
         return TextToSpeech.ERROR;
     }
 }

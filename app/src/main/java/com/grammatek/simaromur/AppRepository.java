@@ -1,5 +1,7 @@
 package com.grammatek.simaromur;
 
+import static android.speech.tts.TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE;
+
 import android.app.AlertDialog;
 import android.app.Application;
 import android.content.ActivityNotFoundException;
@@ -21,6 +23,7 @@ import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
 import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.device.TTSEngineController;
+import com.grammatek.simaromur.device.pojo.DeviceVoice;
 import com.grammatek.simaromur.frontend.FrontendManager;
 import com.grammatek.simaromur.device.AssetVoiceManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
@@ -105,8 +108,19 @@ public class AppRepository {
         mAppData = mAppDataDao.getLiveAppData();
         mAppData.observeForever(appData -> {
             Log.v(LOG_TAG, "mAppData update: " + appData);
+            if (appData == null) {
+                return;
+            }
             // Update cached appData
             mCachedAppData = appData;
+            // preload selected voice
+            Voice selectedVoice = mVoiceDao.findVoiceWithId(mCachedAppData.currentVoiceId);
+            if (mSelectedVoice == null || (!mSelectedVoice.name.equals(selectedVoice.name))) {
+                if (selectedVoice != null) {
+                    // this can happen if DB is fresh
+                    loadVoice(selectedVoice.name);
+                }
+            }
         });
         mAllVoices = mVoiceDao.getAllVoices();
         mAllVoices.observeForever(voices -> {
@@ -334,7 +348,7 @@ public class AppRepository {
                 la = TextToSpeech.LANG_COUNTRY_AVAILABLE;
             }
             if (supportsVariant) {
-                la = TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE;
+                la = LANG_COUNTRY_VAR_AVAILABLE;
             }
         }
         Log.v(LOG_TAG, "isLanguageAvailable: returns " + la);
@@ -356,34 +370,99 @@ public class AppRepository {
         Log.v(LOG_TAG, "getDefaultVoiceFor: (" + iso3Language + "/" + iso3Country + "/" + variant + ")");
         String rv = null;
 
+        if (isLanguageAvailable(iso3Language, iso3Country, variant) == LANG_COUNTRY_VAR_AVAILABLE) {
+            return variant;
+        }
+
+        // only at first start, if user has neither selected a voice, nor the selected voice is
+        // persisted
         if (mSelectedVoice == null) {
-            Log.d(LOG_TAG, "getDefaultVoiceFor: selected voice not yet loaded");
-            if (mCachedAppData != null && mCachedAppData.currentVoiceId != 0) {
-                for (final Voice voice : getCachedVoices()) {
-                    if (voice.voiceId == mCachedAppData.currentVoiceId) {
-                        mSelectedVoice = voice;
-                        Log.d(LOG_TAG, "getDefaultVoiceFor: found preferred voice in list");
+            if (variant.isEmpty()) {
+                // no specific voice selected, decide default voice depending on network availability /
+                // or voice RTF in case of an on-device-voice
+                Voice bestVoice = null;
+                if (ConnectionCheck.isTTSServiceReachable()) {
+                    bestVoice = selectBestNetworkVoice();
+                    if (bestVoice == null ) {
+                        Log.v(LOG_TAG, "getDefaultVoiceFor(): no TTS voices (yet), trying on-device voices ..");
+                        bestVoice = selectFastestOnDeviceVoice();
                     }
+                } else {
+                    bestVoice = selectFastestOnDeviceVoice();
+                }
+                if (bestVoice != null ) {
+                    rv = bestVoice.name;
                 }
             }
+        } else {
+            rv = mSelectedVoice.name;
         }
 
-        /* Favor our selected voice before falling back to other choices */
-        if (mSelectedVoice != null && mSelectedVoice.supportsIso3(iso3Language, iso3Country, variant)) {
-            return mSelectedVoice.name;
-        }
+        // TODO DS: check for unsupported language
+        //          maybe the user has a non-Icelandic locale set and selects voice ("use system locale")
+        //          then we need to decide what we return here as default voice
+        //          rv = null;
+        Log.v(LOG_TAG, "getDefaultVoiceFor(): chosen default voice: (" + rv + ")");
+        return rv;
+    }
 
-        Log.v(LOG_TAG, "getDefaultVoiceFor: not matching selected voice");
+    /**
+     * Select the currently fastest on device voice, as propagated by its RTF (Realtime factor).
+     *
+     * @return Voice in DB that has the fastest RTF.
+     */
+    private Voice selectFastestOnDeviceVoice() {
+        DeviceVoice bestODVoice = null;
 
-        for (final Voice voice : getCachedVoices()) {
-            // if the voice is the exact fit for given parameters, return it directly
-            if (voice.supportsIso3(iso3Language, iso3Country, variant)) {
-                rv = voice.name;
-                break;
+        for (DeviceVoice voice: mAVM.getVoiceList().Voices) {
+            if (bestODVoice == null) {
+                bestODVoice = voice;
+                continue;
+            }
+            if (voice.RTF > bestODVoice.RTF) {
+                bestODVoice = voice;
             }
         }
-        Log.v(LOG_TAG, "chosen default voice: (" + rv + ")");
-        return rv;
+        if (bestODVoice == null) {
+            throw (new RuntimeException("No on device voices available ?!"));
+        }
+        // map between bestVoice and Voice
+        return mapDeviceVoiceToDbVoice(bestODVoice);
+    }
+
+    /**
+     * Select the "best" network voice.
+     * On the long term, this has to be based on metrics. For now, we just use the first one in
+     * the list of available network voices.
+     *
+     * @return Best network voice in DB
+     */
+    private Voice selectBestNetworkVoice() {
+        for (Voice voice:getCachedVoices()) {
+            if (voice.needsNetwork()) {
+                return voice;
+            }
+        }
+        Log.w(LOG_TAG, "No network voices available ?!");
+        return null;
+    }
+
+    /**
+     * Maps given DeviceVoice to database voice.
+     *
+     * @param odVoice   on device voice
+     * @return  corresponding db Voice
+     */
+    private Voice mapDeviceVoiceToDbVoice(DeviceVoice odVoice) {
+        if (odVoice == null) return null;
+        Voice dbVoiceOD = odVoice.convertToDbVoice();
+        for (Voice voice:getCachedVoices()) {
+            if (voice == dbVoiceOD) {
+                return voice;
+            }
+        }
+        Log.w(LOG_TAG, "On device voice not in DB ?!");
+        return null;
     }
 
     public void showTtsBackendWarningDialog(Context context) {
@@ -503,7 +582,10 @@ public class AppRepository {
             // delete all voices
             final List<Voice> allDbVoices = mVoiceDao.getAnyVoices();
             for (Voice voice : allDbVoices) {
-                mVoiceDao.deleteVoices(voice);
+                if (voice.url.equals("assets")) {
+                    Log.w(LOG_TAG, "assetVoiceRunnable Delete asset voice " + voice.name);
+                    mVoiceDao.deleteVoices(voice);
+                }
             }
 
             final List<Voice> assetVoices = mAVM.getVoiceDbList();

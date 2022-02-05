@@ -25,6 +25,9 @@ public class DeviceVoice {
     public String Type;
     @SerializedName("version")
     public String Version;
+    // Realtime factor, the higher, the better; measured on a Pixel-6 phone
+    @SerializedName("rtf")
+    public Float RTF;
     @SerializedName("files")
     public List<DeviceVoiceFile> Files;
 
