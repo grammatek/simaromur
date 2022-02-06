@@ -115,9 +115,8 @@ public class AppRepository {
             mCachedAppData = appData;
             // preload selected voice
             Voice selectedVoice = mVoiceDao.findVoiceWithId(mCachedAppData.currentVoiceId);
-            if (mSelectedVoice == null || (!mSelectedVoice.name.equals(selectedVoice.name))) {
-                if (selectedVoice != null) {
-                    // this can happen if DB is fresh
+            if (selectedVoice != null) {
+                if (mSelectedVoice == null || (!mSelectedVoice.name.equals(selectedVoice.name))) {
                     loadVoice(selectedVoice.name);
                 }
             }
