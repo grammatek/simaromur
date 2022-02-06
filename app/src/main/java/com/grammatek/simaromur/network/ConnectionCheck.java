@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class ConnectionCheck {
     private final static String LOG_TAG = "Simaromur_" + ConnectionCheck.class.getSimpleName();
     private final Context context;
-    private ScheduledThreadPoolExecutor sch;
+    private final ScheduledThreadPoolExecutor sch;
     private ScheduledFuture<?> periodicFuture;
     private static boolean isNetworkConnected = false;
     private static boolean isTTSServiceReachable = false;

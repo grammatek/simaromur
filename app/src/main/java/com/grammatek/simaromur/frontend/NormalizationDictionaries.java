@@ -412,18 +412,18 @@ public class NormalizationDictionaries {
     }
 
     //TODO: take care not to normalize the superscripts away when doing unicode normalization!
-    private static Map<String, String> dimensionBefore = new HashMap<String, String>() {{
+    private static final Map<String, String> dimensionBefore = new HashMap<String, String>() {{
         put("²", "fer");
         // put("2", "fer");
         // put("³", "rúm");
         // put("3", "rúm");
     }};
-    private static Map<String, String> dimensionAfter = new HashMap<String, String>() {{
+    private static final Map<String, String> dimensionAfter = new HashMap<String, String>() {{
         put("f", "fer");
         put("fer", "fer");
         // put("rúm", "rúm");
     }};
-    private static Map<String, String> prefixMeterDimension = new HashMap<String, String>() {{
+    private static final Map<String, String> prefixMeterDimension = new HashMap<String, String>() {{
         put("", "");
         //  put("m", "milli");
         // put("[cs]", "senti");
@@ -483,7 +483,7 @@ public class NormalizationDictionaries {
         return areaDict;
     }
 
-    private static Map<String, String> volumeDict = new HashMap<>();
+    private static final Map<String, String> volumeDict = new HashMap<>();
 
     public static Map<String, String> getVolumeDict() {
         if (!volumeDict.isEmpty())
@@ -510,7 +510,7 @@ public class NormalizationDictionaries {
         return volumeDict;
     }
 
-    private static Map<String, String> timeDict = new HashMap<>();
+    private static final Map<String, String> timeDict = new HashMap<>();
 
     public static Map<String, String> getTimeDict() {
         if  (!timeDict.isEmpty())

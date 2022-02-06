@@ -20,13 +20,13 @@ public interface VoiceDao {
     void insertVoice(Voice voice);
 
     @Update
-    public void updateVoices(Voice... voices);
+    void updateVoices(Voice... voices);
 
     @Delete
     void deleteVoices(Voice... voices);
 
     @Query("SELECT * FROM voice_table as voices order by voices.type desc, voices.internal_name asc")
-    public LiveData<List<Voice>> getAllVoices();
+    LiveData<List<Voice>> getAllVoices();
 
     /**
      * Returns all voices without using LiveData container.
@@ -36,26 +36,26 @@ public interface VoiceDao {
      * @return List of all voices or null in case there are no voices yet.
      */
     @Query("SELECT * FROM voice_table")
-    public List<Voice> getAnyVoices();
+    List<Voice> getAnyVoices();
 
     @Query("SELECT * FROM voice_table WHERE name LIKE :name ")
-    public List<Voice> findVoiceWithName(String name);
+    List<Voice> findVoiceWithName(String name);
 
     @Query("SELECT * FROM voice_table WHERE name IS :name AND internal_name IS :internalName" +
             " AND language_code IS :languageCode AND language_name IS :languageName AND variant IS :variant")
-    public Voice findVoice(String name, String internalName, String languageCode,  String languageName,
-                           String variant);
+    Voice findVoice(String name, String internalName, String languageCode, String languageName,
+                    String variant);
 
     @Query("SELECT * FROM voice_table WHERE type LIKE 'tiro' ")
-    public List<Voice> findNetworkVoices();
+    List<Voice> findNetworkVoices();
 
     // Return voices registered in Assets
     @Query("SELECT * FROM voice_table WHERE url in ('assets') ")
-    public List<Voice> getAssetVoices();
+    List<Voice> getAssetVoices();
 
     // Return voices according to list of given types
     @Query("SELECT * FROM voice_table WHERE type in (:localTypeNames)")
-    public List<Voice> getVoicesForType(List<String> localTypeNames);
+    List<Voice> getVoicesForType(List<String> localTypeNames);
 
     // Return voice belonging to given voice id
     @Query("SELECT * FROM voice_table WHERE voiceId in (:voiceId)")

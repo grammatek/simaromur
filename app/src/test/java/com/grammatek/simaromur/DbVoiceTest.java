@@ -30,7 +30,7 @@ public class DbVoiceTest {
             avm = new AssetVoiceManager(context);
         }
         catch (IOException e) {
-            Log.e(LOG_TAG, "Exception in test: " +  e.toString());
+            Log.e(LOG_TAG, "Exception in test: " + e);
             assert(false);
         }
     }

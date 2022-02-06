@@ -17,7 +17,7 @@ import java.util.Map;
  */
 
 public class Pronunciation {
-    private Context mContext;
+    private final Context mContext;
     private NativeG2P mG2P;
     private Map<String, PronDictEntry> mPronDict;
 

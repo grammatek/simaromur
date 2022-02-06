@@ -40,10 +40,10 @@ public class NormalizationManager {
 
     private final Context mContext;
     private final POSTaggerME mPosTagger;
-    private TTSUnicodeNormalizer mUnicodeNormalizer;
-    private Tokenizer mTokenizer;
-    private TTSNormalizer mTTSNormalizer;
-    private String mAssetsPath;
+    private final TTSUnicodeNormalizer mUnicodeNormalizer;
+    private final Tokenizer mTokenizer;
+    private final TTSNormalizer mTTSNormalizer;
+    private final String mAssetsPath;
 
     public NormalizationManager(Context context) {
         mContext = context;
@@ -124,7 +124,7 @@ public class NormalizationManager {
 
     // Get the probabilities of the tags given to the tokens to inspect
     private void printProbabilities(String[] tags, POSTaggerME posTagger, String[] tokens) {
-        double probs[] = posTagger.probs();
+        double[] probs = posTagger.probs();
         Log.v(LOG_TAG, "Token\t:\tTag\t:\tProbability\n--------------------------");
         for(int i=0;i<tokens.length;i++){
             Log.v(LOG_TAG, tokens[i]+"\t:\t"+tags[i]+"\t:\t"+probs[i]);

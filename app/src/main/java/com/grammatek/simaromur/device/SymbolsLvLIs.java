@@ -16,7 +16,7 @@ public class SymbolsLvLIs {
     public enum Type {
         TYPE_SAMPA,     // Speech Assessment Methods Phonetic Alphabet
         TYPE_IPA        // International Phonetic Alphabet
-    };
+    }
 
     // These symbols map phonemes to training input vectors. The order of symbols is absolutely
     // critical and should never be changed without making sure that the trained model corresponds.

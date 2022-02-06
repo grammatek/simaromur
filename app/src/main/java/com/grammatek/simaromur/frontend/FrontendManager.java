@@ -19,7 +19,7 @@ public class FrontendManager {
     private NormalizationManager mNormalizationManager;
     private Pronunciation mPronunciation;
 
-    private Context mContext;
+    private final Context mContext;
 
     public FrontendManager(Context context) {
         initializeNormalizationManager(context);

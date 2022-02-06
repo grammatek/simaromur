@@ -44,7 +44,7 @@ public class InfoViewer extends ListActivity {
 
     private class GetInformation extends AsyncTask<Void, Void, Void> {
 
-        private ProgressDialog progress;
+        private final ProgressDialog progress;
 
         public GetInformation(ProgressDialog progress) {
             this.progress = progress;
