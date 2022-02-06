@@ -82,6 +82,7 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
 
     @Override
     public synchronized void onResponse(@NotNull Call<List<VoiceResponse>> call, Response<List<VoiceResponse>> response) {
+        Log.v(LOG_TAG, "onResponse: " + response.code());
         assert (mVoiceListObserver != null);
         if(response.isSuccessful()) {
             final List<VoiceResponse> netVoicesList = response.body();
@@ -101,7 +102,7 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
 
     @Override
     public void onFailure(@NotNull Call<List<VoiceResponse>> call, Throwable t) {
-        Log.v(LOG_TAG, "onFailure: " + t.getLocalizedMessage());
+        Log.w(LOG_TAG, "onFailure: " + t.getLocalizedMessage());
         assert (mVoiceListObserver != null);
         if (t instanceof IOException) {
             if (call.isCanceled()) {

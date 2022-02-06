@@ -12,6 +12,9 @@ import android.util.Log;
 
 import com.grammatek.simaromur.db.Voice;
 
+/**
+ * This activity is started, when one presses on "Símarómur raddir" inside TTSManager.
+ */
 public class VoiceManager extends AppCompatActivity {
     private final static String LOG_TAG = "Simaromur_" + VoiceManager.class.getSimpleName();
     public static final String EXTRA_DATA_VOICE_ID = "voice_model_id";

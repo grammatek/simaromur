@@ -118,7 +118,6 @@ public class ConnectionCheck {
             socket.connect(inetSocketAddress, timeoutInMs);
             return true;
         } catch (java.io.IOException e) {
-            e.printStackTrace();
             return false;
         }
     }

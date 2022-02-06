@@ -33,7 +33,6 @@ public class App extends Application {
         return getApplication().getApplicationContext();
     }
 
-
     public static String getAbsoluteFilePath(String relativePath) {
         if (Utility.isExternalStorageWritable()) {
             return new File(getContext().getExternalFilesDir(null), relativePath).getPath();
