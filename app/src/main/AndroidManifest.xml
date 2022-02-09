@@ -50,17 +50,6 @@
             android:targetActivity=".TTSManager" />
 
         <activity
-            android:name=".DownloadVoiceData"
-            android:label="@string/voice_list_update"
-            android:theme="@android:style/Theme.Holo"
-            android:configChanges="orientation">
-            <intent-filter>
-                <action android:name="android.speech.tts.engine.INSTALL_TTS_DATA" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-
-        <activity
             android:name=".VoiceManager"
             android:configChanges="orientation"
             android:label="@string/simaromur_voice_manager"
@@ -95,9 +84,6 @@
         </activity>
         <activity
             android:name=".InfoViewer"
-            android:configChanges="keyboardHidden|orientation" />
-        <activity
-            android:name=".TTSDemo"
             android:configChanges="keyboardHidden|orientation" />
 
         <meta-data

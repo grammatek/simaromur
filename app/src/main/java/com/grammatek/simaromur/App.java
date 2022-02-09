@@ -2,6 +2,7 @@ package com.grammatek.simaromur;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
 
 import com.google.firebase.FirebaseApp;
@@ -33,8 +34,14 @@ public class App extends Application {
         return getApplication().getApplicationContext();
     }
 
+    /* Checks if external storage is available for read and write */
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        return Environment.MEDIA_MOUNTED.equals(state);
+    }
+
     public static String getAbsoluteFilePath(String relativePath) {
-        if (Utility.isExternalStorageWritable()) {
+        if (isExternalStorageWritable()) {
             return new File(getContext().getExternalFilesDir(null), relativePath).getPath();
         } else {
             return new File(getContext().getFilesDir(), relativePath).getPath();
@@ -49,7 +56,7 @@ public class App extends Application {
     }
 
     public static String getAbsoluteDirPath(String relativePath) {
-        if (Utility.isExternalStorageWritable()) {
+        if (isExternalStorageWritable()) {
             return new File(getContext().getExternalFilesDir(null), relativePath).getPath();
         } else {
             return new File(getContext().getFilesDir(), relativePath).getParent();
