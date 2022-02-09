@@ -1,6 +1,6 @@
 /**
  * Created by Daniel Schnell.
- * Copyright (c) 2021 Grammatek ehf. All rights reserved.
+ * Copyright (c) 2021-2022 Grammatek ehf. All rights reserved.
  */
 
 #ifndef SIMAROMUR_LOGGER_H

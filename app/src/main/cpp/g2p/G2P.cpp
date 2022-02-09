@@ -1,6 +1,6 @@
 /**
  * Created by Daniel Schnell on 11.03.21.
- * Copyright (C) 2021 Grammatek ehf. All rights reserved.
+ * Copyright (C) 2021-2022 Grammatek ehf. All rights reserved.
  */
 
 #include "G2P.h"

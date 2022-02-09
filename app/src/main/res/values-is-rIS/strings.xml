@@ -37,7 +37,7 @@
     <string name="info_android_version">Android útgáfa</string>
     <string name="info_supported_abis">Studd ABIs</string>
     <string name="info_phone_model">Gerð síma</string>
-    <string name="info_about">© (2021) Grammatek ehf.\nhttps://www.grammatek.com\nByggt á upprunalegri vinnu frá Carnegie Mellon University © (1999–2012)</string>
+    <string name="info_about">© (2021–2022) Grammatek ehf.\nhttps://www.grammatek.com\nByggt á upprunalegri vinnu frá Carnegie Mellon University © (1999–2012)</string>
     <string name="info_repo_url">https://github.com/grammatek/simaromur</string>
     <string name="info_benchmark">Viðmið</string>
     <string name="info_benchmark_value">sinnum hraðar en rauntími</string>
