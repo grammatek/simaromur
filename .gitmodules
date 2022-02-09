@@ -1,0 +1,3 @@
+[submodule "app/src/main/assets/voices"]
+	path = app/src/main/assets/voices
+	url = https://github.com/grammatek/simaromur_voices

@@ -18,6 +18,7 @@
     <string name="voice_name_title">Nafn</string>
     <string name="voice_gender_title">Kyn</string>
     <string name="voice_availability_title">Staða</string>
+    <string name="voice_type">Tegund</string>
     <string name="speak_voice_title">Spila</string>
     <string name="play_voice_title_description">Lesa sýndan texta</string>
     <string name="is_IS">Íslenska</string>
@@ -52,4 +53,8 @@
     <string name="info_privacy_notice">Persónuvernd</string>
     <string name="info_privacy_notice_url">https://www.grammatek.com/legal#simaromur</string>
     <string name="privacy_notice">Símarómur er app sem les texta af skjám snjallsíma. Textarnir, sem forritið á að lesa, eru sendir á vefþjón vinnsluaðila, sem býr til talútgáfur af textunum. Engum notendaupplýsingum, eins og IP-tölum síma, er safnað gegnum Símaróm. Öllum textum og hljóðupptökum er eytt jafn óðum og því engir textar eða aðrar upplýsingar frá notendum vistaðar á vegum kerfisins. Sjá https://www.grammatek.com/legal#simaromur</string>
+    <string name="crashlytics_notice">"Til þess að aðstoða okkur við að bæta Símaróm getur þú leyft okkur að safna nafnlausri notandatölfræði og villuskýrslum gegnum þriðja aðila: Google Firebase. Ef þú gefur samþykki þitt verður IP-tala þín einungis vistuð (nafnlaus) í þessum tilgangi. Þú getur dregið samþykki þitt til baka hvenær sem er gegnum upplýsingaskjá Símaróms. Nánari upplýsingar um meðferð persónuupplýsinga er að finna á https://www.grammatek.com/legal#simaromur"</string>
+    <string name="crashlytics_title">Bæta Símaróm</string>
+    <string name="type_local">á tæki</string>
+    <string name="type_network">netrödd</string>
 </resources>

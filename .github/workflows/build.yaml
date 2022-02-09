@@ -50,7 +50,10 @@ jobs:
         run: .github/scripts/dl_3rdparty.sh
         shell: bash
       - name: "Build the app"
-        run: ./gradlew build
+        run: |
+          git submodule update --init
+          ./gradlew assemble
+          ./gradlew build -x test
       - name: Archive reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v2

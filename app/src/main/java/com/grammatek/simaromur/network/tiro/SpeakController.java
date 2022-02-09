@@ -3,12 +3,12 @@ package com.grammatek.simaromur.network.tiro;
 import android.util.Log;
 
 import com.grammatek.simaromur.audio.AudioObserver;
+import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -18,6 +18,7 @@ import retrofit2.Response;
 public class SpeakController implements Callback<ResponseBody> {
     private final static String LOG_TAG = "Simaromur_Tiro" + SpeakController.class.getSimpleName();
     private AudioObserver mAudioObserver;       // Audio observer given in streamAudio()
+    private TTSAudioControl.AudioFinishedObserver mAudioFinishedObserver;
     private Call<ResponseBody> mCall;           // Caller object created in streamAudio(),
                                                 // saved for being cancelable via stop().
 
@@ -28,7 +29,7 @@ public class SpeakController implements Callback<ResponseBody> {
      * @param request           the request to be sent to the Tiro Speak API
      * @param audioObserver     the audio observer to be used for available audio data / error
      */
-    public synchronized void streamAudio(SpeakRequest request, AudioObserver audioObserver) {
+    public synchronized void streamAudio(SpeakRequest request, AudioObserver audioObserver, TTSAudioControl.AudioFinishedObserver audioFinishedObserver) {
         Log.v(LOG_TAG, "streamAudio: request: " + request);
         if (mCall != null) {
             Log.w(LOG_TAG, "streamAudio: warning: stopping ongoing request: " + request);
@@ -36,6 +37,7 @@ public class SpeakController implements Callback<ResponseBody> {
         }
         mCall = buildSpeakCall(request);
         mAudioObserver = audioObserver;
+        mAudioFinishedObserver = audioFinishedObserver;
         // async request execution
         mCall.enqueue(this);
     }
@@ -105,7 +107,7 @@ public class SpeakController implements Callback<ResponseBody> {
                 // @todo: body.bytes() loads the whole response into memory. We should change this
                 //        to body.byteStream() to support streamed responses without further
                 //        network delays. Then we'd need to handle the end of response via a special
-                //        done() call in the observer.
+                //        done() call in the observer. (or e.g. mAudioFinishedObserver ?)
                 byte[] data = body.bytes();
                 Log.v(LOG_TAG, "API returned: " + data.length + " bytes");
                 mAudioObserver.update(data);
@@ -123,6 +125,10 @@ public class SpeakController implements Callback<ResponseBody> {
                 e.printStackTrace();
             }
             mAudioObserver.error(errMsg);
+        }
+        // not yet used when executed via TTS service
+        if (mAudioFinishedObserver != null) {
+            mAudioFinishedObserver.update();
         }
     }
 

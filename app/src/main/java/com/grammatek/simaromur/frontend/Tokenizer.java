@@ -16,8 +16,8 @@ import java.util.Set;
  * d. collect sentences in a list to return
  */
 public class Tokenizer {
-    private Set<String> mAbbreviations;
-    private Set<String> mAbbreviationsNonending;
+    private final Set<String> mAbbreviations;
+    private final Set<String> mAbbreviationsNonending;
 
     private final String mAlphabetic = "[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ]+";
     private final String mUpperCase = "[A-ZÁÉÍÓÚÝÐÞÆÖ]";
@@ -163,10 +163,7 @@ public class Tokenizer {
         if (current.isEmpty())
             return false;
         if (Character.isUpperCase(current.charAt(0)) || current.charAt(0) == '"') {
-            if (isUpperCaseAbbr(last) || mAbbreviationsNonending.contains(last.toLowerCase())) {
-                return false;
-            }
-            return true;
+            return !isUpperCaseAbbr(last) && !mAbbreviationsNonending.contains(last.toLowerCase());
         }
         return false;
     }
@@ -226,23 +223,17 @@ public class Tokenizer {
             return false;
         if (isAbbreviation(token))
             return false;
-        if (isUpperCaseAbbr(token))
-            return false;
-        return true;
+        return !isUpperCaseAbbr(token);
     }
 
     private boolean isUpperCaseAbbr(String token) {
-        if (token.matches("(" + mUpperCase + "\\.)+") && !isAbbreviation(token))
-            return true;
-        return false;
+        return token.matches("(" + mUpperCase + "\\.)+") && !isAbbreviation(token);
     }
 
     private boolean isAbbreviation(String token) {
         if (mAbbreviations.contains(token.toLowerCase()))
             return true;
-        if (mAbbreviationsNonending.contains(token.toLowerCase()))
-            return true;
-        return false;
+        return mAbbreviationsNonending.contains(token.toLowerCase());
     }
 
 }

@@ -23,19 +23,17 @@ endif()
 
 # Flite libraries
 add_library(flite STATIC IMPORTED)
-add_library(flite_cmu_indic_lex STATIC IMPORTED)
-add_library(flite_cmu_indic_lang STATIC IMPORTED)
+add_library(flite_cmu_grapheme_lex STATIC IMPORTED)
+add_library(flite_cmu_grapheme_lang STATIC IMPORTED)
 add_library(flite_cmulex STATIC IMPORTED)
-add_library(flite_usenglish STATIC IMPORTED)
 
 # Variable FLITE_DIR is set by build.gradle which again looks for the entry "flite.dir" in file
 # local.properties. That's the way how to pass build variables from outside.
 
 set_target_properties(flite PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite.a)
-set_target_properties(flite_cmu_indic_lex PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite_cmu_indic_lex.a)
-set_target_properties(flite_cmu_indic_lang PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite_cmu_indic_lang.a)
+set_target_properties(flite_cmu_grapheme_lang PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite_cmu_grapheme_lang.a)
+set_target_properties(flite_cmu_grapheme_lex PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite_cmu_grapheme_lex.a)
 set_target_properties(flite_cmulex PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite_cmulex.a)
-set_target_properties(flite_usenglish PROPERTIES IMPORTED_LOCATION ${FLITE_DIR}/${ARCH}/lib/libflite_usenglish.a)
 
 set_target_properties(flite PROPERTIES INCLUDE_DIRECTORIES ${FLITE_DIR}/${ARCH}/include/flite)
 include_directories( ${FLITE_DIR}/${ARCH}/include/flite )
@@ -65,10 +63,9 @@ add_library( ttsflite
 # build script, prebuilt third-party libraries, or system libraries.
 
 target_link_libraries( ttsflite PUBLIC
-        flite_cmu_indic_lex
-        flite_cmu_indic_lang
+        flite_cmu_grapheme_lex
+        flite_cmu_grapheme_lang
         flite_cmulex
-        flite_usenglish
         flite
         # Links the target library to the log library
         # included in the NDK.

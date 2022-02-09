@@ -1,5 +1,7 @@
 package com.grammatek.simaromur.network.tiro;
 
+import static com.grammatek.simaromur.ApiDbUtil.NET_VOICE_SUFFIX;
+
 import android.util.Log;
 
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
@@ -7,7 +9,7 @@ import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -67,35 +69,6 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
     }
 
     /**
-     * Queries available voices at API for given Language Code. If given language code is empty,
-     * all available voices are returned.
-     *
-     * @param languageCode   Language Code filter to use for the voice list
-     *
-     * @return  list of supported voices from API matching given language code.
-     *
-     * @throws IOException
-     */
-    public List<VoiceResponse> queryVoices(String languageCode) throws IOException {
-        Log.v(LOG_TAG, "queryVoices (" + languageCode+ ")");
-        Call<List<VoiceResponse>> call = buildQueryVoicesCall(languageCode);
-
-        // synchronous request
-        Response<List<VoiceResponse>> response = call.execute();
-
-        List<VoiceResponse> voices = null;
-        if (response.isSuccessful()) {
-            voices = response.body();
-            assert voices != null;
-            Log.v(LOG_TAG, "API returned voice list of size: " + voices.size());
-        }
-        else {
-            Log.e(LOG_TAG, "API Error: " + response.errorBody());
-        }
-        return voices;
-    }
-
-    /**
      * Builds a Retrofit caller object for the Tiro API without calling its endpoint yet.
      *
      * @param languageCode   Language Code filter to use for the voice list
@@ -109,11 +82,17 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
 
     @Override
     public synchronized void onResponse(@NotNull Call<List<VoiceResponse>> call, Response<List<VoiceResponse>> response) {
+        Log.v(LOG_TAG, "onResponse: " + response.code());
         assert (mVoiceListObserver != null);
         if(response.isSuccessful()) {
-            List<VoiceResponse> voicesList = response.body();
-            assert (voicesList != null);
-            mVoiceListObserver.update(voicesList);
+            final List<VoiceResponse> netVoicesList = response.body();
+            List<VoiceResponse> updateVoicesList = new ArrayList<>();
+            assert (netVoicesList != null);
+            for (VoiceResponse aVoice:netVoicesList) {
+                aVoice.Name = aVoice.Name.concat(NET_VOICE_SUFFIX);
+                updateVoicesList.add(aVoice);
+            }
+            mVoiceListObserver.update(updateVoicesList);
         }
         else {
             Log.e(LOG_TAG, "API Error: " + response.code() + " " + response.errorBody());
@@ -123,7 +102,7 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
 
     @Override
     public void onFailure(@NotNull Call<List<VoiceResponse>> call, Throwable t) {
-        Log.v(LOG_TAG, "onFailure: " + t.getLocalizedMessage());
+        Log.w(LOG_TAG, "onFailure: " + t.getLocalizedMessage());
         assert (mVoiceListObserver != null);
         if (t instanceof IOException) {
             if (call.isCanceled()) {

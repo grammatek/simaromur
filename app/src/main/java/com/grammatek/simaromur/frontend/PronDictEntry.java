@@ -7,8 +7,8 @@ package com.grammatek.simaromur.frontend;
 
 public class PronDictEntry {
 
-    private String word;
-    private String transcript;
+    private final String word;
+    private final String transcript;
 
     public PronDictEntry(String word, String transcript) {
         this.word = word;

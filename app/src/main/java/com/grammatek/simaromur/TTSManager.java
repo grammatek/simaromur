@@ -25,6 +25,9 @@ import com.grammatek.simaromur.db.AppData;
 
 import java.util.Locale;
 
+/**
+ * This is the main activity shown on screen when starting the App.
+ */
 public class TTSManager extends Activity implements OnItemClickListener, TextToSpeech.OnInitListener {
     private final static String LOG_TAG = "Simaromur_Java_" + TTSManager.class.getSimpleName();
     private TextToSpeech mTtsClient;        // for querying TTS engine info
@@ -129,14 +132,29 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     private void showPrivacyNoticeDialog() {
         final SpannableString s = new SpannableString(getResources().getString(R.string.privacy_notice));
         Linkify.addLinks(s, Linkify.ALL);
-
         AlertDialog d = new AlertDialog.Builder(this)
-                .setMessage(s)
                 .setTitle(R.string.important)
-                .setCancelable(false)
+                .setMessage(s)
                 .setPositiveButton(R.string.ok, (dialog, id) -> {
                     App.getAppRepository().doAcceptPrivacyNotice(true);
+                    showCrashlyticsPrivacyNoticeDialog();
                 })
+                .setCancelable(false)
+                .create();
+        d.show();
+        ((TextView) d.findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
+    }
+
+    private void showCrashlyticsPrivacyNoticeDialog() {
+        final SpannableString s = new SpannableString(getResources().getString(R.string.crashlytics_notice));
+        Linkify.addLinks(s, Linkify.ALL);
+
+        AlertDialog d = new AlertDialog.Builder(this)
+                .setTitle(R.string.crashlytics_title)
+                .setMessage(s)
+                .setPositiveButton(R.string.doit, (dialog, id) -> App.getFirebaseCrashlytics().setCrashlyticsCollectionEnabled(true))
+                .setNegativeButton(R.string.not_yet, (dialog, id) -> App.getFirebaseCrashlytics().setCrashlyticsCollectionEnabled(false))
+                .setCancelable(false)
                 .create();
         d.show();
         ((TextView) d.findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
@@ -225,7 +243,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     }
 
     static class ImageAdapter extends BaseAdapter {
-        private Context mContext;
+        private final Context mContext;
 
         public ImageAdapter(Context c) {
             mContext = c;
@@ -262,8 +280,8 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
 
                 v = vi.inflate(R.layout.dashboard_icon, null);
                 holder = new ViewHolder();
-                holder.text = (TextView) v.findViewById(R.id.dashboard_icon_text);
-                holder.icon = (ImageView) v.findViewById(R.id.dashboard_icon_img);
+                holder.text = v.findViewById(R.id.dashboard_icon_text);
+                holder.icon = v.findViewById(R.id.dashboard_icon_img);
                 v.setTag(holder);
             } else {
                 holder = (ViewHolder) v.getTag();

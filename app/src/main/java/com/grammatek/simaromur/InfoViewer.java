@@ -13,6 +13,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import com.grammatek.simaromur.device.flite.NativeFliteTTS;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,8 +35,8 @@ public class InfoViewer extends ListActivity {
         ProgressDialog progress = new ProgressDialog(this);
         if (mEnableBenchmark) {
             progress.setMessage("Benchmarking Símarómur. Wait a few seconds");
-            mFliteEngine = new NativeFliteTTS(this, null);
-            mFliteEngine.setLanguage("eng", "USA","");
+            mFliteEngine = new NativeFliteTTS(null);
+            mFliteEngine.setLanguage("is", "Iceland","");
         }
         progress.setCancelable(false);
         new GetInformation(progress).execute();
@@ -42,7 +44,7 @@ public class InfoViewer extends ListActivity {
 
     private class GetInformation extends AsyncTask<Void, Void, Void> {
 
-        private ProgressDialog progress;
+        private final ProgressDialog progress;
 
         public GetInformation(ProgressDialog progress) {
             this.progress = progress;
@@ -75,6 +77,7 @@ public class InfoViewer extends ListActivity {
                 add(getString(R.string.info_url));
                 add(getString(R.string.info_copyright));
                 add(getString(R.string.info_privacy_notice));
+                add(getString(R.string.crashlytics_title));
                 add(getString(R.string.info_runtime_header));
                 add(getString(R.string.info_android_version));
                 add(getString(R.string.info_supported_abis));
@@ -96,6 +99,7 @@ public class InfoViewer extends ListActivity {
             add(getString(R.string.info_repo_url));
             add(getString(R.string.info_about));
             add(getString(R.string.info_privacy_notice_url));
+            add("Nope (or yes)");
             add("");
             add(android.os.Build.VERSION.RELEASE);
             add(String.join(", ", android.os.Build.SUPPORTED_ABIS));
@@ -108,17 +112,13 @@ public class InfoViewer extends ListActivity {
             Data.add("mBenchmark + \" " + getString(R.string.info_benchmark_value) + " \"");
         }
 
-        runOnUiThread(new Runnable() {
-
-            @Override
-            public void run() {
-                String[] dataArray = new String[Data.size()];
-                Data.toArray(dataArray);
-                String[] infoArray = new String[Info.size()];
-                Info.toArray(infoArray);
-                setListAdapter(new SettingsArrayAdapter(InfoViewer.this,
-                        infoArray, dataArray));
-            }
+        runOnUiThread(() -> {
+            String[] dataArray = new String[Data.size()];
+            Data.toArray(dataArray);
+            String[] infoArray = new String[Info.size()];
+            Info.toArray(infoArray);
+            setListAdapter(new SettingsArrayAdapter(InfoViewer.this,
+                    infoArray, dataArray));
         });
 
     }
@@ -157,8 +157,8 @@ public class InfoViewer extends ListActivity {
                 convertView = inflater.inflate(R.layout.flite_info, parent, false);
             }
 
-            TextView infoType = (TextView) convertView.findViewById(R.id.infotitle);
-            TextView infoDetail = (TextView) convertView.findViewById(R.id.infodetail);
+            TextView infoType = convertView.findViewById(R.id.infotitle);
+            TextView infoDetail = convertView.findViewById(R.id.infodetail);
 
             if (values[position].equals(getString(R.string.info_runtime_header))) {
                 infoType.setText(getString(R.string.info_runtime));

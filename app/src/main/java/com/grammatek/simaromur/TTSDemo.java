@@ -70,13 +70,10 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 	private final static String LOG_TAG = "Simaromur_Java_" + TTSDemo.class.getSimpleName();
 
 	private EditText mUserText;
-	private ImageButton mSendButton;
 	private ArrayAdapter<String> mAdapter;
-	private ArrayAdapter<String> mVoiceAdapter;
-    private ArrayAdapter<String> mRateAdapter;
 	private List<Voice> mVoices;
-	private ArrayList<String> mStrings = new ArrayList<>();
-    private List<String> mRates = new ArrayList<>();
+	private final ArrayList<String> mStrings = new ArrayList<>();
+    private final List<String> mRates = new ArrayList<>();
 	private Spinner mVoiceSpinner;
     private Spinner mRateSpinner;
 	private TextToSpeech mTts;
@@ -110,12 +107,9 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 			// We can't demo anything if there are no voices installed.
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setMessage("Flite voices not installed. Please add voices in order to run the demo");
-			builder.setNegativeButton("OK", new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.cancel();
-					finish();
-				}
+			builder.setNegativeButton("OK", (dialog, which) -> {
+				dialog.cancel();
+				finish();
 			});
 			AlertDialog alert = builder.create();
 			alert.show();
@@ -150,7 +144,7 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 	}
 
 	@Override
-	public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		if (requestCode == PERMISSION_REQUEST_CODE) {
 			if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 				Log.e("value", "Permission Granted, Now you can use local drive .");
@@ -181,7 +175,7 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 		    voiceNames.add(vox.getDisplayName()); // vox.getVariant());
 		}
 
-		mVoiceAdapter = new ArrayAdapter<String>(this,
+		ArrayAdapter<String> mVoiceAdapter = new ArrayAdapter<>(this,
 				android.R.layout.simple_spinner_dropdown_item,
 				voiceNames);
 
@@ -214,18 +208,18 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 		mRates.add("Fast");
 		mRates.add("Very Fast");
 
-		mRateAdapter = new ArrayAdapter<String>(this,
-							android.R.layout.simple_spinner_dropdown_item,
-							mRates);
+		ArrayAdapter<String> mRateAdapter = new ArrayAdapter<>(this,
+				android.R.layout.simple_spinner_dropdown_item,
+				mRates);
 
 
-		mUserText = (EditText) findViewById(R.id.userText);
-		mSendButton = (ImageButton) findViewById(R.id.sendButton);
+		mUserText = findViewById(R.id.userText);
+		ImageButton mSendButton = findViewById(R.id.sendButton);
 
-		mVoiceSpinner = (Spinner) findViewById(R.id.voice);
+		mVoiceSpinner = findViewById(R.id.voice);
 		mVoiceSpinner.setAdapter(mVoiceAdapter);
 
-		mRateSpinner = (Spinner) findViewById(R.id.speechrate);
+		mRateSpinner = findViewById(R.id.speechrate);
 		mRateSpinner.setAdapter(mRateAdapter);
 		mRateSpinner.setSelection(2);
 
@@ -275,7 +269,7 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 	}
 
 	private class InputHistoryAdapter extends ArrayAdapter<String> {
-		private ArrayList<String> items;
+		private final ArrayList<String> items;
 
 		public InputHistoryAdapter(Context context,
 				int textViewResourceId, ArrayList<String> items) {
@@ -290,11 +284,10 @@ public class TTSDemo extends ListActivity implements OnClickListener, OnKeyListe
 				convertView = vi.inflate(R.layout.list_tts_history, null);
 			}
 			String s = items.get(position);
-			TextView tt = (TextView) convertView.findViewById(R.id.inputText);
+			TextView tt = convertView.findViewById(R.id.inputText);
 			tt.setText(s);
 			return convertView;
 		}
-
 	}
 
 	@SuppressWarnings("deprecation")

@@ -1,14 +1,21 @@
 # Símarómur
 
-This project provides an Icelandic TTS application for the Android TTS service. It provides already
-access to network voices of the [Tíro TTS API](https://tts.tiro.is/v0/voices). We are currently working
-on device-local voices.
+This project provides an Icelandic TTS application for the Android TTS service.
 
-Handling of device-local voices is originally based on [Flite TTS Engine For Android](https://github.com/happyalu/Flite-TTS-Engine-for-Android),
+## Voices
+
+Símarómur provides access to network voices of the [Tíro TTS API](https://tts.tiro.is/v0/voices) and
+[on-device voices](https://github.com/grammatek/simaromur_voices) that are bundled via assets.
+
+Handling of device-local voices started originally based on [Flite TTS Engine For Android](https://github.com/happyalu/Flite-TTS-Engine-for-Android),
 but we changed it considerably and started with a clean slate instead of forking the project.
 We replaced many deprecated API's and also use current TTS Service Android API's. We also use CMake
 for integrating the C++ part instead of ndk-build and adapted the JNI part to be compatible with 64Bit
 platforms.
+
+We are using PyTorch mobile for inferencing the on-device neural network voices, but we plan usage of
+"old-school" FLite based voices as well. The network voices are currently CPU-only and need a powerful
+processor to run with acceptable inference speed.
 
 ## Text Normalization & G2P
 
@@ -52,7 +59,13 @@ This should download and extract all necessary binaries to the sub-directory `3r
 
 ## Configuration & Build
 
-Create the file `local.properties` if it doesn't already exist and add variables `flite.dir` to
+Fetch the voice assets subdirectory via
+
+```bash
+git submodule update --init
+```
+
+Then create the file `local.properties` if it doesn't already exist and add variables `flite.dir` to
 point either to the absolute path of your FLite root directory and `3rdparty.dir` for the installed
 OpenFST/Thrax libraries, e.g.
 

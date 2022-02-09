@@ -18,7 +18,7 @@ def getFliteDir() {
     def externalModuleDir = properties.getProperty('flite.dir', null)
     if (externalModuleDir == null) {
         throw new GradleException(
-                "Flite location not found. Define location with flite.dir in the local.properties file!")
+                "Flite location not found. Define location with flite.dir in the local.properties file !")
     }
     return externalModuleDir
 }
@@ -210,11 +210,11 @@ dependencies {
 // Saves last modified date of bundled assets, so we can determine when
 // to copy these over to the apps data path
 task saveAllAssetDate {
-    def assetDirectory = "src/main/assets";
+    def assetDirectory = "src/main/assets"
     def text = ""
     fileTree(assetDirectory).visit { FileVisitDetails details ->
-        def name = details.file.path;
-        name = name.substring(name.indexOf("assets"));
+        def name = details.file.path
+        name = name.substring(name.indexOf("assets"))
         text += details.getLastModified() + " " + name + "\n"
     }
     file(assetDirectory + "/lastModified.txt").text = "" + text

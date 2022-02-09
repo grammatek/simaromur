@@ -3,33 +3,31 @@ package com.grammatek.simaromur.frontend;
 import android.content.Context;
 import android.content.res.Resources;
 
-import com.grammatek.simaromur.NativeG2P;
+import com.grammatek.simaromur.device.NativeG2P;
 import com.grammatek.simaromur.R;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This class manages the dictionary look-ups and the calls to g2p for unknown words
  */
 
 public class Pronunciation {
-    private Context mContext;
+    private final Context mContext;
     private NativeG2P mG2P;
     private Map<String, PronDictEntry> mPronDict;
 
     public Pronunciation(Context context) {
         this.mContext = context;
         initializePronDict();
-        initializeG2P();
     }
 
     public String transcribe(String text) {
+        initializeG2P();    // lazy initialize to break dependencies
         String[] tokens = text.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String tok : tokens) {
@@ -43,11 +41,9 @@ public class Pronunciation {
     }
 
     private void initializeG2P() {
-        if (mG2P != null) {
-            // @todo: mG2P.stop();
-            mG2P = null;
+        if (mG2P == null) {
+            mG2P = new NativeG2P(this.mContext);
         }
-        mG2P = new NativeG2P(this.mContext);
     }
 
     private void initializePronDict() {

@@ -1,5 +1,7 @@
 package com.grammatek.simaromur;
 
+import static android.speech.tts.TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE;
+
 import android.app.AlertDialog;
 import android.app.Application;
 import android.content.ActivityNotFoundException;
@@ -19,6 +21,11 @@ import com.grammatek.simaromur.db.AppDataDao;
 import com.grammatek.simaromur.db.ApplicationDb;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
+import com.grammatek.simaromur.device.TTSAudioControl;
+import com.grammatek.simaromur.device.TTSEngineController;
+import com.grammatek.simaromur.device.pojo.DeviceVoice;
+import com.grammatek.simaromur.frontend.FrontendManager;
+import com.grammatek.simaromur.device.AssetVoiceManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
 import com.grammatek.simaromur.network.tiro.SpeakController;
 import com.grammatek.simaromur.network.tiro.VoiceController;
@@ -41,6 +48,7 @@ import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
  * Abstracted application repository as promoted by the Architecture Guide.
  * https://developer.android.com/topic/libraries/architecture/guide.html
  */
+//@Singleton
 public class AppRepository {
     private final static String LOG_TAG = "Simaromur_" + AppRepository.class.getSimpleName();
     private final static long NETWORK_VOICE_QUERY_TIME_MS = 1000*60*30;   // 30 min.
@@ -52,14 +60,16 @@ public class AppRepository {
     private List<com.grammatek.simaromur.db.Voice> mAllCachedVoices;
     private final VoiceController mTiroVoiceController;
     private final SpeakController mTiroSpeakController;
-    private List<VoiceResponse> mTiroVoices;
     private final ApiDbUtil mApiDbUtil;
+    private final AssetVoiceManager mAVM;
     ScheduledExecutorService mScheduler;
+    FrontendManager mFrontend;
+    TTSEngineController mTTSEngineController;
 
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
 
-    private MediaPlayObserver mMediaPlayer;
+    private final MediaPlayObserver mMediaPlayer;
 
     /**
      * Observer for Tiro voice query results.
@@ -74,8 +84,7 @@ public class AppRepository {
                 }
                 Log.v(LOG_TAG, "Tiro API returned: " + voice.VoiceId);
             }
-            mTiroVoices = voices;
-            new updateVoicesAsyncTask(mApiDbUtil, "tiro").execute(mTiroVoices);
+            new updateVoicesAsyncTask(mApiDbUtil, "tiro").execute(voices);
             new updateAppDataVoiceListTimestampAsyncTask(mAppDataDao).execute();
         }
         public void error(String errorMsg) {
@@ -85,19 +94,32 @@ public class AppRepository {
 
     // Note that in order to unit test the AppRepository, you have to remove the Application
     // dependency.
-    public AppRepository(Application application) {
+    public AppRepository(Application application) throws IOException {
         Log.v(LOG_TAG, "AppRepository()");
         ApplicationDb db = ApplicationDb.getDatabase(application);
         mAppDataDao = db.appDataDao();
         mVoiceDao = db.voiceDao();
         mApiDbUtil = new ApiDbUtil(mVoiceDao);
+        mAVM = new AssetVoiceManager(App.getContext());
+        mFrontend = new FrontendManager(App.getContext());
+        mTTSEngineController = new TTSEngineController(App.getContext().getAssets(), mFrontend);
         mTiroSpeakController = new SpeakController();
         mTiroVoiceController = new VoiceController();
         mAppData = mAppDataDao.getLiveAppData();
         mAppData.observeForever(appData -> {
             Log.v(LOG_TAG, "mAppData update: " + appData);
+            if (appData == null) {
+                return;
+            }
             // Update cached appData
             mCachedAppData = appData;
+            // preload selected voice
+            Voice selectedVoice = mVoiceDao.findVoiceWithId(mCachedAppData.currentVoiceId);
+            if (selectedVoice != null) {
+                if (mSelectedVoice == null || (!mSelectedVoice.name.equals(selectedVoice.name))) {
+                    loadVoice(selectedVoice.name);
+                }
+            }
         });
         mAllVoices = mVoiceDao.getAllVoices();
         mAllVoices.observeForever(voices -> {
@@ -106,9 +128,11 @@ public class AppRepository {
             mAllCachedVoices = voices;
         });
 
-        mScheduler = Executors.newSingleThreadScheduledExecutor();
-        mScheduler.scheduleAtFixedRate(timerRunnable, 0, 20, TimeUnit.SECONDS);
         mMediaPlayer = new MediaPlayObserver();
+
+        mScheduler = Executors.newSingleThreadScheduledExecutor();
+        mScheduler.scheduleAtFixedRate(networkVoicesUpdateRunnable, 0, 60, TimeUnit.SECONDS);
+        mScheduler.schedule(assetVoiceRunnable, 1, TimeUnit.SECONDS);
     }
 
     /**
@@ -159,21 +183,6 @@ public class AppRepository {
     }
 
     /**
-     * Returns list of all Tiro voices from its API endpoint.
-     *
-     * @param languageCode  language code, e.g. "is-IS"
-     *
-     * @return  list of all cached Tiro API voices.
-     */
-    public List<VoiceResponse> queryTiroVoices(String languageCode) throws IOException {
-        Log.v(LOG_TAG, "queryTiroVoices");
-        if (mTiroVoices == null) {
-            streamTiroVoices(languageCode);
-        }
-        return mTiroVoices;
-    }
-
-    /**
      * Request Tiro voices from its API endpoint.
      *
      * @param languageCode  language code, e.g. "is-IS"
@@ -194,12 +203,13 @@ public class AppRepository {
      * @param speed     speed to use for the voice audio
      * @param pitch     pitch to use for the voice audio
      */
-    public void startTiroSpeak(String voiceId, String text, String langCode, float speed, float pitch) {
+    public void startTiroSpeak(String voiceId, String text, String langCode, float speed, float pitch,
+                               TTSAudioControl.AudioFinishedObserver finishedObserver) {
         final String SampleRate = "" + SAMPLE_RATE_MP3;
         SpeakRequest request = new SpeakRequest("standard", langCode,
                 "mp3", SampleRate, text, "text", voiceId);
         mMediaPlayer.stop();
-        mTiroSpeakController.streamAudio(request , mMediaPlayer);
+        mTiroSpeakController.streamAudio(request , mMediaPlayer, finishedObserver);
     }
 
     /**
@@ -228,25 +238,42 @@ public class AppRepository {
             final String SampleRate = "" + SAMPLE_RATE_WAV;
             SpeakRequest request = new SpeakRequest("standard", voice.languageCode,
                     "pcm", SampleRate, text, "text", voice.internalName);
-            mTiroSpeakController.streamAudio(request , new TTSObserver(synthCb, pitch, speed));
+            mTiroSpeakController.streamAudio(request , new TTSObserver(synthCb, pitch, speed), null);
         } else {
             Log.e(LOG_TAG, "startTiroTts: given voice is null ?!");
         }
     }
 
-    /**
-     * Insert a voice into the db.
-     *
-     * @param voice Voice to be saved into db
-     */
-    public void insertVoice(com.grammatek.simaromur.db.Voice voice) {
-        Log.v(LOG_TAG, "insertVoice");
-        new insertVoiceAsyncTask(mVoiceDao).execute(voice);
+    public TTSEngineController.SpeakTask startDeviceSpeak(Voice voice, String text, float speed,
+                              float pitch, TTSAudioControl.AudioFinishedObserver observer) {
+        try {
+            mTTSEngineController.LoadEngine(voice);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        // use the sample rate from the Engine
+        return mTTSEngineController.StartSpeak(text, speed, pitch, 22050, observer);
+    }
+
+    public void stopDeviceSpeak(TTSEngineController.SpeakTask speakTask) {
+        // use the sample rate from the Engine
+        mTTSEngineController.StopSpeak(speakTask);
+    }
+
+    public void startTorchTTS(SynthesisCallback synthCb, Voice voice, String text, float speed, float pitch) {
+        try {
+            mTTSEngineController.LoadEngine(voice);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        // use the sample rate from the Engine
+        mTTSEngineController.StartSpeak(new TTSObserver(synthCb, pitch, speed, 22050), text);
     }
 
     /**
-     * Loads given voice, e.g. from disk. Can also to network request to see, if the voice is
-     * available.
+     * Loads given voice, e.g. from disk. Can also access network to query voice availability.
      *
      * @param voiceName     Name of the voice to load
      *
@@ -260,6 +287,14 @@ public class AppRepository {
         for (final Voice voice:voices) {
             if (voice.name.equals(voiceName)) {
                 Log.v(LOG_TAG, "SUCCESS");
+                if (voice.type.equals(Voice.TYPE_TORCH) || voice.type.equals(Voice.TYPE_FLITE)) {
+                    try {
+                        mTTSEngineController.LoadEngine(voice);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return TextToSpeech.ERROR_NOT_INSTALLED_YET;
+                    }
+                }
                 mSelectedVoice = voice;
                 mAppDataDao.selectCurrentVoice(voice);
                 return TextToSpeech.SUCCESS;
@@ -312,7 +347,7 @@ public class AppRepository {
                 la = TextToSpeech.LANG_COUNTRY_AVAILABLE;
             }
             if (supportsVariant) {
-                la = TextToSpeech.LANG_COUNTRY_VAR_AVAILABLE;
+                la = LANG_COUNTRY_VAR_AVAILABLE;
             }
         }
         Log.v(LOG_TAG, "isLanguageAvailable: returns " + la);
@@ -334,45 +369,109 @@ public class AppRepository {
         Log.v(LOG_TAG, "getDefaultVoiceFor: (" + iso3Language + "/" + iso3Country + "/" + variant + ")");
         String rv = null;
 
+        if (isLanguageAvailable(iso3Language, iso3Country, variant) == LANG_COUNTRY_VAR_AVAILABLE) {
+            return variant;
+        }
+
+        // only at first start, if user has neither selected a voice, nor the selected voice is
+        // persisted
         if (mSelectedVoice == null) {
-            Log.d(LOG_TAG, "getDefaultVoiceFor: selected voice not yet loaded");
-            if (mCachedAppData != null && mCachedAppData.currentVoiceId != 0) {
-                for (final Voice voice : getCachedVoices()) {
-                    if (voice.voiceId == mCachedAppData.currentVoiceId) {
-                        mSelectedVoice = voice;
-                        Log.d(LOG_TAG, "getDefaultVoiceFor: found preferred voice in list");
+            if (variant.isEmpty()) {
+                // no specific voice selected, decide default voice depending on network availability /
+                // or voice RTF in case of an on-device-voice
+                Voice bestVoice = null;
+                if (ConnectionCheck.isTTSServiceReachable()) {
+                    bestVoice = selectBestNetworkVoice();
+                    if (bestVoice == null ) {
+                        Log.v(LOG_TAG, "getDefaultVoiceFor(): no TTS voices (yet), trying on-device voices ..");
+                        bestVoice = selectFastestOnDeviceVoice();
                     }
+                } else {
+                    bestVoice = selectFastestOnDeviceVoice();
+                }
+                if (bestVoice != null ) {
+                    rv = bestVoice.name;
                 }
             }
+        } else {
+            rv = mSelectedVoice.name;
         }
 
-        /* Favor our selected voice before falling back to other choices */
-        if (mSelectedVoice != null && mSelectedVoice.supportsIso3(iso3Language, iso3Country, variant)) {
-            return mSelectedVoice.name;
-        }
-
-        Log.v(LOG_TAG, "getDefaultVoiceFor: not matching selected voice");
-
-        for (final Voice voice : getCachedVoices()) {
-            // if the voice is the exact fit for given parameters, return it directly
-            if (voice.supportsIso3(iso3Language, iso3Country, variant)) {
-                rv = voice.name;
-                break;
-            }
-        }
-        Log.v(LOG_TAG, "chosen default voice: (" + rv + ")");
+        // TODO DS: check for unsupported language
+        //          maybe the user has a non-Icelandic locale set and selects voice ("use system locale")
+        //          then we need to decide what we return here as default voice
+        //          rv = null;
+        Log.v(LOG_TAG, "getDefaultVoiceFor(): chosen default voice: (" + rv + ")");
         return rv;
     }
 
+    /**
+     * Select the currently fastest on device voice, as propagated by its RTF (Realtime factor).
+     *
+     * @return Voice in DB that has the fastest RTF.
+     */
+    private Voice selectFastestOnDeviceVoice() {
+        DeviceVoice bestODVoice = null;
+
+        for (DeviceVoice voice: mAVM.getVoiceList().Voices) {
+            if (bestODVoice == null) {
+                bestODVoice = voice;
+                continue;
+            }
+            if (voice.RTF > bestODVoice.RTF) {
+                bestODVoice = voice;
+            }
+        }
+        if (bestODVoice == null) {
+            throw (new RuntimeException("No on device voices available ?!"));
+        }
+        // map between bestVoice and Voice
+        return mapDeviceVoiceToDbVoice(bestODVoice);
+    }
+
+    /**
+     * Select the "best" network voice.
+     * On the long term, this has to be based on metrics. For now, we just use the first one in
+     * the list of available network voices.
+     *
+     * @return Best network voice in DB
+     */
+    private Voice selectBestNetworkVoice() {
+        for (Voice voice:getCachedVoices()) {
+            if (voice.needsNetwork()) {
+                return voice;
+            }
+        }
+        Log.w(LOG_TAG, "No network voices available ?!");
+        return null;
+    }
+
+    /**
+     * Maps given DeviceVoice to database voice.
+     *
+     * @param odVoice   on device voice
+     * @return  corresponding db Voice
+     */
+    private Voice mapDeviceVoiceToDbVoice(DeviceVoice odVoice) {
+        if (odVoice == null) return null;
+        Voice dbVoiceOD = odVoice.convertToDbVoice();
+        for (Voice voice:getCachedVoices()) {
+            if (voice == dbVoiceOD) {
+                return voice;
+            }
+        }
+        Log.w(LOG_TAG, "On device voice not in DB ?!");
+        return null;
+    }
+
     public void showTtsBackendWarningDialog(Context context) {
-        AlertDialog warningDialog = null;
+        AlertDialog warningDialog;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         String audioAssetFile = "";
         int messageId =  R.string.try_again_later;
         if (! ConnectionCheck.isNetworkConnected()) {
             messageId =  R.string.check_internet;
-            builder.setPositiveButton(R.string.doit, (dialog, id) -> {
-                openWifiSettings(context); })
+            builder.setPositiveButton(R.string.doit, (dialog, id) -> openWifiSettings(context))
                     .setNegativeButton(R.string.not_yet, (dialog, id) -> {});
             audioAssetFile = "audio/check_internet_dora.mp3";
         } else if (! ConnectionCheck.isTTSServiceReachable()) {
@@ -410,7 +509,7 @@ public class AppRepository {
             if (size != inputStream.read(buffer)) {
                 Log.w(LOG_TAG, "playAssetFile: not enough bytes ?");
             }
-            TTSObserver observer=new TTSObserver(callback, (float) 1.0, (float) 1.1);
+            TTSObserver observer = new TTSObserver(callback, (float) 1.0, (float) 1.1);
             observer.update(buffer);
             observer.stop();
         } catch (Exception e) {
@@ -423,7 +522,8 @@ public class AppRepository {
         try {
             Intent intent = new Intent(Intent.ACTION_MAIN, null);
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
-            ComponentName cn = new ComponentName("com.android.settings", "com.android.settings.wifi.WifiSettings");
+            ComponentName cn = new ComponentName("com.android.settings",
+                    "com.android.settings.wifi.WifiSettings");
             intent.setComponent(cn);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
@@ -441,16 +541,6 @@ public class AppRepository {
         return null;
     }
 
-    Voice getVoiceForLocale(String iso3Language, String iso3Country, String variant) {
-        for (final Voice voice : getCachedVoices()) {
-            // if the voice is the exact fit for given parameters, return it directly
-            if (voice.supportsIso3(iso3Language, iso3Country, variant)) {
-                return voice;
-            }
-        }
-        return null;
-    }
-
     String getLoadedVoiceName() {
         if (mSelectedVoice != null) {
             return mSelectedVoice.name;
@@ -458,7 +548,10 @@ public class AppRepository {
         return "";
     }
 
-    Runnable timerRunnable = new Runnable() {
+    /**
+     * Update DB according to network voice
+     */
+    Runnable networkVoicesUpdateRunnable = new Runnable() {
         @Override
         public void run() {
             Date lastUpdateTime = new Date(System.currentTimeMillis() - NETWORK_VOICE_QUERY_TIME_MS);
@@ -480,6 +573,29 @@ public class AppRepository {
     };
 
     /**
+     * Update the Db according to Asset voices
+     */
+    Runnable assetVoiceRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // delete all voices
+            final List<Voice> allDbVoices = mVoiceDao.getAnyVoices();
+            for (Voice voice : allDbVoices) {
+                if (voice.url.equals("assets")) {
+                    Log.w(LOG_TAG, "assetVoiceRunnable Delete asset voice " + voice.name);
+                    mVoiceDao.deleteVoices(voice);
+                }
+            }
+
+            final List<Voice> assetVoices = mAVM.getVoiceDbList();
+            for (Voice voice : assetVoices) {
+                // enter new voices
+                mVoiceDao.insertVoice(voice);
+            }
+        }
+    };
+
+    /**
      * Set the accept privacy notice boolean in AppData table
      *
      * @param setter    true for accepting the privacy notice, false for not accepting it
@@ -493,7 +609,7 @@ public class AppRepository {
      * Asynchronously update the database for the privacy notice acceptance flag
      */
     private static class doAcceptPrivacyNoticeAsyncTask extends AsyncTask<Boolean, Void, Void> {
-        private AppDataDao mAsyncTaskDao;
+        private final AppDataDao mAsyncTaskDao;
 
         doAcceptPrivacyNoticeAsyncTask(AppDataDao dao) {
             mAsyncTaskDao = dao;
@@ -506,38 +622,25 @@ public class AppRepository {
         }
     }
 
-    private static class insertVoiceAsyncTask extends AsyncTask<com.grammatek.simaromur.db.Voice, Void, Void> {
-        private VoiceDao mAsyncTaskDao;
-
-        insertVoiceAsyncTask(VoiceDao dao) {
-            mAsyncTaskDao = dao;
-        }
-
-        @Override
-        protected Void doInBackground(final Voice... params) {
-            mAsyncTaskDao.insertVoice(params[0]);
-            return null;
-        }
-    }
-
     private static class updateVoicesAsyncTask extends AsyncTask<List<VoiceResponse>, Void, Void> {
-        private ApiDbUtil mApiDbUtil;
-        private String mVoiceType;
+        private final ApiDbUtil mApiDbUtil;
+        private final String mVoiceType;
 
         updateVoicesAsyncTask(ApiDbUtil apiDbUtil, String voiceType) {
             mApiDbUtil = apiDbUtil;
             mVoiceType = voiceType;
         }
 
+        @SafeVarargs
         @Override
-        protected Void doInBackground(final List<VoiceResponse>... voices) {
+        protected final Void doInBackground(final List<VoiceResponse>... voices) {
             mApiDbUtil.updateApiVoices(voices[0], mVoiceType);
             return null;
         }
     }
 
     private static class updateAppDataVoiceListTimestampAsyncTask extends AsyncTask<Void, Void, Void> {
-        private AppDataDao mAppDataDao;
+        private final AppDataDao mAppDataDao;
 
         updateAppDataVoiceListTimestampAsyncTask(AppDataDao appDataDao) {  mAppDataDao = appDataDao;  }
 

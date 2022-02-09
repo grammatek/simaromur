@@ -160,7 +160,7 @@ JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
 }
 
 JNIEXPORT jboolean
-JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeClassInit(
+JNICALL Java_com_grammatek_simaromur_device_flite_NativeFliteTTS_nativeClassInit(
         JNIEnv *env, jclass cls)
 {
     DEBUG_LOG_FUNCTION;
@@ -173,7 +173,7 @@ JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeClassInit(
 }
 
 JNIEXPORT jboolean
-JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeCreate(
+JNICALL Java_com_grammatek_simaromur_device_flite_NativeFliteTTS_nativeCreate(
         JNIEnv *env, jobject object, jstring path)
 {
     DEBUG_LOG_FUNCTION;
@@ -195,7 +195,7 @@ JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeCreate(
 }
 
 JNIEXPORT jboolean
-JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeDestroy(
+JNICALL Java_com_grammatek_simaromur_device_flite_NativeFliteTTS_nativeDestroy(
         JNIEnv *env, jobject object)
 {
     DEBUG_LOG_FUNCTION;
@@ -209,7 +209,7 @@ JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeDestroy(
 
 JNIEXPORT jint
 JNICALL
-Java_com_grammatek_simaromur_NativeFliteTTS_nativeIsLanguageAvailable(
+Java_com_grammatek_simaromur_device_flite_NativeFliteTTS_nativeIsLanguageAvailable(
         JNIEnv *env, jobject object, jstring language,
         jstring country, jstring variant)
 {
@@ -236,7 +236,7 @@ Java_com_grammatek_simaromur_NativeFliteTTS_nativeIsLanguageAvailable(
 
 JNIEXPORT jboolean
 JNICALL
-Java_com_grammatek_simaromur_NativeFliteTTS_nativeSetLanguage(
+Java_com_grammatek_simaromur_device_flite_NativeFliteTTS_nativeSetLanguage(
         JNIEnv *env, jobject object, jstring language,
         jstring country, jstring variant)
 {
@@ -266,7 +266,7 @@ Java_com_grammatek_simaromur_NativeFliteTTS_nativeSetLanguage(
 
 JNIEXPORT jboolean
 JNICALL
-Java_com_grammatek_simaromur_NativeFliteTTS_nativeSetSpeechRate(
+Java_com_grammatek_simaromur_device_flite_NativeFliteTTS_nativeSetSpeechRate(
         JNIEnv *env, jobject object, jint rate)
 {
     DEBUG_LOG_FUNCTION;
@@ -289,7 +289,7 @@ Java_com_grammatek_simaromur_NativeFliteTTS_nativeSetSpeechRate(
 
 
 JNIEXPORT jboolean
-JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeSynthesize(
+JNICALL Java_com_grammatek_simaromur_device_flite_NativeFliteTTS_nativeSynthesize(
         JNIEnv *env, jobject object, jstring text)
 {
     DEBUG_LOG_FUNCTION;
@@ -315,7 +315,7 @@ JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeSynthesize(
 }
 
 JNIEXPORT jboolean
-JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeStop(
+JNICALL Java_com_grammatek_simaromur_device_flite_NativeFliteTTS_nativeStop(
         JNIEnv *env, jobject object)
 {
     DEBUG_LOG_FUNCTION;
@@ -337,7 +337,7 @@ JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeStop(
 }
 
 JNIEXPORT jfloat
-JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeGetBenchmark(
+JNICALL Java_com_grammatek_simaromur_device_flite_NativeFliteTTS_nativeGetBenchmark(
         JNIEnv *env, jobject object)
 {
     DEBUG_LOG_FUNCTION;
@@ -346,7 +346,7 @@ JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeGetBenchmark(
 }
 
 JNIEXPORT jint
-JNICALL Java_com_grammatek_simaromur_NativeFliteTTS_nativeGetSampleRate(
+JNICALL Java_com_grammatek_simaromur_device_flite_NativeFliteTTS_nativeGetSampleRate(
         JNIEnv *env, jobject object)
 {
     DEBUG_LOG_FUNCTION;

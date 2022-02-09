@@ -18,11 +18,13 @@ public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.Voic
     private static ClickListener clickListener;
 
     class VoiceViewHolder extends RecyclerView.ViewHolder {
-        private final TextView voiceItemView;
+        private final TextView voiceNameItemView;
+        private final TextView voiceTypeItemView;
 
         private VoiceViewHolder(View itemView) {
             super(itemView);
-            voiceItemView = itemView.findViewById(R.id.textView);
+            voiceNameItemView = itemView.findViewById(R.id.textViewLeft);
+            voiceTypeItemView = itemView.findViewById(R.id.textViewRight);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -43,16 +45,21 @@ public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.Voic
     @Override
     public void onBindViewHolder(VoiceViewHolder holder, int position) {
         Voice current = mVoices.get(position);
-        holder.voiceItemView.setText(current.name);
+        holder.voiceNameItemView.setText(current.name);
+        if (current.type.equals("tiro")) {
+            holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_network));
+        } else {
+            holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_local));
+        }
     }
 
-    void setVoices(List<com.grammatek.simaromur.db.Voice> words){
-        mVoices = words;
+    void setVoices(List<com.grammatek.simaromur.db.Voice> voices){
+        mVoices = voices;
         notifyDataSetChanged();
     }
 
     // getItemCount() is called many times, and when it is first called,
-    // mWords has not been updated (means initially, it's null, and we can't return null).
+    // mVoices has not been updated (means initially, it's null, and we can't return null).
     @Override
     public int getItemCount() {
         if (mVoices != null)

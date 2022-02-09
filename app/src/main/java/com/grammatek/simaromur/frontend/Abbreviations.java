@@ -15,7 +15,7 @@ import java.util.Set;
  * This class initializes and stores sets of abbreviations from res/raw abbreviation files.
  */
 public class Abbreviations {
-    private Context context;
+    private final Context context;
     private Set<String> abbreviations = new HashSet<>();
     // nonEndingAbbr are not allowed at the end of a sentence
     private Set<String> nonEndingAbbr = new HashSet<>();
