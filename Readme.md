@@ -93,9 +93,10 @@ You can contribute to this project by forking it, creating a branch and opening 
 
 ## License
 
-Original Copyright information can be found in [LICENSE-CMU](LICENSE-CMU.txt).
+All new code is Copyright © 2021-2022 Grammatek ehf and licensed under the [Apache License](LICENSE).
 
-New code is Copyright © 2021-2022 Grammatek ehf and licensed under the [Apache License](LICENSE).
+Native C++ files starting with `edu_cmu_XXX` and related Java bindings are Copyright 2010-2012 by Carnegie Mellon University and are licensed under [LICENSE-CMU](LICENSE-CMU.txt). 
+We use the 3rdparty library Sonic for audio speed and pitch manipulation. Sonic is Copyright 2010, 2011 by Bill Cox and is licensed under the [Apache License](LICENSE)
 
 This software is developed under the auspices of the Icelandic Government 5-Year Language Technology Program, described
 [here](https://www.stjornarradid.is/lisalib/getfile.aspx?itemid=56f6368e-54f0-11e7-941a-005056bc530c) and
