@@ -57,12 +57,12 @@ public class TTSEngineFlite  implements TTSEngine {
     }
 
     @Override
-    public byte[] SpeakToPCM(String sampas, int sampleRate) {
+    public byte[] SpeakToPCM(String sampas) {
         return new byte[0];
     }
 
     @Override
-    public int GetSampleRate() {
+    public int GetNativeSampleRate() {
         return 22050;
     }
 }

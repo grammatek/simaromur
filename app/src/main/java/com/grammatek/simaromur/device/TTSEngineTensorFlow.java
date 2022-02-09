@@ -10,6 +10,7 @@ import java.util.Map;
 
 public class TTSEngineTensorFlow implements TTSEngine {
     final private Interpreter interpreter;
+    private final static int SAMPLE_RATE = 22050;
 
     public TTSEngineTensorFlow(String modelFilename) {
         File modelFile = new File(App.getDataPath() + "/" + modelFilename);
@@ -17,7 +18,7 @@ public class TTSEngineTensorFlow implements TTSEngine {
         interpreter = new Interpreter(modelFile);
     }
 
-    public byte[] SpeakToPCM(String sampas, int sampleRate) {
+    public byte[] SpeakToPCM(String sampas) {
         // TODO: these input/output data types need to be changed according to the model
         Map<String, Object> inputs = new HashMap<>();
         inputs.put("sampa", sampas);
@@ -34,7 +35,7 @@ public class TTSEngineTensorFlow implements TTSEngine {
     }
 
     @Override
-    public int GetSampleRate() {
-        return 22050;
+    public int GetNativeSampleRate() {
+        return SAMPLE_RATE;
     }
 }

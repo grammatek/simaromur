@@ -18,6 +18,7 @@ import java.time.Instant;
 
 public class TTSEnginePyTorch implements TTSEngine {
     private final static String LOG_TAG = "Simaromur_" + TTSEnginePyTorch.class.getSimpleName();
+    private final static int SAMPLE_RATE = 22050;
     private static DeviceVoice mVoice = null;
     private static Module mAcousticModel = null;
     private static Module mVocoderModel = null;
@@ -87,7 +88,7 @@ public class TTSEnginePyTorch implements TTSEngine {
     }
 
     @Override
-    public byte[] SpeakToPCM(String sampas, int sampleRate) {
+    public byte[] SpeakToPCM(String sampas) {
         Log.v(LOG_TAG, "Speak: " + sampas);
         Instant startTime = Instant.now();
 
@@ -111,12 +112,12 @@ public class TTSEnginePyTorch implements TTSEngine {
 
         final long timeElapsed = Duration.between(startTime, stopTime).toMillis();
         Log.v(LOG_TAG, "Voice generation ran for " + timeElapsed / 1000.0F + " secs, " +
-                samples.length * 1000.0F / timeElapsed / GetSampleRate() + " x real-time");
+                samples.length * 1000.0F / timeElapsed / GetNativeSampleRate() + " x real-time");
         return bytes;
     }
 
     @Override
-    public int GetSampleRate() {
-        return 22050;
+    public int GetNativeSampleRate() {
+        return SAMPLE_RATE;
     }
 }

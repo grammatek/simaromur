@@ -163,7 +163,7 @@ public class TTSEngineController {
             // pitch & speed & sampleRate is applied by observer
             this.speed = 1.0f;
             this.pitch = 1.0f;
-            this.sampleRate = mEngine.GetSampleRate();
+            this.sampleRate = mEngine.GetNativeSampleRate();
         }
 
         /**
@@ -182,12 +182,12 @@ public class TTSEngineController {
          */
         public void run() {
             Log.v(LOG_SPEAK_TASK_TAG, "run() called");
-            assert(sampleRate == mEngine.GetSampleRate());
+            assert(sampleRate == mEngine.GetNativeSampleRate());
 
             // Frontend processing
             String sampas = mFrontend.process(text);
             if (isStopped) return;
-            byte[] pcmBytes16Bit = mEngine.SpeakToPCM(sampas, sampleRate);
+            byte[] pcmBytes16Bit = mEngine.SpeakToPCM(sampas);
             if (isStopped) return;
             if (observer == null) {
                 byte[] audio = AudioManager.applyPitchAndSpeed(pcmBytes16Bit, sampleRate, pitch, speed);

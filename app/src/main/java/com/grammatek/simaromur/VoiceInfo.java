@@ -111,7 +111,7 @@ public class VoiceInfo extends AppCompatActivity {
     public void onResume() {
         Log.v(LOG_TAG, "onResume:");
         super.onResume();
-        if (mVoice.type.equals(Voice.TYPE_TIRO)) {
+        if (mVoice.needsNetwork()) {
             if (ConnectionCheck.isNetworkConnected()) {
                 mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
             }
@@ -119,7 +119,7 @@ public class VoiceInfo extends AppCompatActivity {
                 mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
                 App.getAppRepository().showTtsBackendWarningDialog(this);
             }
-        } else if (mVoice.type.equals(Voice.TYPE_TORCH)) {
+        } else {
             mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_action_download);
         }
     }
