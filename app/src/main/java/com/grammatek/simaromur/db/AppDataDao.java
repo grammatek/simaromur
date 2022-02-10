@@ -23,7 +23,6 @@ public abstract class AppDataDao {
     @Update
     public abstract void update(AppData app);
 
-    // TODO(DS): this should be called only for special circumstances
     @Delete
     public abstract void delete(AppData app);
 
@@ -91,5 +90,4 @@ public abstract class AppDataDao {
         }
         return (appData.simVoiceListUpdateTime.before(date));
     }
-    // TODO(DS): To be continued ....
 }

@@ -36,7 +36,6 @@ public class AppData {
 
     //
     // SIM voices download info
-    // TODO(DS): contents of the voice list to be defined
     //
 
     // path to SIM voice list, empty if not yet downloaded
