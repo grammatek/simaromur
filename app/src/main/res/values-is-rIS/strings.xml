@@ -41,7 +41,7 @@
     <string name="info_repo_url">https://github.com/grammatek/simaromur</string>
     <string name="info_benchmark">Viðmið</string>
     <string name="info_benchmark_value">sinnum hraðar en rauntími</string>
-    <string name="info_app_version">Símarómur útgáfa</string>
+    <string name="info_app_version">Útgáfa</string>
     <string name="info_version_error">Villa við að ná í uppl. um útgáfu</string>
     <string name="check_internet">Athugaðu nettengingu</string>
     <string name="speech_service_not_available">Talgervilsþjónustan er ekki í boði eins og er</string>

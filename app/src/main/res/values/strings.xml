@@ -37,7 +37,7 @@
     <string name="info_runtime_header">RUNTIME_HEADER</string>
     <string name="info_runtime">Runtime information</string>
     <string name="info_android_version">Android Version</string>
-    <string name="info_app_version">Símarómur Version</string>
+    <string name="info_app_version">Version</string>
     <string name="info_version_error">Error retrieving version info</string>
     <string name="info_supported_abis">Supported ABIs</string>
     <string name="info_phone_model">Phone Model</string>
