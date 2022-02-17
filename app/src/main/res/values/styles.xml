@@ -60,6 +60,7 @@
         <item name="android:textColorLink">#6EB1F8</item>
         <item name="android:autoLink">web</item>
         <item name="android:linksClickable">true</item>
+        <item name="android:layout_marginTop">8dp</item>
     </style>
 
     <style name="button_style" parent="android:style/Widget.Material.Button">

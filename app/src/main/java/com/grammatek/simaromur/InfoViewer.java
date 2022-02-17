@@ -10,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -27,7 +26,8 @@ public class InfoViewer extends ListActivity {
         Log.v(LOG_TAG, "onCreate");
         super.onCreate(savedInstanceState);
         // use our non-default layout
-        setContentView(R.layout.info);
+        setContentView(R.layout.activity_info);
+        setTitle(R.string.simaromur_info);
         populateInformation();
     }
 
@@ -78,7 +78,7 @@ public class InfoViewer extends ListActivity {
         private final String[] data;
 
         public SettingsArrayAdapter(Context context, String[] values, String[] data) {
-            super(context, R.layout.info, values);
+            super(context, R.layout.activity_info, values);
             this.context = context;
             this.values = values;
             this.data = data;
@@ -87,14 +87,6 @@ public class InfoViewer extends ListActivity {
         @Override
         public int getViewTypeCount() {
             return 2;
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            if (values[position].equals(getString(R.string.info_runtime_header))) {
-                return 0;
-            }
-            else return 1;
         }
 
         @Override

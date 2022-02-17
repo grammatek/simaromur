@@ -81,7 +81,9 @@
         </activity>
         <activity
             android:name=".InfoViewer"
-            android:configChanges="keyboardHidden|orientation" />
+            android:label="@string/simaromur_info"
+            android:configChanges="keyboardHidden|orientation"
+        />
 
         <meta-data
             android:name="firebase_performance_logcat_enabled"
