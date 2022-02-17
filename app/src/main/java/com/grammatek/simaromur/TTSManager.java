@@ -152,8 +152,12 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
         AlertDialog d = new AlertDialog.Builder(this)
                 .setTitle(R.string.crashlytics_title)
                 .setMessage(s)
-                .setPositiveButton(R.string.doit, (dialog, id) -> App.getFirebaseCrashlytics().setCrashlyticsCollectionEnabled(true))
-                .setNegativeButton(R.string.not_yet, (dialog, id) -> App.getFirebaseCrashlytics().setCrashlyticsCollectionEnabled(false))
+                .setPositiveButton(R.string.doit, (dialog, id) -> {
+                    App.getAppRepository().doGiveCrashLyticsUserConsent(true);
+                })
+                .setNegativeButton(R.string.not_yet, (dialog, id) -> {
+                    App.getAppRepository().doGiveCrashLyticsUserConsent(false);
+                })
                 .setCancelable(false)
                 .create();
         d.show();

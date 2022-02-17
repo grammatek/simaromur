@@ -85,6 +85,14 @@
             android:configChanges="keyboardHidden|orientation"
         />
 
+        <receiver android:name="com.google.android.gms.measurement.AppMeasurementReceiver"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.measurement.UPLOAD" />
+                <action android:name="com.android.vending.INSTALL_REFERRER"/>
+            </intent-filter>
+        </receiver>
+
         <meta-data
             android:name="firebase_performance_logcat_enabled"
             android:value="false" />

@@ -24,7 +24,7 @@ import java.util.List;
 )
 public abstract class ApplicationDb extends RoomDatabase {
     private final static String LOG_TAG = "Simaromur_" + ApplicationDb.class.getSimpleName();
-    static final int LATEST_VERSION = 3;
+    static final int LATEST_VERSION = 4;
     private static ApplicationDb INSTANCE;
 
     public abstract AppDataDao appDataDao();
@@ -47,6 +47,13 @@ public abstract class ApplicationDb extends RoomDatabase {
                     + " ADD COLUMN privacy_info_dialog_accepted INTEGER NOT NULL DEFAULT(0)");
         }
     };
+    static public final Migration MIGRATION_3_4 = new Migration(3, 4){  // v3 => 4
+        @Override
+        public void migrate(SupportSQLiteDatabase database){
+            database.execSQL("ALTER TABLE app_data_table "
+                    + " ADD COLUMN crash_lytics_user_consent_accepted INTEGER NOT NULL DEFAULT(0)");
+        }
+    };
     public static ApplicationDb getDatabase(final Context context) {
         Log.v(LOG_TAG, "getDatabase");
         if (INSTANCE == null) {
@@ -54,7 +61,7 @@ public abstract class ApplicationDb extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             ApplicationDb.class, "application_db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                             // Wipes and rebuilds instead of migrating if no Migration object.
                             .fallbackToDestructiveMigration()
                             .allowMainThreadQueries()

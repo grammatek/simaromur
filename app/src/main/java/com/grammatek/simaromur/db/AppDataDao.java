@@ -9,8 +9,6 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
-import com.grammatek.simaromur.AppRepository;
-
 import java.util.Date;
 
 @Dao
@@ -43,6 +41,18 @@ public abstract class AppDataDao {
     public void doAcceptPrivacyNotice(Boolean setter) {
         AppData appData = getAppData();
         appData.privacyInfoDialogAccepted = setter;
+        update(appData);
+    }
+
+    // Return boolean, if CrashLytics user consent has been given
+    public Boolean hasGivenCrashLyticsUserConsent() {
+        return getAppData().crashLyticsUserConsentGiven;
+    }
+
+    // Sets boolean for CrashLytics user consent
+    public void doGiveCrashLyticsUserConsent(Boolean setter) {
+        AppData appData = getAppData();
+        appData.crashLyticsUserConsentGiven = setter;
         update(appData);
     }
 

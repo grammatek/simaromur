@@ -10,7 +10,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.TextView;
+
+import com.grammatek.simaromur.db.AppData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +32,42 @@ public class InfoViewer extends ListActivity {
         setContentView(R.layout.activity_info);
         setTitle(R.string.simaromur_info);
         populateInformation();
+    }
+
+    @Override
+    public void onResume() {
+        Log.v(LOG_TAG, "onResume:");
+        super.onResume();
+        // set the Firebase analytics checkbox according to what's in the database
+        CheckBox cb = findViewById(R.id.UserConsentFireBase);
+        cb.setOnClickListener(view -> {
+            boolean isChecked = ((CheckBox) view).isChecked();
+            setFirebaseConsentCheckBox(cb, isChecked);
+            App.getAppRepository().doGiveCrashLyticsUserConsent(isChecked);
+        });
+
+        // initialize checkbox appearance
+        AppData appData = App.getAppRepository().getCachedAppData();
+        if (appData != null) {
+            final boolean consentGiven = appData.crashLyticsUserConsentGiven;
+            cb.setChecked(consentGiven);
+            setFirebaseConsentCheckBox(cb, consentGiven);
+        }
+    }
+
+    /**
+     * Set check mark and text color appearance
+     * @param cb       CheckBox view
+     * @param checked  boolean for if checkbox is checked or not
+     */
+    private void setFirebaseConsentCheckBox(CheckBox cb, boolean checked) {
+        if (checked) {
+            cb.setButtonTintList(getColorStateList(R.color.green));
+            cb.setTextColor(getColorStateList(R.color.colorTextPrimary));
+        } else {
+            cb.setButtonTintList(getColorStateList(R.color.chrome));
+            cb.setTextColor(getColorStateList(R.color.chrome));
+        }
     }
 
     private void populateInformation() {

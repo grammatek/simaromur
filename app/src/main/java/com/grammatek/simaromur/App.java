@@ -8,6 +8,7 @@ import android.util.Log;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.google.firebase.perf.FirebasePerformance;
 import com.grammatek.simaromur.frontend.NormalizationManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
@@ -67,8 +68,17 @@ public class App extends Application {
         return mNormalizationManager;
     }
 
-    public static FirebaseAnalytics getFirebaseAnalytics() { return sFirebaseAnalytics; }
-    public static FirebaseCrashlytics getFirebaseCrashlytics() { return sFirebaseCrashlytics; }
+    /**
+     * Switch on/off Firebase performance/analytics/crashreports
+     *
+     * @param isEnabled if true, all metrics & crash reports are enabled, and via false
+     *                  all metrics & crash reports are disabled.
+     */
+    public static void setFirebaseAnalytics(boolean isEnabled) {
+        FirebasePerformance.getInstance().setPerformanceCollectionEnabled(isEnabled);
+        sFirebaseCrashlytics.setCrashlyticsCollectionEnabled(isEnabled);
+        sFirebaseAnalytics.setAnalyticsCollectionEnabled(isEnabled);
+    }
 
     @Override
     public void onCreate() {
