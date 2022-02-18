@@ -13,7 +13,6 @@
     <string name="tts_settings_label">Stillingar fyrir talgervil</string>
     <string name="voice_list_update">Sækja lista af röddum</string>
     <string name="speak_button">Spila</string>
-    <string name="voice_test_text">Innanlandssmitið sem greindist utan sóttkvíar í gær sýnir að veiran er ekki horfin úr samfélaginu</string>
     <string name="voice_lang_title">Tungumál</string>
     <string name="voice_name_title">Nafn</string>
     <string name="voice_gender_title">Kyn</string>
@@ -57,4 +56,6 @@
     <string name="crashlytics_title">Bæta Símaróm</string>
     <string name="type_local">á tæki</string>
     <string name="type_network">netrödd</string>
+    <string name="voice_test_text_network">Þetta er netrödd. Texti til lestrar er sendur á netþjón, sem sendir upplesturinn til baka á snjallsímann. Netraddirnar eru enn sem komið er hraðvirkari en raddirnar á símanum sjálfum.</string>
+    <string name="voice_test_text_on_device">Þessi rödd er mynduð á snjallsímanum þínum. Enn sem komið er tekur raddmyndun á síma frekar langan tíma, en því öflugri sem síminn þinn er, því styttri tíma tekur að mynda röddina.</string>
 </resources>

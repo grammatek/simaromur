@@ -2,12 +2,14 @@ package com.grammatek.simaromur;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -17,6 +19,7 @@ import java.util.Map;
 import static org.junit.Assert.assertNotEquals;
 
 @RunWith(RobolectricTestRunner.class)
+@Config(sdk = {Build.VERSION_CODES.O_MR1})
 public class FileUtilsTest {
     private final static String LOG_TAG = "Simarómur_Test_" + FileUtilsTest.class.getSimpleName();
     private final static Context context = ApplicationProvider.getApplicationContext();

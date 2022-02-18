@@ -143,7 +143,6 @@
         android:importantForAutofill="no"
         android:inputType="textAutoCorrect|textMultiLine"
         android:orientation="vertical"
-        android:text="@string/voice_test_text"
         app:layout_constraintBottom_toTopOf="@+id/speak_button"
         app:layout_constraintEnd_toEndOf="@+id/imageStatus"
         app:layout_constraintStart_toStartOf="@+id/textView8"

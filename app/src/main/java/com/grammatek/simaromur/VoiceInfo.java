@@ -65,6 +65,7 @@ public class VoiceInfo extends AppCompatActivity {
         TextView langTextView = findViewById(R.id.textViewLanguage);
         TextView genderTextView = findViewById(R.id.textViewGender);
         TextView typeTextView = findViewById(R.id.textViewType);
+        TextView speakableTextView = findViewById(R.id.speakable_text);
 
         // setup button / spinner
         Button button = findViewById(R.id.speak_button);
@@ -93,10 +94,12 @@ public class VoiceInfo extends AppCompatActivity {
                 } else {
                     genderTextView.setText(getResources().getString(R.string.female));
                 }
-                if (mVoice.type.equalsIgnoreCase("tiro")) {
+                if (mVoice.needsNetwork()) {
                     typeTextView.setText(getResources().getString(R.string.type_network));
+                    speakableTextView.setText(getResources().getString(R.string.voice_test_text_network));
                 } else {
                     typeTextView.setText(getResources().getString(R.string.type_local));
+                    speakableTextView.setText(getResources().getString(R.string.voice_test_text_on_device));
                 }
                 setTitle("Símarómur / " + getResources().getString(R.string.simaromur_voice_manager)
                         + " / " + mVoice.name);
