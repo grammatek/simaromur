@@ -200,10 +200,11 @@ dependencies {
     // Add PyTorch dependencies
     implementation 'org.pytorch:pytorch_android_lite:1.10.0'
 
-    // Add Tensorflow lite dependencies
-    implementation 'org.tensorflow:tensorflow-lite:2.6.0'
-    implementation 'org.tensorflow:tensorflow-lite-support:0.3.0'
-    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.6.0'
+    // Add Tensorflow lite dependencies, not needed, therefore disabling it because the release
+    // binary gets too big !
+    //implementation 'org.tensorflow:tensorflow-lite:2.6.0'
+    //implementation 'org.tensorflow:tensorflow-lite-support:0.3.0'
+    //implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.6.0'
 
 }
 

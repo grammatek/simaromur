@@ -2,20 +2,21 @@ package com.grammatek.simaromur.device;
 
 import com.grammatek.simaromur.App;
 
-import org.tensorflow.lite.Interpreter;
+// don't bundle unless needed
+//import org.tensorflow.lite.Interpreter;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 public class TTSEngineTensorFlow implements TTSEngine {
-    final private Interpreter interpreter;
+    //final private Interpreter interpreter;
     private final static int SAMPLE_RATE = 22050;
 
     public TTSEngineTensorFlow(String modelFilename) {
         File modelFile = new File(App.getDataPath() + "/" + modelFilename);
         // load the model
-        interpreter = new Interpreter(modelFile);
+        //interpreter = new Interpreter(modelFile);
     }
 
     public byte[] SpeakToPCM(String sampas) {
@@ -26,7 +27,7 @@ public class TTSEngineTensorFlow implements TTSEngine {
         String[] audioData = new String[1];
         outputs.put("audio", audioData);
         try {
-            interpreter.runSignature(inputs, outputs, "myTTSSignature");
+            //interpreter.runSignature(inputs, outputs, "myTTSSignature");
         } catch (Exception e) {
             e.printStackTrace();
         }
