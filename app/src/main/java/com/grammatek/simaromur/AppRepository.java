@@ -120,6 +120,9 @@ public class AppRepository {
                     loadVoice(selectedVoice.name);
                 }
             }
+            // user consent can change anytime
+            final Boolean setCrashLytics = appData.crashLyticsUserConsentGiven;
+            App.setFirebaseAnalytics(setCrashLytics);
         });
         mAllVoices = mVoiceDao.getAllVoices();
         mAllVoices.observeForever(voices -> {
@@ -618,6 +621,38 @@ public class AppRepository {
         @Override
         protected Void doInBackground(final Boolean... params) {
             mAsyncTaskDao.doAcceptPrivacyNotice(params[0]);
+            return null;
+        }
+    }
+
+    /**
+     * Set the CrashLytics user consent. If this is set to true, we can use CrashLytics to provide
+     * better developer-friendly feedback like crash reports and usage statistics. If set to false,
+     * developers and the CrashLytics cloud provider (i.e. Google) will not receive any usage
+     * statistics or crash reports.
+     *
+     * @param setter    true for allowing to send usage statistics and crash reports to the cloud
+     *                  provider of CrashLytics, false for disabling crash reports and usage statistics
+     */
+    public void doGiveCrashLyticsUserConsent(Boolean setter) {
+        Log.v(LOG_TAG, "insertVoice");
+        new doGiveCrashLyticsUserConsentAsyncTask(mAppDataDao).execute(setter);
+        // the real Firebase settings are updated asynchronously in appData observer
+    }
+
+    /**
+     * Asynchronously update the database for the privacy notice acceptance flag
+     */
+    private static class doGiveCrashLyticsUserConsentAsyncTask extends AsyncTask<Boolean, Void, Void> {
+        private final AppDataDao mAsyncTaskDao;
+
+        doGiveCrashLyticsUserConsentAsyncTask(AppDataDao dao) {
+            mAsyncTaskDao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(final Boolean... params) {
+            mAsyncTaskDao.doGiveCrashLyticsUserConsent(params[0]);
             return null;
         }
     }

@@ -36,7 +36,6 @@ public class AppData {
 
     //
     // SIM voices download info
-    // TODO(DS): contents of the voice list to be defined
     //
 
     // path to SIM voice list, empty if not yet downloaded
@@ -53,6 +52,11 @@ public class AppData {
     @NonNull
     public Boolean privacyInfoDialogAccepted = false;
 
+    // boolean for CrashLytics user consent
+    @ColumnInfo(name = "crash_lytics_user_consent_accepted", defaultValue = "0")
+    @NonNull
+    public Boolean crashLyticsUserConsentGiven = false;
+
     @Override
     public String toString() {
         return "AppData{" +
@@ -64,6 +68,7 @@ public class AppData {
                 ", simVoiceListPath='" + simVoiceListPath + '\'' +
                 ", simVoiceListUpdateTime=" + simVoiceListUpdateTime +
                 ", privacyInfoDialogAccepted=" + privacyInfoDialogAccepted +
+                ", crashLyticsUserConsentGiven=" + crashLyticsUserConsentGiven +
                 '}';
     }
 }

@@ -5,13 +5,11 @@
     </style>
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
     <style name="AppTheme.Launcher">
-        <!-- Customize your theme here. -->
         <item name="android:windowBackground">@drawable/launch_screen</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
@@ -49,7 +47,21 @@
         <item name="android:textColor">@color/colorTextPrimary</item>
     </style>
 
+    <style name="info_view_style_1">
+        <item name="android:textAppearance">
+            @android:style/TextAppearance.Large</item>
+        <item name="android:textColor">@color/colorTextPrimary</item>
+    </style>
 
+    <style name="info_view_style_2">
+        <item name="android:textAppearance">
+            @android:style/TextAppearance.Small</item>
+        <item name="android:textColor">@color/colorTextPrimary</item>
+        <item name="android:textColorLink">#6EB1F8</item>
+        <item name="android:autoLink">web</item>
+        <item name="android:linksClickable">true</item>
+        <item name="android:layout_marginTop">8dp</item>
+    </style>
 
     <style name="button_style" parent="android:style/Widget.Material.Button">
         <!-- Customize your theme here. -->
@@ -61,6 +73,5 @@
         <item name="android:textAppearance">@android:style/TextAppearance.Large</item>
         <item name="android:layout_marginTop">16dp</item>
         <item name="android:textColor">@color/colorTextPrimary</item>
-
     </style>
 </resources>

@@ -7,24 +7,24 @@
     android:orientation="horizontal">
 
     <TextView
-        android:gravity="start"
-        android:textAlignment="textStart"
         android:id="@+id/textViewLeft"
         style="@style/text_view_style"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/darkGray"
         android:layout_weight="66.6"
+        android:background="@color/colorPrimaryDark"
+        android:gravity="start"
+        android:textAlignment="textStart"
         tools:text="placeholder text" />
 
     <TextView
-        android:gravity="center"
-        android:textAlignment="center"
         android:id="@+id/textViewRight"
         style="@style/text_view_style"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@color/darkGray"
+        android:background="@color/colorPrimaryDark"
+        android:gravity="center"
+        android:textAlignment="center"
 
         tools:text="placeholder text" />
 
