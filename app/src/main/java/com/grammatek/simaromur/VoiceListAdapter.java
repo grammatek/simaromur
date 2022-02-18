@@ -46,7 +46,7 @@ public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.Voic
     public void onBindViewHolder(VoiceViewHolder holder, int position) {
         Voice current = mVoices.get(position);
         holder.voiceNameItemView.setText(current.name);
-        if (current.type.equals("tiro")) {
+        if (current.needsNetwork()) {
             holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_network));
         } else {
             holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_local));

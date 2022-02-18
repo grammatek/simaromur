@@ -2,6 +2,7 @@ package com.grammatek.simaromur;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -9,6 +10,7 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ import com.grammatek.simaromur.device.pojo.DeviceVoices;
 import com.grammatek.simaromur.db.Voice;
 
 @RunWith(RobolectricTestRunner.class)
+@Config(sdk = {Build.VERSION_CODES.O_MR1})
 public class DbVoiceTest {
     private final static String LOG_TAG = "Simarómur_Test_" + FileUtilsTest.class.getSimpleName();
     private final static Context context = ApplicationProvider.getApplicationContext();
