@@ -52,6 +52,7 @@ public class VoiceManager extends AppCompatActivity {
             launchVoiceInfoActivity(voice);
         });
         App.getAppRepository().streamTiroVoices("");
+        setTitle("Símarómur / " + getResources().getString(R.string.simaromur_voice_manager));
     }
 
     public void launchVoiceInfoActivity( Voice voice) {

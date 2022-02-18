@@ -4,13 +4,10 @@
     android:id="@+id/infoLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent">
+    android:background="@android:color/black">
 
     <ListView
-        android:id="@android:id/list"
+        android:id="@+id/infoListView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/UserConsentFireBase"
@@ -35,7 +32,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@android:id/list" />
+        app:layout_constraintTop_toBottomOf="@+id/infoListView" />
 
     <Space
         android:id="@+id/textSpacerInfo"

@@ -4,7 +4,7 @@
     <string name="eng_sample">This is a sample English sentence for Símarómur synthesizer.</string>
     <string name="icelandic_sample">Þetta er prófunarsetning á íslensku fyrir talgervilinn Símarómur.</string>
     <string name="simaromur_manager">Símarómur</string>
-    <string name="simaromur_voice_manager">Símarómur raddir</string>
+    <string name="simaromur_voice_manager">Raddir</string>
     <string name="simaromur_info">Um Símaróm</string>
     <string name="simaromur_feedback">Ábendingar</string>
     <string name="email_subject">Ábending vegna Símaróms</string>

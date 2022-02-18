@@ -1,6 +1,7 @@
 package com.grammatek.simaromur;
 
 import android.annotation.SuppressLint;
+import android.app.ListActivity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
@@ -97,6 +98,8 @@ public class VoiceInfo extends AppCompatActivity {
                 } else {
                     typeTextView.setText(getResources().getString(R.string.type_local));
                 }
+                setTitle("Símarómur / " + getResources().getString(R.string.simaromur_voice_manager)
+                        + " / " + mVoice.name);
             }
         });
     }

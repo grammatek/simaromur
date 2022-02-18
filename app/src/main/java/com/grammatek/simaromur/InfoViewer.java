@@ -1,6 +1,5 @@
 package com.grammatek.simaromur;
 
-import android.app.ListActivity;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -11,7 +10,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.ListView;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.grammatek.simaromur.db.AppData;
 
@@ -21,7 +23,7 @@ import java.util.List;
 /**
  * Activity shows information about the application.
  */
-public class InfoViewer extends ListActivity {
+public class InfoViewer extends AppCompatActivity {
     private final static String LOG_TAG = "Simaromur_Java_" + InfoViewer.class.getSimpleName();
 
     @Override
@@ -30,7 +32,7 @@ public class InfoViewer extends ListActivity {
         super.onCreate(savedInstanceState);
         // use our non-default layout
         setContentView(R.layout.activity_info);
-        setTitle(R.string.simaromur_info);
+        setTitle("Símarómur / " + getResources().getString(R.string.simaromur_info));
         populateInformation();
     }
 
@@ -78,7 +80,6 @@ public class InfoViewer extends ListActivity {
                 add(getString(R.string.info_copyright));
                 add(getString(R.string.info_privacy_notice));
                 add(getString(R.string.info_android_version));
-                add(getString(R.string.info_supported_abis));
                 add(getString(R.string.info_phone_model));
             }
         };
@@ -98,7 +99,6 @@ public class InfoViewer extends ListActivity {
             add(getString(R.string.info_about));
             add(getString(R.string.info_privacy_notice_url));
             add(android.os.Build.VERSION.RELEASE);
-            add(String.join(", ", android.os.Build.SUPPORTED_ABIS));
             add(android.os.Build.MODEL);
             }
         };
@@ -107,11 +107,11 @@ public class InfoViewer extends ListActivity {
         Data.toArray(dataArray);
         String[] infoArray = new String[Info.size()];
         Info.toArray(infoArray);
-
-        setListAdapter(new SettingsArrayAdapter(this, infoArray, dataArray));
+        ListView infoView = findViewById(R.id.infoListView);
+        infoView.setAdapter(new SettingsArrayAdapter(this, infoArray, dataArray));
     }
 
-    private class SettingsArrayAdapter extends ArrayAdapter<String> {
+    private static class SettingsArrayAdapter extends ArrayAdapter<String> {
         private final Context context;
         private final String[] values;
         private final String[] data;
