@@ -20,5 +20,8 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
+-keep class com.grammatek.simaromur.device.NativeG2P { *; }
 -keep class opennlp.** { *; }
 -dontwarn opennlp.**
+-keep class org.pytorch.** { *; }
+-keep class com.facebook.** { *; }
