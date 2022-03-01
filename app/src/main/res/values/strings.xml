@@ -46,7 +46,7 @@
     <string name="info_repo_url">https://github.com/grammatek/simaromur</string>
     <string name="info_benchmark">Benchmark</string>
     <string name="info_benchmark_value">times faster than real time</string>
-    <string name="privacy_notice">Símarómur sends text to a 3rdparty speech service to convert it to spoken language. Neither the text, nor the audio data or your IP address are stored on the mobile phone or on these servers.\n\nPlease visit our privacy policy at https://www.grammatek.com/legal#simaromur</string>
+    <string name="privacy_notice">Símarómur sends text to a 3rd party speech service to convert it to spoken language. Neither the text, nor the audio data or your IP address are stored on the mobile phone or on these servers.\n\nPlease visit our privacy policy at https://www.grammatek.com/legal#simaromur</string>
     <string name="crashlytics_title">Improve Símarómur</string>
     <string name="crashlytics_notice">To improve Símarómur, you can enable anonymous usage statistics and crash reports to be gathered via a third party: Google Firebase. If you consent, your IP Address is stored only for this purpose.\n\nYou can revoke your consent anytime, by deselecting your consent in the Info screen\n\n\nPlease visit our privacy policy at https://www.grammatek.com/legal#simaromur</string>
     <string name="speech_service_connection_problem">Símarómur connection problem</string>

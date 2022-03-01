@@ -55,7 +55,7 @@ public class Pronunciation {
     private Map<String, PronDictEntry> readPronDict() {
         Map<String, PronDictEntry> pronDict = new HashMap<>();
         Resources res = this.mContext.getResources();
-        int resID = R.raw.ice_pron_dict_standard_clear_2102;
+        int resID = R.raw.ice_pron_dict_standard_clear_2201_extended;
         String line = "";
         try {
             InputStream is = res.openRawResource(resID);
