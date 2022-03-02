@@ -58,7 +58,7 @@ public class TTSObserver implements AudioObserver {
      *
      * @param ttsData Audio response data from Tiro API
      */
-    public void update(final byte[] ttsData) {
+    public synchronized void update(final byte[] ttsData) {
         if (ttsData.length == 0) {
             Log.v(LOG_TAG, "TTSObserver: Nothing to speak");
             TTSService.playSilence(mSynthCb);
@@ -98,13 +98,13 @@ public class TTSObserver implements AudioObserver {
         // ignore, as we don't play from files
     }
 
-    public void stop() {
+    public synchronized void stop() {
         if (mSynthCb.hasStarted() && ! mSynthCb.hasFinished()) {
             mSynthCb.done();
         }
     }
 
-    public void error(String errorMsg) {
+    public synchronized void error(String errorMsg) {
         Log.e(LOG_TAG, "TTSObserver()::error: " + errorMsg);
         mSynthCb.error(ERROR_NETWORK);
     }
