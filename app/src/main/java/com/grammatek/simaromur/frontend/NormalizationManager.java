@@ -31,22 +31,19 @@ import java.util.List;
 public class NormalizationManager {
     private final static boolean DEBUG = false;
     private final static String LOG_TAG = "Simaromur_Java_" + NormalizationManager.class.getSimpleName();
-    private static final String POS_MODEL = "is-pos-reduced-maxent.bin";
+    private static final String POS_MODEL = "pos/is-pos-reduced-maxent.bin";
 
     private final Context mContext;
     private final POSTaggerME mPosTagger;
     private final TTSUnicodeNormalizer mUnicodeNormalizer;
     private final Tokenizer mTokenizer;
     private final TTSNormalizer mTTSNormalizer;
-    private final String mAssetsPath;
 
     public NormalizationManager(Context context) {
         mContext = context;
         mUnicodeNormalizer = new TTSUnicodeNormalizer(context);
         mTokenizer = new Tokenizer(context);
         mTTSNormalizer = new TTSNormalizer();
-        mAssetsPath = new File(App.getDataPath()).getParent();
-        copyAssets("pos");
         mPosTagger = initPOSTagger();
     }
 
@@ -108,7 +105,9 @@ public class NormalizationManager {
     private POSTaggerME initPOSTagger() {
         POSTaggerME posTagger = null;
         try {
-            POSModel posModel = new POSModel(new File(mAssetsPath + "/pos/" + POS_MODEL));
+            // read model from assets
+            InputStream iStream = mContext.getAssets().open(POS_MODEL);
+            POSModel posModel = new POSModel(iStream);
             posTagger = new POSTaggerME(posModel);
 
         } catch(IOException e) {
@@ -123,48 +122,6 @@ public class NormalizationManager {
         Log.v(LOG_TAG, "Token\t:\tTag\t:\tProbability\n--------------------------");
         for(int i=0;i<tokens.length;i++){
             Log.v(LOG_TAG, tokens[i]+"\t:\t"+tags[i]+"\t:\t"+probs[i]);
-        }
-    }
-
-    private void copyAssets(String assetSubPath) {
-        AssetManager assetManager = mContext.getAssets();
-        String[] files = null;
-        try {
-            files = assetManager.list(assetSubPath);
-            // create destination assetSubPath if not exists
-            String destDir = mAssetsPath + "/" + assetSubPath + "/";
-            try {
-                File dir = new File(destDir);
-                if (!dir.exists())
-                    dir.mkdir();
-            } catch(SecurityException e) {
-                Log.e(LOG_TAG, "Failed to create directory: " + destDir, e);
-            }
-            for(String filename : files) {
-                try {
-                    File outFile = new File(destDir, filename);
-                    OutputStream outStream = new FileOutputStream(outFile);
-                    InputStream inStream = assetManager.open(assetSubPath + "/" + filename);
-
-                    copyFile(inStream, outStream);
-                    inStream.close();
-                    outStream.flush();
-                    outStream.close();
-                    Log.i(LOG_TAG, "Copied " + filename + " to " + outFile.getAbsolutePath());
-                } catch(IOException e) {
-                    Log.e(LOG_TAG, "Failed to copy asset file: " + filename, e);
-                }
-            }
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Failed to get asset file list.", e);
-        }
-    }
-
-    private void copyFile(InputStream inStream, OutputStream outStream) throws IOException {
-        byte[] buffer = new byte[1024];
-        int read;
-        while((read = inStream.read(buffer)) != -1) {
-            outStream.write(buffer, 0, read);
         }
     }
 }
