@@ -107,7 +107,6 @@ public class TTSUnicodeNormalizer {
                     sb.append(wrd + " ");
                     continue;
                 }
-                //TODO: update lexicon!!
                 if (!inDictionary(wrd)) {
                     for (int i = 0; i < wrd.length(); i++) {
                         // is it an Icelandic character?
