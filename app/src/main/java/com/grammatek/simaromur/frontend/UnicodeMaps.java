@@ -185,6 +185,8 @@ public class UnicodeMaps {
         otherSubstMap.put('\u0091', "'"); // private use one -> why this substitution?
         otherSubstMap.put('\u0092', "’"); // private use two -> why this substitution?
         otherSubstMap.put('\u0096', "-"); // start of guarded area -> why this substitution?
+        otherSubstMap.put('\u00a9', "höfundarréttur"); // © copyright sign
+        otherSubstMap.put('\u00ae', "skráð vörumerki"); // ® registered trademark symbol
         otherSubstMap.put('\u00b4', "'"); // acute accent
         otherSubstMap.put('\u2010', "-"); // hyphen
         otherSubstMap.put('\u2011', "-"); // non-breaking hyphen

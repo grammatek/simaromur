@@ -103,6 +103,11 @@ public class TTSUnicodeNormalizer {
             StringBuilder sb = new StringBuilder();
             String[] sentArr = sent.split(" ");
             for (String wrd : sentArr) {
+                if (isTag(wrd)) {
+                    sb.append(wrd + " ");
+                    continue;
+                }
+                //TODO: update lexicon!!
                 if (!inDictionary(wrd)) {
                     for (int i = 0; i < wrd.length(); i++) {
                         // is it an Icelandic character?
@@ -117,9 +122,14 @@ public class TTSUnicodeNormalizer {
                             // symbols and punctuation chars should cause the voice to pause?
                             else if (wrd.charAt(i) == '(' || wrd.charAt(i) == ')' || wrd.charAt(i) == '"')
                                 wrd = wrd.replace(Character.toString(wrd.charAt(i)), ",");
+                            // for now, replace end of sentence symbols with a full stop,
+                            // later the exclamation mark and question mark might have a special
+                            // meaning for the TTS engine
+                            else if (Character.toString(wrd.charAt(i)).matches("[:!?]"))
+                                wrd = wrd.replace(Character.toString(wrd.charAt(i)), ".");
                             // we want to keep punctuation marks still present in the normalized
                             // string, but delete the unknown character otherwise
-                            else if (!Character.toString(wrd.charAt(i)).matches("[.,:!?]"))
+                            else if (!Character.toString(wrd.charAt(i)).matches("[.,]"))
                                 wrd = wrd.replace(Character.toString(wrd.charAt(i)), "");
                         }
                     }
@@ -137,6 +147,10 @@ public class TTSUnicodeNormalizer {
 
     public static boolean inDictionary(String wrd) {
         return mLexicon.contains(wrd.toLowerCase());
+    }
+
+    private boolean isTag(String wrd) {
+        return wrd.matches("^<\\w+>$");
     }
 
     private boolean shouldDelete(Character c) {

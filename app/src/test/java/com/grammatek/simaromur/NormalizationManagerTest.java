@@ -28,12 +28,21 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Í gær greindust 78 með ABCD-19";
+        String input = "til áramóta 2021/2022";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("í gær greindust sjötíu og átta með a b c d nítján .",
+        assertEquals("til áramóta tvö þúsund tuttugu og eitt <sil> tvö þúsund tuttugu og tvö .",
                 processed);
+    }
+
+    @Test
+    public void processNewIssuesTest() {
+        NormalizationManager manager = new NormalizationManager(context);
+        for (String sent : getNewTestSentences().keySet()) {
+            String processed = manager.process(sent);
+            assertEquals(getNewTestSentences().get(sent), processed);
+        }
     }
 
     @Test
@@ -45,14 +54,22 @@ public class NormalizationManagerTest {
         }
     }
 
+    private Map<String, String> getNewTestSentences() {
+        Map<String, String> sent = new HashMap<>();
+        sent.put("Mörk Ómars á EM:", "mörk ómars á em .");
+        sent.put("til áramóta 2021/2022", "til áramóta tvö þúsund tuttugu og eitt <sil> tvö þúsund tuttugu og tvö .");
+        sent.put("© grammatek", "höfundarréttur grammatek .");
+        return sent;
+    }
+
     private Map<String, String> getTestSentences() {
         Map<String, String> testSentences = new HashMap<>();
         testSentences.put("Í gær greindust 78 með COVID-19",
-                "Í gær greindust sjötíu og átta með kovid nítján .".toLowerCase());
+                "Í gær greindust sjötíu og átta með covid nítján .".toLowerCase());
         testSentences.put("Í gær greindust 78 með Covid-19",
-                "Í gær greindust sjötíu og átta með Kovid nítján .".toLowerCase());
+                "Í gær greindust sjötíu og átta með Covid nítján .".toLowerCase());
         testSentences.put("Í gær greindust 78 með covid-19",
-                "Í gær greindust sjötíu og átta með kovid nítján .".toLowerCase());
+                "Í gær greindust sjötíu og átta með covid nítján .".toLowerCase());
         testSentences.put("Í gær greindust 78 með CREW-19",
                 "Í gær greindust sjötíu og átta með crew nítján .".toLowerCase());
         testSentences.put("Í gær greindust 78 með ABCD-19",
@@ -67,7 +84,7 @@ public class NormalizationManagerTest {
         testSentences.put("Viðeignin fer fram í sal FS og hefst klukkan 20 .",
                 "Viðeignin fer fram í sal f s og hefst klukkan tuttugu .".toLowerCase()); // spelling error!
         testSentences.put("Annars var verði 3500 fyrir tímann !",
-                "Annars var verði þrjú þúsund og fimm hundruð fyrir tímann !".toLowerCase()); // spelling error
+                "Annars var verði þrjú þúsund og fimm hundruð fyrir tímann .".toLowerCase()); // spelling error
         testSentences.put("Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann SL þriðjudaginn 18. janúar nk. ",
                 "Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann s l þriðjudaginn átjánda janúar næstkomandi .".toLowerCase());
         testSentences.put("„ Ég kíki daglega á facebook , karfan.is , vf.is , mbl.is , kkí , og utpabroncs.com . “ ",
@@ -143,6 +160,9 @@ public class NormalizationManagerTest {
         testSentences.put("C4CE6358DF86040CAAEEBC58951B8E133105D3369980D62D109E5B6B75CCE67C_713x0",
                 "c fjögur c e sex þúsund þrjú hundruð fimmtíu og átta d f átta sex núll fjórir núll c a a e e b c fimm átta níu fimm einn b átta e einn þrír þrír einn núll fimm d þrír þrír sex níu níu átta núll d sextíu og tvö d hundrað og níu e fimm b sex b sjötíu og fimm c c e sextíu og sjö c sjö hundruð og þrettán x núll ."
         );
+        testSentences.put("Mörk Ómars á EM:", "mörk ómars á em .");
+        testSentences.put("til áramóta 2021/2022", "til áramóta tvö þúsund tuttugu og eitt <sil> tvö þúsund tuttugu og tvö .");
+        testSentences.put("© grammatek", "höfundarréttur grammatek .");
 
         return testSentences;
     }
