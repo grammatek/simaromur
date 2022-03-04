@@ -35,9 +35,13 @@ public class FrontendManager {
      * @return an X-SAMPA transcription of @text
      */
     public String process(String text) {
-        final String sp = " " + SymbolsLvLIs.SymbolShortPause + " ";
         final String normalized = mNormalizationManager.process(text);
-        String transcribedText = mPronunciation.transcribe(normalized);
+        return transcribe(normalized);
+    }
+
+    public String transcribe(String text) {
+        final String sp = " " + SymbolsLvLIs.SymbolShortPause + " ";
+        String transcribedText = mPronunciation.transcribe(text);
 
         // replace special characters
         transcribedText = transcribedText.replaceAll("\\.", sp);

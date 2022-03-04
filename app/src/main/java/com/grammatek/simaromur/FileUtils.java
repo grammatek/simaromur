@@ -5,19 +5,27 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 
 public class FileUtils {
     private final static String LOG_TAG = "Simaromur_" + FileUtils.class.getSimpleName();
+    private static HashMap<String, LocalDateTime> sAssetDateTimeMap;
 
     /**
      * Calculate MD5 message digest of given file and return it as string
@@ -141,5 +149,94 @@ public class FileUtils {
         }
 
         throw new IOException("No such file: " + assetFileName);
+    }
+
+    /**
+     * Copy asset files recursively to the data directory of the application.
+     *
+     * @param assetManager  asset manager of app context
+     * @param assetSubPath  Path inside assets where to look for files to copy
+     * @param destPath      destination directory to copy files into, if it doesn't exist, it's
+     *                      created
+     */
+    public static void copyAssetFilesRecursive(AssetManager assetManager, String assetSubPath, String destPath) throws IOException {
+        String[] files;
+        if (sAssetDateTimeMap == null) {
+            // lazy load mapping of asset files to DateTime
+            sAssetDateTimeMap = FileUtils.readAssetDateList(assetManager);
+        }
+
+        try {
+            files = assetManager.list(assetSubPath);
+            // create destination assetSubPath if not exists
+            String destDir = destPath + "/";
+            try {
+                File dir = new File(destDir);
+                if (!dir.exists()) {
+                    boolean rv = dir.mkdir();
+                    if (!rv)    throw new IOException("Couldn't create " + destDir);
+                }
+            } catch(SecurityException e) {
+                Log.e(LOG_TAG, "Failed to create directory: " + destDir, e);
+            }
+            for(String filename : files) {
+                try {
+                    String assetFileName = assetSubPath + "/" + filename;
+                    String outputFileName = destDir + filename;
+                    if (Files.exists(Paths.get(outputFileName))) {
+                        // don't copy if destination file exists and is newer than asset file
+                        final LocalDateTime assetFileTime = sAssetDateTimeMap.get("assets/" + assetFileName);
+                        final LocalDateTime destFileTime = FileUtils.getModificationDateTimeOfFile(outputFileName);
+                        if (assetFileTime != null && destFileTime.isAfter(assetFileTime)) {
+                            Log.i(LOG_TAG, "Asset already copied: " + assetFileName + " on: " +
+                                    destFileTime.format(DateTimeFormatter.ofPattern("dd.MM.yyyy:H:m:s")));
+                            continue;
+                        }
+                    }
+                    OutputStream outStream = new FileOutputStream(new File(destDir, filename));
+                    InputStream inStream = assetManager.open(assetFileName);
+
+                    copyFile(inStream, outStream);
+                    inStream.close();
+                    outStream.flush();
+                    outStream.close();
+                    Log.i(LOG_TAG, "Copied " + filename + " to " + outputFileName);
+                } catch(IOException e) {
+                    Log.e(LOG_TAG, "Failed to copy asset file: " + filename, e);
+                }
+            }
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Failed to get asset file list.", e);
+        }
+    }
+
+    /**
+     * Copy input stream to output stream. Both streams need to exist and be open
+     *
+     * @param inStream      Input stream
+     * @param outStream     Output stream
+     *
+     * @throws IOException  In case any I/O error happens
+     */
+    public static void copyFile(InputStream inStream, OutputStream outStream) throws IOException {
+        byte[] buffer = new byte[1024];
+        int read;
+        while((read = inStream.read(buffer)) != -1) {
+            outStream.write(buffer, 0, read);
+        }
+    }
+
+    /**
+     * Returns the LocalDateTime object of given file as last modification time.
+     *
+     * @param fileName      Filename to be used for operation
+     * @return              LocalDateTime object of modification time of file
+     *
+     * @throws IOException  In case any I/O error happens
+     */
+    public static LocalDateTime getModificationDateTimeOfFile(String fileName) throws IOException {
+        Path file = Paths.get(fileName);
+        long millis = Files.getLastModifiedTime(file).toMillis();
+        return  Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDateTime();
     }
 }

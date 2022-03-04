@@ -1,4 +1,5 @@
 &
+a
 a-moll
 aalesund
 aaron
@@ -2049,6 +2050,7 @@ aðvífandi
 aðvörun
 aþena
 aþenu
+b
 b-moll
 ba
 babel
@@ -5114,6 +5116,7 @@ býtum
 býð
 býðst
 býður
+c
 c-moll
 ca
 cab
@@ -5416,6 +5419,7 @@ cycles
 cycling
 cyrus
 cís-moll
+d
 d'or
 d-moll
 dabbi
@@ -6826,6 +6830,7 @@ dýrustu
 dýrð
 dýrðarhnoss
 dýrðir
+e
 e-moll
 e-pilla
 e-pillan
@@ -8518,6 +8523,7 @@ eðvaldsson
 eðvarð
 eðvarðsson
 eþíópíu
+f
 f-moll
 fabian
 fabio
@@ -12493,6 +12499,7 @@ fúsum
 fýlu
 fýlusvip
 fýsn
+g
 g-moll
 gaal
 gabb
@@ -14800,6 +14807,7 @@ gústav
 gústavsson
 gústi
 gýgur
+h
 h-moll
 ha
 haag
@@ -19107,6 +19115,7 @@ hýsa
 hýsir
 hýst
 hýsti
+i
 i'd
 i'll
 i've
@@ -19181,6 +19190,7 @@ impact
 implant
 impregilo
 impressjónismi
+improve
 impru
 in
 inc
@@ -19578,6 +19588,7 @@ iðrun
 iðulega
 iðunn
 iðunnar
+j
 ja
 jack
 jackson
@@ -22891,6 +22902,7 @@ kýr
 kýrnar
 kýs
 l
+l
 labb
 labba
 labbandi
@@ -25535,6 +25547,7 @@ lýðveldi
 lýðveldinu
 lýðveldisins
 lýðveldið
+m
 mac
 machine
 macro
@@ -28271,6 +28284,7 @@ mývatn
 mývatni
 mývatns
 mývatnssveit
+n
 nachos
 nadal
 nafar
@@ -29379,6 +29393,7 @@ nýyrðasmíð
 nýárs
 nýársdag
 nýútkominni
+o
 obama
 obb
 obbann
@@ -29809,6 +29824,7 @@ own
 owned
 owners
 oxford
+p
 pabba
 pabbar
 pabbarnir
@@ -30978,6 +30994,7 @@ púða
 púði
 púður
 pýþagóras
+q
 quality
 quattro
 que
@@ -30991,6 +31008,7 @@ quiet
 quite
 quiz
 quo
+r
 rabba
 rabbaði
 rabbi
@@ -32841,6 +32859,7 @@ rýrnað
 rýrnun
 rýrt
 rýrð
+s
 saari
 sabbath
 sachs
@@ -39632,6 +39651,7 @@ sýslumaður
 sýslumaðurinn
 sýslumenn
 sýslunni
+t
 table
 tabú
 taco
@@ -41479,6 +41499,7 @@ týnt
 týpa
 týr
 týra
+u
 u.s.
 uber
 ubs
@@ -42246,6 +42267,7 @@ utanyfirgöllum
 utanyfirgöllunum
 utd
 uxu
+v
 vaart
 vafa
 vafalaust
@@ -44578,6 +44600,7 @@ vöxturinn
 vöðva
 vöðvi
 vöðvum
+w
 waage
 wade
 wage
@@ -44731,9 +44754,11 @@ written
 wrong
 wrote
 wuhan
+x
 xavi
 xhaka
 xi
+y
 yahoo
 yard
 yasser
@@ -44908,6 +44933,7 @@ ytra
 ytri
 yðar
 yður
+z
 zagreb
 zeit
 zeppelin
@@ -45970,6 +45996,7 @@ zuckerberg
 æðsti
 æðstu
 æðum
+é
 ég
 éljagangur
 éljum
@@ -46295,6 +46322,7 @@ zuckerberg
 íþróttir
 íþróttum
 íþyngjandi
+ð
 ó
 óalgengt
 óaðlaðandi
@@ -46859,6 +46887,7 @@ zuckerberg
 óþökk
 óþörf
 óþörfu
+ö
 öbí
 öfga
 öfgamenn
@@ -47110,6 +47139,7 @@ zuckerberg
 öðru
 öðrum
 öðruvísi
+ú
 úff
 úganda
 úkraína
@@ -47474,6 +47504,7 @@ zuckerberg
 útúr
 útþenslu
 úði
+ý
 ýja
 ýjað
 ýkt
@@ -47504,6 +47535,7 @@ zuckerberg
 ýtrustu
 ýtt
 ýtti
+þ
 þagga
 þagna
 þagnarskyldu
