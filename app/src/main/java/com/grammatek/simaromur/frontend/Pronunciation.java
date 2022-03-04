@@ -37,7 +37,7 @@ public class Pronunciation {
                 sb.append(mPronDict.get(tok).getTranscript()).append(" ");
             }
             else if (tok.equals(mSilToken)){
-                sb.append(SymbolsLvLIs.SymbolSilence).append(" ");
+                sb.append(SymbolsLvLIs.SymbolShortPause).append(" ");
             }
             else {
                 sb.append(mG2P.process(tok)).append(" ");
