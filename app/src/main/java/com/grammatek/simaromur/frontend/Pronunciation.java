@@ -5,6 +5,7 @@ import android.content.res.Resources;
 
 import com.grammatek.simaromur.device.NativeG2P;
 import com.grammatek.simaromur.R;
+import com.grammatek.simaromur.device.SymbolsLvLIs;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -20,6 +21,7 @@ public class Pronunciation {
     private final Context mContext;
     private NativeG2P mG2P;
     private Map<String, PronDictEntry> mPronDict;
+    private String mSilToken = "<sil>";
 
     public Pronunciation(Context context) {
         this.mContext = context;
@@ -33,7 +35,11 @@ public class Pronunciation {
         for (String tok : tokens) {
             if (mPronDict.containsKey(tok)) {
                 sb.append(mPronDict.get(tok).getTranscript()).append(" ");
-            } else {
+            }
+            else if (tok.equals(mSilToken)){
+                sb.append(SymbolsLvLIs.SymbolSilence).append(" ");
+            }
+            else {
                 sb.append(mG2P.process(tok)).append(" ");
             }
         }
