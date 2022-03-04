@@ -28,11 +28,11 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "til áramóta 2021/2022";
+        String input = "Álfur P er bestur";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("til áramóta tvö þúsund tuttugu og eitt <sil> tvö þúsund tuttugu og tvö .",
+        assertEquals("álfur p er bestur .",
                 processed);
     }
 
@@ -163,6 +163,8 @@ public class NormalizationManagerTest {
         testSentences.put("Mörk Ómars á EM:", "mörk ómars á em .");
         testSentences.put("til áramóta 2021/2022", "til áramóta tvö þúsund tuttugu og eitt <sil> tvö þúsund tuttugu og tvö .");
         testSentences.put("© grammatek", "höfundarréttur grammatek .");
+        testSentences.put("Álfur P er bestur", "álfur p er bestur .");
+        testSentences.put("Það bíður pk eftir þér", "það bíður pakki eftir þér .");
 
         return testSentences;
     }
