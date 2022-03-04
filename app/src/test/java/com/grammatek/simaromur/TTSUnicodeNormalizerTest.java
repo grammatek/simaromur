@@ -56,5 +56,6 @@ public class TTSUnicodeNormalizerTest {
         sent.put("þessi setning er í tämu tjåni", "þessi setning er í temu tjoni");
         return sent;
     }
+
 }
 

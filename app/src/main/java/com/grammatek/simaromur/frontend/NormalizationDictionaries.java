@@ -233,7 +233,7 @@ public class NormalizationDictionaries {
                 + DOT_ONE_NONE + EOS, "$1og þess háttar$3");
         abbreviationDict.put(BOS + "([Oo]" + DOT_ONE_NONE + "þ" + DOT_ONE_NONE + "u" + DOT_ONE_NONE + "l|O" + DOT_ONE_NONE + "Þ"
                 + DOT_ONE_NONE + "U" + DOT_ONE_NONE + "L)" + DOT_ONE_NONE + EOS, "$1og því um líkt$3");
-        abbreviationDict.put(BOS + "([Pp]" + DOT_ONE_NONE + ")" + EOS, "$1pakki$3");
+        abbreviationDict.put(BOS + "([Pp]k" + DOT_ONE_NONE + ")" + EOS, "$1pakki$3");
 
         abbreviationDict.put(BOS + "([Rr]n" + DOT_ONE_NONE + ")(:| [\\d\\-]+)" + EOS, "$1reikningsnúmer$3$4");
         abbreviationDict.put(BOS + "([Rr]itstj" + DOT_ONE_NONE + ")" + EOS, "$1ritstjóri$3");

@@ -154,8 +154,6 @@ public class TTSNormalizer {
     // pronunciation dictionary on the server. Need a better workflow for this.
     private String processLettersPattern(String token) {
         String lower = token.toLowerCase();
-        if (lower.equals("covid"))
-            return "kovid";
         if (TTSUnicodeNormalizer.inDictionary(lower))
             return lower;
         token = insertSpaces(token);
@@ -208,11 +206,7 @@ public class TTSNormalizer {
         }
         //1.234 or 1 or 12 or 123
         else if (numberToken.matches(NumberHelper.CARDINAL_THOUSAND_PTRN)) {
-            Map<String, Map<String, String>> cardinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND); // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
-            List<CategoryTuple> mergedTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            normalized = fillDict(numberToken, nextTag, mergedTupleList, cardinalThousandDict, NumberHelper.INT_COLS_THOUSAND);
+            normalized = normalizeThousandDigit(numberToken, nextTag);
         }
         //1.234 or 12.345 or 123.456 -> asking the same thing twice, check
         else if (numberToken.matches(NumberHelper.CARDINAL_MILLION_PTRN)) {
@@ -239,11 +233,25 @@ public class TTSNormalizer {
             Map<String, Map<String, String>> timeDict = makeDict(numberToken, NumberHelper.TIME_SPORT_COLS); // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
             normalized = fillDict(numberToken, nextTag, TimeTuples.getTuples(), timeDict, NumberHelper.TIME_SPORT_COLS);
         }
-        // 4/8 or ⅓ , etc.
-        else if (numberToken.matches(NumberHelper.FRACTION_PTRN)) {
+        else if (numberToken.matches("^\\d{1,2}/\\d{1,2}$")) {
             // if domain == "other" - do other things, below is the handling for sport results:
             Map<String, Map<String, String>> sportsDict = makeDict(numberToken, NumberHelper.TIME_SPORT_COLS); // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
             normalized = fillDict(numberToken, nextTag, SportTuples.getTuples(), sportsDict, NumberHelper.TIME_SPORT_COLS);
+        }
+        // 4/8 or ⅓ , etc.
+        else if (numberToken.matches(NumberHelper.FRACTION_PTRN)) {
+            String[] splitted = numberToken.split("/");
+            String part1 = splitted[0];
+            String part2 = splitted[1];
+            if (part1.matches(NumberHelper.CARDINAL_THOUSAND_PTRN))
+                part1 = normalizeThousandDigit(part1, nextTag);
+            else
+                part1 = normalizeNumber(part1, nextTag);
+            if (part2.matches(NumberHelper.CARDINAL_THOUSAND_PTRN))
+                part2 = normalizeThousandDigit(part2, nextTag);
+            else
+                part2 = normalizeNumber(part2, nextTag);
+            normalized = part1 + " <sil> " + part2;
         }
         // 01. (what kind of ordinal is this?)
         else if (numberToken.matches("^0\\d\\.$")) {
@@ -252,6 +260,16 @@ public class TTSNormalizer {
         else {
             normalized = normalizeDigits(numberToken);
         }
+        return normalized;
+    }
+
+    private String normalizeThousandDigit(String numberToken, String nextTag) {
+        String normalized;
+        Map<String, Map<String, String>> cardinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND); // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
+        List<CategoryTuple> mergedTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples())
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        normalized = fillDict(numberToken, nextTag, mergedTupleList, cardinalThousandDict, NumberHelper.INT_COLS_THOUSAND);
         return normalized;
     }
 
@@ -316,7 +334,7 @@ public class TTSNormalizer {
         return token;
     }
 
-    /* The default/fallback normalization method. We have checked all patterns that migth need special handling
+    /* The default/fallback normalization method. We have checked all patterns that might need special handling
      * now we simply replace digits by their default word representation.
      */
     private String normalizeDigits(String token) {
