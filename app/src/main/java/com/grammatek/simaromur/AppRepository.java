@@ -34,6 +34,7 @@ import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -125,6 +126,7 @@ public class AppRepository {
             App.setFirebaseAnalytics(setCrashLytics);
         });
         mAllVoices = mVoiceDao.getAllVoices();
+        mAllCachedVoices = new ArrayList<>();
         mAllVoices.observeForever(voices -> {
             Log.v(LOG_TAG, "mAllVoices update: " + voices);
             // Update cached voices
