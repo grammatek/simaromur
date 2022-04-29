@@ -62,7 +62,7 @@ public class ConnectionCheck {
                        public void onAvailable(Network network) {
                            // network available
                            NetworkCapabilities nc = connectivityManager.getNetworkCapabilities(network);
-                           if (nc.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                           if (nc != null && nc.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
                                Log.v(LOG_TAG, "Internet available");
                                isNetworkConnected = true;
                                startTTSServiceHealthCheck();
