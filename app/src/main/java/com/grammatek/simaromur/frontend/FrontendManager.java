@@ -41,14 +41,19 @@ public class FrontendManager {
 
     public String transcribe(String text) {
         final String sp = " " + SymbolsLvLIs.SymbolShortPause + " ";
+        final String multiPausePattern = "(§sp ?){2,}";
+        final String beginEndPausePattern = "^§sp|§sp$";
+
         String transcribedText = mPronunciation.transcribe(text);
 
         // replace special characters
         transcribedText = transcribedText.replaceAll("\\.", sp);
         transcribedText = transcribedText.replaceAll(",", sp);
         transcribedText = transcribedText.replaceAll("\\s{2,}", " ");
+        transcribedText = transcribedText.replaceAll(multiPausePattern, "§sp ").trim();
+        transcribedText = transcribedText.replaceAll(beginEndPausePattern, "");
 
-        Log.i(LOG_TAG, text + " => " + transcribedText);
+        Log.i(LOG_TAG, text + " => (" + transcribedText + ")");
         return transcribedText;
     }
 
