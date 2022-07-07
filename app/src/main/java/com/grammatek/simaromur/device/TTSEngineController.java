@@ -187,15 +187,23 @@ public class TTSEngineController {
             // Frontend processing
             String sampas = mFrontend.process(text);
             if (isStopped) return;
-            byte[] pcmBytes16Bit = mEngine.SpeakToPCM(sampas);
-            if (isStopped) return;
-            if (observer == null) {
-                byte[] audio = AudioManager.applyPitchAndSpeed(pcmBytes16Bit, sampleRate, pitch, speed);
+            // split at §sp symbol to parallelize synthesis and speaking
+            String[] splitSampas = sampas.split("§sp");
+            for (String splitSamp : splitSampas) {
+                byte[] pcmBytes16Bit = mEngine.SpeakToPCM(splitSamp);
+                if (pcmBytes16Bit.length == 0) {
+                    Log.i(LOG_TAG, "Engine returned 0 bytes ?! Returning ..");
+                    return;
+                }
                 if (isStopped) return;
-                // Media player: use wav
-                mTTSAudioControl.play(new TTSAudioControl.AudioEntry(audio, audioObserver));
-            } else {
-                observer.update(pcmBytes16Bit);
+                if (observer == null) {
+                    byte[] audio = AudioManager.applyPitchAndSpeed(pcmBytes16Bit, sampleRate, pitch, speed);
+                    if (isStopped) return;
+                    // Media player: use wav
+                    mTTSAudioControl.play(new TTSAudioControl.AudioEntry(audio, audioObserver));
+                } else {
+                    observer.update(pcmBytes16Bit);
+                }
             }
         }
 
@@ -204,6 +212,7 @@ public class TTSEngineController {
          */
         public void stop() {
             isStopped = true;
+            mTTSAudioControl.stop();
         }
     }
 }

@@ -39,4 +39,9 @@ public class TTSEngineTensorFlow implements TTSEngine {
     public int GetNativeSampleRate() {
         return SAMPLE_RATE;
     }
+
+    @Override
+    public void Stop() {
+
+    }
 }

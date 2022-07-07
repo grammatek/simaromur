@@ -65,4 +65,9 @@ public class TTSEngineFlite  implements TTSEngine {
     public int GetNativeSampleRate() {
         return 22050;
     }
+
+    @Override
+    public void Stop() {
+
+    }
 }

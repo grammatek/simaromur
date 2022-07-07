@@ -22,4 +22,9 @@ public interface TTSEngine {
      * @return  Native sample rate of voice.
      */
     int GetNativeSampleRate();
+
+    /**
+     * Stops any ongoing synthesis
+     */
+    void Stop();
 }

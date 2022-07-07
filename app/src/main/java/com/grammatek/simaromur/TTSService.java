@@ -5,6 +5,7 @@ import com.grammatek.simaromur.network.ConnectionCheck;
 
 import android.content.Intent;
 import android.media.AudioFormat;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.SynthesisRequest;
@@ -26,6 +27,8 @@ import static com.grammatek.simaromur.audio.AudioManager.N_CHANNELS;
 import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelStoreOwner;
 
 /**
  * Implements the SIM Engine as a TextToSpeechService
@@ -37,7 +40,7 @@ public class TTSService extends TextToSpeechService {
 
     @Override
     public void onCreate() {
-        Log.i(LOG_TAG, "onCreate()");
+        Log.e(LOG_TAG, "onCreate()");
 
         mRepository = App.getAppRepository();
         // This calls onIsLanguageAvailable() and must run after Initialization
@@ -50,7 +53,7 @@ public class TTSService extends TextToSpeechService {
     // mandatory
     @Override
     protected synchronized int onIsLanguageAvailable(String language, String country, String variant) {
-        Log.v(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+")");
+        Log.e(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+")");
         if (variant.endsWith(ApiDbUtil.NET_VOICE_SUFFIX)) {
             if (!ConnectionCheck.isTTSServiceReachable()) {
                 Log.v(LOG_TAG, "onIsLanguageAvailable: TTS API NOT reachable");
@@ -73,7 +76,7 @@ public class TTSService extends TextToSpeechService {
     // mandatory
     @Override
     protected synchronized int onLoadLanguage(String language, String country, String variant) {
-        Log.i(LOG_TAG, "onLoadLanguage("+language+","+country+","+variant+")");
+        Log.e(LOG_TAG, "onLoadLanguage("+language+","+country+","+variant+")");
         if (variant.endsWith(ApiDbUtil.NET_VOICE_SUFFIX)) {
             if (!ConnectionCheck.isTTSServiceReachable()) {
                 Log.v(LOG_TAG, "onLoadLanguage: TTS API NOT reachable");
@@ -88,7 +91,7 @@ public class TTSService extends TextToSpeechService {
     // mandatory
     @Override
     protected synchronized void onStop() {
-        Log.i(LOG_TAG, "onStop");
+        Log.e(LOG_TAG, "onStop: we should actively stop any ongoing synthesis: thread id: " + android.os.Process.myTid());
         // @todo stop ongoing speak request, i.e. unregister observers
     }
 
@@ -96,11 +99,12 @@ public class TTSService extends TextToSpeechService {
     @Override
     protected synchronized void onSynthesizeText(
             SynthesisRequest request, SynthesisCallback callback) {
-        Log.i(LOG_TAG, "onSynthesizeText");
+        Log.e(LOG_TAG, "onSynthesizeText(): thread id: " + android.os.Process.myTid());
 
         String language = request.getLanguage();
         String country = request.getCountry();
         String variant = request.getVariant();
+        Utterance utterance = new Utterance(request.getCharSequenceText().toString());
         String text = request.getCharSequenceText().toString();
         String voiceName = request.getVoiceName();
         // we will get speechrate and pitch from the settings,
@@ -143,6 +147,9 @@ public class TTSService extends TextToSpeechService {
             Log.w(LOG_TAG, "onSynthesizeText: Loaded voice ("+loadedVoiceName+") and given voice ("+voiceName+") differ ?!");
         }
 
+        // stops any currently ongoing speak action
+        App.getAppRepository().stopSpeaking();
+
         com.grammatek.simaromur.db.Voice voice = mRepository.getVoiceForName(loadedVoiceName);
         if (voice != null) {
             if (text.isEmpty()) {
@@ -150,7 +157,7 @@ public class TTSService extends TextToSpeechService {
                 playSilence(callback);
                 return;
             }
-
+// XXX DS: save utterance
             // check if network voice && for network availability
             if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TIRO)) {
                 if (! testForAndHandleNetworkVoiceIssues(callback, text, voice)) {
@@ -177,6 +184,9 @@ public class TTSService extends TextToSpeechService {
         else {
             Log.e(LOG_TAG, "onSynthesizeText: unsupported voice ?!");
         }
+        //Log.e(LOG_TAG, "onSynthesizeText: sleeping 3 seconds ...");
+        //SystemClock.sleep(3000);
+        Log.e(LOG_TAG, "onSynthesizeText: finished");
     }
 
     /**
@@ -261,7 +271,7 @@ public class TTSService extends TextToSpeechService {
     @Override
     public synchronized String onGetDefaultVoiceNameFor(String language, String country, String variant)
     {
-        Log.i(LOG_TAG, "onGetDefaultVoiceNameFor("+language+","+country+","+variant+")");
+        Log.e(LOG_TAG, "onGetDefaultVoiceNameFor("+language+","+country+","+variant+")");
         String defaultVoice = mRepository.getDefaultVoiceFor(language, country, variant);
         Log.i(LOG_TAG, "onGetDefaultVoiceNameFor: voice name is " + defaultVoice);
         return defaultVoice;
@@ -270,7 +280,7 @@ public class TTSService extends TextToSpeechService {
     @Override
     public synchronized  List<Voice> onGetVoices()
     {
-        Log.i(LOG_TAG, "onGetVoices");
+        Log.e(LOG_TAG, "onGetVoices");
         List<Voice> announcedVoiceList = new ArrayList<>();
 
         for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
@@ -313,7 +323,7 @@ public class TTSService extends TextToSpeechService {
     @Override
     public synchronized int onIsValidVoiceName(String name)
     {
-        Log.i(LOG_TAG, "onIsValidVoiceName("+name+")");
+        Log.e(LOG_TAG, "onIsValidVoiceName("+name+")");
         for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
             if (voice.name.equals(name)) {
                 Log.v(LOG_TAG, "voice name is valid");
@@ -334,7 +344,7 @@ public class TTSService extends TextToSpeechService {
     @Override
     public synchronized int onLoadVoice(String name)
     {
-        Log.i(LOG_TAG, "onLoadVoice("+name+")");
+        Log.e(LOG_TAG, "onLoadVoice("+name+")");
         if (onIsValidVoiceName(name) == TextToSpeech.SUCCESS) {
             if (TextToSpeech.SUCCESS == mRepository.loadVoice(name)) {
                 Log.v(LOG_TAG, "voice loading successful");

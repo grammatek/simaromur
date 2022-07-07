@@ -23,6 +23,7 @@ public class TTSEnginePyTorch implements TTSEngine {
     private static Module mAcousticModel = null;
     private static Module mVocoderModel = null;
     private static Module mVocoderDummyInput = null;
+    private Boolean mShouldStop = false;
 
     // Constructor for loading models from within Assets
     public TTSEnginePyTorch(AssetManager asm, DeviceVoice voice) {
@@ -90,6 +91,7 @@ public class TTSEnginePyTorch implements TTSEngine {
     @Override
     public byte[] SpeakToPCM(String sampas) {
         Log.v(LOG_TAG, "Speak: " + sampas);
+        mShouldStop = false;
         Instant startTime = Instant.now();
 
         int[] sampa2VecInput = SymbolsLvLIs.MapSymbolsToVec(SymbolsLvLIs.Type.TYPE_SAMPA, sampas);
@@ -98,26 +100,44 @@ public class TTSEnginePyTorch implements TTSEngine {
         textTensorBuffer.put(sampa2VecInput);
         long[] textTensorShape = {1, sampa2VecInput.length};
         Tensor textTensor = Tensor.fromBlob(textTensorBuffer, textTensorShape);
+        byte[] bytes = new byte[0];
+        do {
+            if (mShouldStop) {
+                break;
+            }
+            Log.v(LOG_TAG, "Inference start ...");
+            final IValue melganInput = mAcousticModel.runMethod("mobile_inference",
+                    IValue.from(textTensor));
+            if (mShouldStop) {
+                break;
+            }
+            Log.v(LOG_TAG, "Inference textTensor");
+            // vocoder produces 22.05 kHz PCM float values between -20000.0 .. 20000.0
+            final IValue voiceOutput = mVocoderModel.runMethod("inference", melganInput);
 
-        Log.v(LOG_TAG, "Inference start ...");
-        final IValue melganInput = mAcousticModel.runMethod("mobile_inference",
-                IValue.from(textTensor));
-        Log.v(LOG_TAG, "Inference textTensor");
-        // vocoder produces 22.05 kHz PCM float values between -20000.0 .. 20000.0
-        final IValue voiceOutput = mVocoderModel.runMethod("inference", melganInput);
-        Log.v(LOG_TAG, "Inference voiceOuput");
-        float[] samples = voiceOutput.toTensor().getDataAsFloatArray();
-        byte[] bytes = AudioManager.pcmFloatTo16BitPCMWithDither(samples, 20000.0f, true);
-        Instant stopTime = Instant.now();
+            if (mShouldStop) {
+                break;
+            }
+            Log.v(LOG_TAG, "Inference voiceOuput");
+            float[] samples = voiceOutput.toTensor().getDataAsFloatArray();
+            bytes = AudioManager.pcmFloatTo16BitPCMWithDither(samples, 20000.0f, true);
 
-        final long timeElapsed = Duration.between(startTime, stopTime).toMillis();
-        Log.v(LOG_TAG, "Voice generation ran for " + timeElapsed / 1000.0F + " secs, " +
-                samples.length * 1000.0F / timeElapsed / GetNativeSampleRate() + " x real-time");
+            Instant stopTime = Instant.now();
+            final long timeElapsed = Duration.between(startTime, stopTime).toMillis();
+            Log.v(LOG_TAG, "Voice generation ran for " + timeElapsed / 1000.0F + " secs, " +
+                    samples.length * 1000.0F / timeElapsed / GetNativeSampleRate() + " x real-time");
+
+        } while(false);
         return bytes;
     }
 
     @Override
     public int GetNativeSampleRate() {
         return SAMPLE_RATE;
+    }
+
+    @Override
+    public void Stop() {
+
     }
 }

@@ -66,6 +66,8 @@ public class AppRepository {
     ScheduledExecutorService mScheduler;
     FrontendManager mFrontend;
     TTSEngineController mTTSEngineController;
+    private TTSEngineController.SpeakTask mDevSpeakTask;
+    private Utterance mActiveUtterance;       //< the currently processed utterance
 
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
@@ -249,21 +251,24 @@ public class AppRepository {
         }
     }
 
-    public TTSEngineController.SpeakTask startDeviceSpeak(Voice voice, String text, float speed,
+    synchronized
+    public void startDeviceSpeak(Voice voice, String text, float speed,
                               float pitch, TTSAudioControl.AudioFinishedObserver observer) {
         try {
             mTTSEngineController.LoadEngine(voice);
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            return;
         }
         // use the sample rate from the Engine
-        return mTTSEngineController.StartSpeak(text, speed, pitch, 22050, observer);
+        mDevSpeakTask = mTTSEngineController.StartSpeak(text, speed, pitch, 22050, observer);
     }
 
-    public void stopDeviceSpeak(TTSEngineController.SpeakTask speakTask) {
+    synchronized
+    public void stopDeviceSpeak() {
         // use the sample rate from the Engine
-        mTTSEngineController.StopSpeak(speakTask);
+        mTTSEngineController.StopSpeak(mDevSpeakTask);
+        mDevSpeakTask = null;
     }
 
     public void startTorchTTS(SynthesisCallback synthCb, Voice voice, String text, float speed, float pitch) {
@@ -275,6 +280,21 @@ public class AppRepository {
         }
         // use the sample rate from the Engine
         mTTSEngineController.StartSpeak(new TTSObserver(synthCb, pitch, speed, 22050), text);
+    }
+
+    /**
+     * Stops any currently ongoing speaking
+     */
+    synchronized
+    public void stopSpeaking() {
+        if (mDevSpeakTask == null) {
+            stopTiroSpeak();
+        } else {
+            stopDeviceSpeak();
+            mDevSpeakTask = null;
+        }
+        // who signals the onSynthesize callback that we are finished ?
+        // TODO: do we need to call the callback in the same thread as we get it ? Then we'd need 2 queues: one for the async worker, one for the return of the wav and call the callback here as soon as we have something in the return queue
     }
 
     /**
