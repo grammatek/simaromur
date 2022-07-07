@@ -94,10 +94,8 @@ public class TTSService extends TextToSpeechService {
 
     // mandatory
     @Override
-    protected synchronized void onSynthesizeText(
-            SynthesisRequest request, SynthesisCallback callback) {
-        Log.i(LOG_TAG, "onSynthesizeText");
-
+    protected synchronized void onSynthesizeText(SynthesisRequest request,
+                                                 SynthesisCallback callback) {
         String language = request.getLanguage();
         String country = request.getCountry();
         String variant = request.getVariant();

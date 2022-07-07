@@ -28,6 +28,17 @@ public class FrontendManager {
     }
 
     /**
+     * Returns FrontendManager version. This Version is entered into the UtteranceCache and should
+     * always change in case there is the possibility for a change either in normalization and/or
+     * G2P for any given text.
+     *
+     * @return  String for the frontend version.
+     */
+    public static String getVersion() {
+        return "1.0";
+    }
+
+    /**
      * Processes text for input into a TTS engine. This includes unicode cleaning, tokenizing, and
      * normalizing the the text, and then to convert it into an X-SAMPA transcription.
      *
