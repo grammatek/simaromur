@@ -21,6 +21,7 @@ public class TTSObserver implements AudioObserver {
     private final float mSpeed;
     private int mSampleRate = SAMPLE_RATE_WAV;
     private boolean mUsesNetwork = false;
+    private boolean mIsStopped = false;
 
     /**
      * Constructor called for device voice synthesis
@@ -64,6 +65,8 @@ public class TTSObserver implements AudioObserver {
             TTSService.playSilence(mSynthCb);
             return;
         }
+        mIsStopped = false;
+        // TODO: should only be done, if no MP3 returned by API
         final byte[] audioData = applyPitchAndSpeed(ttsData, mPitch, mSpeed);
         int offset = 0;
         startSynthesis(mSynthCb, mSampleRate, mUsesNetwork);
@@ -75,10 +78,16 @@ public class TTSObserver implements AudioObserver {
             if (mSynthCb.hasStarted()) {
                 mSynthCb.audioAvailable(audioData, offset, bytesConsumed);
             }
+            if (mIsStopped) {
+                break;
+            }
             offset += bytesConsumed;
         }
         Log.v(LOG_TAG, "TTSObserver: consumed " + offset + " bytes");
-        mSynthCb.done();
+        if (! mIsStopped) {
+            // already done if mIsStopped == true
+            mSynthCb.done();
+        }
     }
 
     private static void startSynthesis(SynthesisCallback mSynthCb, int sampleRate, boolean usesNetwork) {
@@ -101,6 +110,7 @@ public class TTSObserver implements AudioObserver {
     public synchronized void stop() {
         if (mSynthCb.hasStarted() && ! mSynthCb.hasFinished()) {
             mSynthCb.done();
+            mIsStopped = true;
         }
     }
 

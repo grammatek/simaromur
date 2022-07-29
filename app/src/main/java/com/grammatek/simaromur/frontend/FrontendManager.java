@@ -51,6 +51,7 @@ public class FrontendManager {
     }
 
     public String transcribe(String text) {
+        Log.v(LOG_TAG, "transcribe() called");
         final String sp = " " + SymbolsLvLIs.SymbolShortPause + " ";
         final String multiPausePattern = "(§sp ?){2,}";
         final String beginEndPausePattern = "^§sp|§sp$";
@@ -66,6 +67,10 @@ public class FrontendManager {
 
         Log.i(LOG_TAG, text + " => (" + transcribedText + ")");
         return transcribedText;
+    }
+
+    public NormalizationManager getNormalizationManager() {
+        return mNormalizationManager;
     }
 
     private void initializePronunciation(Context context) {

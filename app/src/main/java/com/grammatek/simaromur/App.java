@@ -22,7 +22,6 @@ public class App extends Application {
     private static FirebaseCrashlytics sFirebaseCrashlytics;
     private static App sApplication;
 
-    private NormalizationManager mNormalizationManager;
     ConnectionCheck mConnectionChecker;
     public static App getApplication() {
         return sApplication;
@@ -64,10 +63,6 @@ public class App extends Application {
         }
     }
 
-    public NormalizationManager getNormalizationManager() {
-        return mNormalizationManager;
-    }
-
     /**
      * Switch on/off Firebase performance/analytics/crashreports
      *
@@ -97,6 +92,5 @@ public class App extends Application {
             e.printStackTrace();
             // bad, see https://stackoverflow.com/questions/8943288/how-to-implement-uncaughtexception-android#answer-8943671
         }
-        mNormalizationManager = new NormalizationManager(this.getBaseContext());
     }
 }

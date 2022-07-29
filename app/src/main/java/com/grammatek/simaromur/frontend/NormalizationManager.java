@@ -54,6 +54,7 @@ public class NormalizationManager {
      * @return normalized version of 'text'
      */
     public String process(final String text) {
+        Log.v(LOG_TAG, "process() called");
         String cleaned = mUnicodeNormalizer.normalizeEncoding(text);
         List<String> tokenized = mTokenizer.detectSentences(cleaned);
         List<String> normalizedSentences = normalize(tokenized);

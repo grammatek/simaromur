@@ -5,6 +5,7 @@ import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
+import com.grammatek.simaromur.cache.CacheItem;
 import com.grammatek.simaromur.db.AppData;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.device.TTSAudioControl;
@@ -68,16 +69,16 @@ public class VoiceViewModel extends AndroidViewModel {
     }
 
     // Start speaking, i.e. make a speak request async.
-    public void startSpeaking(Voice voice, String text, float speed, float pitch,
+    public void startSpeaking(Voice voice, CacheItem item, float speed, float pitch,
                               TTSAudioControl.AudioFinishedObserver finishedObserver) {
         switch (voice.type) {
             case Voice.TYPE_TIRO:
-                mRepository.startTiroSpeak(voice.internalName, text, voice.languageCode, speed,
+                mRepository.startTiroSpeak(voice.internalName, item, voice.languageCode, speed,
                         pitch, finishedObserver);
                 break;
             case Voice.TYPE_TORCH:
             case Voice.TYPE_FLITE:  // FALLTHROUGH
-                mDevSpeakTask = mRepository.startDeviceSpeak(voice, text, speed, pitch, finishedObserver);
+                mDevSpeakTask = mRepository.startDeviceSpeak(voice, item, speed, pitch, finishedObserver);
                 break;
             default:
                 // other voice types follow here ..
