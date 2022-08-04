@@ -14,10 +14,10 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
-      - name: set up JDK 1.9
+      - name: set up JDK
         uses: actions/setup-java@v1
         with:
-          java-version: 1.9
+          java-version: 1.11
       - name: Get CMake
         uses: lukka/get-cmake@v3.20.1
       - name: Install NDK
@@ -45,7 +45,6 @@ jobs:
           # cache key is unique to the combination of all native lib tags
           path: 3rdparty/
           key: ${{ env.OPENFST_TAG }}_${{ env.THRAX_TAG }}_${{ env.FLITE_TAG }}_dl_${{ env.cache-name }}
-
       - name: "Download & extract native libs"
         run: .github/scripts/dl_3rdparty.sh
         shell: bash
