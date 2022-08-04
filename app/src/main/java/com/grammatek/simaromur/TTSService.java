@@ -1,9 +1,11 @@
 package com.grammatek.simaromur;
 
+import com.grammatek.simaromur.cache.CacheItem;
+import com.grammatek.simaromur.cache.Utterance;
+import com.grammatek.simaromur.cache.UtteranceCacheManager;
 import com.grammatek.simaromur.frontend.NormalizationManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
-import android.content.Intent;
 import android.media.AudioFormat;
 import android.provider.Settings;
 import android.speech.tts.SynthesisCallback;
@@ -18,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
+import java.util.Optional;
 import java.util.Set;
 
 import static android.speech.tts.TextToSpeech.ERROR_SERVICE;
@@ -25,7 +28,7 @@ import static android.speech.tts.TextToSpeech.LANG_MISSING_DATA;
 import static com.grammatek.simaromur.audio.AudioManager.N_CHANNELS;
 import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
 
-import androidx.lifecycle.LiveData;
+import androidx.annotation.NonNull;
 
 /**
  * Implements the SIM Engine as a TextToSpeechService
@@ -90,14 +93,16 @@ public class TTSService extends TextToSpeechService {
     protected synchronized void onStop() {
         Log.i(LOG_TAG, "onStop");
         // @todo stop ongoing speak request, i.e. unregister observers
+
+        // TODO: invalidate current cache item, this way we can stop the speakTask, additionally
+        //      stop speak task, mRepository.startTorchTTS
+        mRepository.setCurrentUtterance(null);
     }
 
     // mandatory
     @Override
-    protected synchronized void onSynthesizeText(
-            SynthesisRequest request, SynthesisCallback callback) {
-        Log.i(LOG_TAG, "onSynthesizeText");
-
+    protected synchronized void onSynthesizeText(SynthesisRequest request,
+                                                 SynthesisCallback callback) {
         String language = request.getLanguage();
         String country = request.getCountry();
         String variant = request.getVariant();
@@ -115,6 +120,13 @@ public class TTSService extends TextToSpeechService {
         }
         Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/"+country+"/"+variant+"), voice: "
                 + voiceName + " speed: " + speechrate + " pitch: " + pitch);
+
+        // if cache item for text already exists: retrieve it, otherwise create a new cache
+        // item and save it into cache, then test one-by-one availability of every single
+        // requested utterance component and eventually add the missing pieces
+        CacheItem item = mRepository.getUtteranceCache().addUtterance(text);
+        item = mRepository.doNormalizationAndG2PAndSaveIntoCache(text, item);
+
         String loadedVoiceName = mRepository.getLoadedVoiceName();
         if (loadedVoiceName.equals("")) {
             // This happens the first time the service comes up
@@ -151,25 +163,28 @@ public class TTSService extends TextToSpeechService {
                 return;
             }
 
+            if ((item.getUtterance().getPhonemesCount() == 0) ||
+                    item.getUtterance().getPhonemesList().get(0).getSymbols().isEmpty()) {
+                Log.w(LOG_TAG, "onSynthesizeText: No phonemes to speak");
+                playSilence(callback);
+                return;
+            }
+
+            mRepository.setCurrentUtterance(item);
+
             // check if network voice && for network availability
             if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TIRO)) {
                 if (! testForAndHandleNetworkVoiceIssues(callback, text, voice)) {
                     return;
                 }
-                NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
-                String normalizedText = normalizationManager.process(text);
-
-                Log.v(LOG_TAG, "onSynthesizeText: original (\"" + text + "\"), normalized (\""
-                        + normalizedText + "\")");
-                if (normalizedText.isEmpty()) {
+                if (item.getUtterance().getNormalized().isEmpty()) {
                     Log.i(LOG_TAG, "onSynthesizeText: normalization failed ?");
                     playSilence(callback);
                     return;
                 }
-                mRepository.startTiroTts(callback, voice, normalizedText, speechrate/100.0f,
-                        pitch/100.0f);
+                mRepository.startTiroTts(callback, voice, item, speechrate/100.0f,pitch/100.0f);
             } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TORCH)) {
-                mRepository.startTorchTTS(callback, voice, text, speechrate/100.0f,pitch/100.0f);
+                mRepository.startTorchTTS(callback, voice, item.getUuid(), speechrate/100.0f,pitch/100.0f);
             } else {
                 Log.e(LOG_TAG, "Voice type currently unsupported: " + voice.type);
             }

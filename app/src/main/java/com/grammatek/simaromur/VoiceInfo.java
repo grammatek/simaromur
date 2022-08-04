@@ -1,7 +1,6 @@
 package com.grammatek.simaromur;
 
 import android.annotation.SuppressLint;
-import android.app.ListActivity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,9 +14,9 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.grammatek.simaromur.cache.CacheItem;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.device.TTSAudioControl;
-import com.grammatek.simaromur.frontend.NormalizationManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
 import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_ID;
@@ -65,7 +64,7 @@ public class VoiceInfo extends AppCompatActivity {
         TextView langTextView = findViewById(R.id.textViewLanguage);
         TextView genderTextView = findViewById(R.id.textViewGender);
         TextView typeTextView = findViewById(R.id.textViewType);
-        TextView speakableTextView = findViewById(R.id.speakable_text);
+        TextView speakableTextView = mUserText;
 
         // setup button / spinner
         Button button = findViewById(R.id.speak_button);
@@ -144,33 +143,35 @@ public class VoiceInfo extends AppCompatActivity {
     // speak_button is pressed
     public void onPlayClicked(View v) {
         Log.v(LOG_TAG, "onPlayClicked");
-        String normalizedText;
         String text = mUserText.getText().toString();
+        AppRepository appRepo = App.getAppRepository();
+
+        CacheItem item = appRepo.getUtteranceCache().addUtterance(text);
+        item = appRepo.doNormalizationAndG2PAndSaveIntoCache(text, item);
+        appRepo.setCurrentUtterance(item);
+
         if (mVoice.type.equals(Voice.TYPE_TIRO)) {
             if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {
                 mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
-                App.getAppRepository().showTtsBackendWarningDialog(this);
+                appRepo.showTtsBackendWarningDialog(this);
                 return;
             }
             mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
-            NormalizationManager normalizationManager = App.getApplication().getNormalizationManager();
-            normalizedText = normalizationManager.process(text);
         } else if (mVoice.type.equals(Voice.TYPE_TORCH)) {
-            // normalization is done in the Engine itself
-            normalizedText = text;
         } else {
             Log.w(LOG_TAG, "Selected voice type " + mVoice.type + " not yet supported !");
             return;
         }
         toggleSpeakButton();
-        Log.v(LOG_TAG, "Text to speak: " + normalizedText);
-        mVoiceViewModel.startSpeaking(mVoice, normalizedText, 1.0f, 1.0f, new AudioToggleObserver());
+        Log.v(LOG_TAG, "Text to speak: " + item.getUtterance().getNormalized());
+        mVoiceViewModel.startSpeaking(mVoice, item, 1.0f, 1.0f, new AudioToggleObserver());
     }
 
     // circle spinner is pressed
     public void onSpinnerClicked(View v) {
         Log.v(LOG_TAG, "onSpinnerClicked");
         mVoiceViewModel.stopSpeaking(mVoice);
+        App.getAppRepository().setCurrentUtterance(null);
         toggleSpeakButton();
     }
 

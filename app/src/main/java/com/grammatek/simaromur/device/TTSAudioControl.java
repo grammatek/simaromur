@@ -87,12 +87,13 @@ public class TTSAudioControl {
      *                      that should be called after successful execution.
      */
     void play(AudioEntry audioEntry) {
-        Log.d(LOG_TAG, "add " + audioEntry.audio.length + " bytes to queue");
+        Log.d(LOG_TAG, "play(): add " + audioEntry.audio.length + " bytes to queue");
         isStopped = false;
         mQueue.offer(audioEntry);
     }
 
     void stop() {
+        Log.d(LOG_TAG, "stop() called");
         mQueue.clear();
         isStopped = true;
         mTrack.pause();

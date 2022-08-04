@@ -16,6 +16,9 @@ import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 
+import com.grammatek.simaromur.cache.CacheItem;
+import com.grammatek.simaromur.cache.Utterance;
+import com.grammatek.simaromur.cache.UtteranceCacheManager;
 import com.grammatek.simaromur.db.AppData;
 import com.grammatek.simaromur.db.AppDataDao;
 import com.grammatek.simaromur.db.ApplicationDb;
@@ -63,6 +66,11 @@ public class AppRepository {
     private final SpeakController mTiroSpeakController;
     private final ApiDbUtil mApiDbUtil;
     private final AssetVoiceManager mAVM;
+    // audio cache low/high watermark: 128/256MB
+    private static final long CacheLowWatermark = 128*1024*1024;
+    private static final long CacheHighWatermark = 2 * CacheLowWatermark;
+    private UtteranceCacheManager mUtteranceCacheManager;
+
     ScheduledExecutorService mScheduler;
     FrontendManager mFrontend;
     TTSEngineController mTTSEngineController;
@@ -71,6 +79,8 @@ public class AppRepository {
     private Voice mSelectedVoice;
 
     private final MediaPlayObserver mMediaPlayer;
+    // contains the currently handled utterance as seen by the utterance cache
+    private CacheItem mCurrentUtterance;
 
     /**
      * Observer for Tiro voice query results.
@@ -98,6 +108,8 @@ public class AppRepository {
     public AppRepository(Application application) throws IOException {
         Log.v(LOG_TAG, "AppRepository()");
         ApplicationDb db = ApplicationDb.getDatabase(application);
+        mUtteranceCacheManager = new UtteranceCacheManager("utterance_cache.pb",
+                CacheLowWatermark, CacheHighWatermark);
         mAppDataDao = db.appDataDao();
         mVoiceDao = db.voiceDao();
         mApiDbUtil = new ApiDbUtil(mVoiceDao);
@@ -138,6 +150,31 @@ public class AppRepository {
         mScheduler = Executors.newSingleThreadScheduledExecutor();
         mScheduler.scheduleAtFixedRate(networkVoicesUpdateRunnable, 0, 60, TimeUnit.SECONDS);
         mScheduler.schedule(assetVoiceRunnable, 1, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Returns the utterance cache manager
+     * @return  instance of the utterance cache manager
+     */
+    public UtteranceCacheManager getUtteranceCache() {
+        return mUtteranceCacheManager;
+    }
+
+    synchronized
+    public CacheItem getCurrentUtterance() {
+        return mCurrentUtterance;
+    }
+
+    synchronized
+    public void setCurrentUtterance(CacheItem currentUtterance) {
+        mCurrentUtterance = currentUtterance;
+        if (mCurrentUtterance != null ) {
+            Log.v(LOG_TAG, "Starting " + currentUtterance.getUuid());
+        }
+    }
+
+    public FrontendManager getFrontendManager() {
+        return mFrontend;
     }
 
     /**
@@ -203,18 +240,82 @@ public class AppRepository {
      * Request to Tiro TTS to speak given text and return Audio asynchronously.
      *
      * @param voiceId   the voice name identifier of the TTS API
-     * @param text      text to speak
+     * @param item      cache item of the utterance
      * @param langCode  language code, e.g. "is-IS"
      * @param speed     speed to use for the voice audio
      * @param pitch     pitch to use for the voice audio
      */
-    public void startTiroSpeak(String voiceId, String text, String langCode, float speed, float pitch,
+    public void startTiroSpeak(String voiceId, CacheItem item, String langCode, float speed, float pitch,
                                TTSAudioControl.AudioFinishedObserver finishedObserver) {
-        final String SampleRate = "" + SAMPLE_RATE_MP3;
-        SpeakRequest request = new SpeakRequest("standard", langCode,
-                "mp3", SampleRate, text, "text", voiceId);
         mMediaPlayer.stop();
-        mTiroSpeakController.streamAudio(request , mMediaPlayer, finishedObserver);
+        if (playIfAudioCacheHit(voiceId, item, finishedObserver)) return;
+
+        final String SampleRate = "" + SAMPLE_RATE_MP3;
+        // get normalized text from item
+        String normalizedText = item.getUtterance().getNormalized();
+        if (normalizedText.isEmpty()) {
+            Log.w(LOG_TAG, "startTiroSpeak: text has no content ?!");
+            // TODO: play silence ?
+            return;
+        }
+        SpeakRequest request = new SpeakRequest("standard", langCode,
+                "mp3", SampleRate, normalizedText, "text", voiceId);
+        mMediaPlayer.getMediaPlayer().setOnCompletionListener(new MediaPlayObserver.MPOnCompleteListener(finishedObserver));
+        mTiroSpeakController.streamAudio(request , mMediaPlayer, item);
+    }
+
+    /**
+     * Query the speech audio cache for existence of already produced audio. If the audio is found,
+     * play it directly with the media player and return true. Otherwise, return false. The
+     * given AudioFinishedObserver's update() method is called in case of any error or if the
+     * MediaPlayer finishes playback.
+     *
+     * @param voiceId   Voice id / voice name of the audio entry for given cache item
+     * @param item      Cache item to examine for an audio entry
+     * @param finishedObserver  the AudioFinishedObserver to be called in case of completion of media
+     *                          playback or in case of an error
+     * @return  true in case audio speech entry has been found and playback started, false otherwise
+     */
+    private boolean playIfAudioCacheHit(String voiceId, CacheItem item, TTSAudioControl.AudioFinishedObserver finishedObserver) {
+        UtteranceCacheManager ucm =  App.getAppRepository().getUtteranceCache();
+        // TODO: voiceVersion parameter is not taken into account yet !
+        final List<byte[]> audioBuffers =
+                ucm.getAudioForUtterance(item.getUtterance(), voiceId, "v1");
+        byte[] data;
+        if (!audioBuffers.isEmpty()) {
+            data = audioBuffers.get(0);
+            // TODO: check if correct audio format !
+            Log.v(LOG_TAG, "Playing back cached audio of size " + data.length);
+            mMediaPlayer.getMediaPlayer().setOnCompletionListener(new MediaPlayObserver.MPOnCompleteListener(finishedObserver));
+            mMediaPlayer.update(data);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Query the speech audio cache for existence of already produced audio. If the audio is found,
+     * play it directly with the media player and return true. Otherwise, return false. The
+     * given TTSObserver's update() method is called in case the MediaPlayer finishes playback.
+     *
+     * @param voiceId   Voice id / voice name of the audio entry for given cache item
+     * @param item      Cache item to examine for an audio entry
+     * @param ttsObserver the TTSObserver to be called for audio data
+     * @return  true in case audio speech entry has been found and playback started, false otherwise
+     */
+    private boolean playIfAudioCacheHit(String voiceId, CacheItem item, TTSObserver ttsObserver) {
+        UtteranceCacheManager ucm =  App.getAppRepository().getUtteranceCache();
+        // TODO: voiceVersion parameter is not taken into account yet !
+        final List<byte[]> audioBuffers =
+                ucm.getAudioForUtterance(item.getUtterance(), voiceId, "v1");
+        byte[] data;
+        if (!audioBuffers.isEmpty()) {
+            data = audioBuffers.get(0);
+            Log.v(LOG_TAG, "Playing back cached audio of size " + data.length);
+            ttsObserver.update(data);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -222,6 +323,7 @@ public class AppRepository {
      */
     public void stopTiroSpeak() {
         mTiroSpeakController.stop();
+        mMediaPlayer.stop();
     }
 
     /**
@@ -229,27 +331,30 @@ public class AppRepository {
      *
      * @param synthCb   The Synthesize callback to use
      * @param voice     The voice to use
-     * @param text      text to speak
+     * @param item      utterance cache item for retrieving text to speak
      * @param speed     speed to use for the voice audio
      * @param pitch     pitch to use for the voice audio
      */
-    public void startTiroTts(SynthesisCallback synthCb, Voice voice, String text, float speed, float pitch) {
+    public void startTiroTts(SynthesisCallback synthCb, Voice voice, CacheItem item, float speed, float pitch) {
         // map given voice to voiceId
         if (voice != null) {
-            if (text.trim().isEmpty()) {
+            final String normalized = item.getUtterance().getNormalized();
+            if (normalized.trim().isEmpty()) {
                 Log.w(LOG_TAG, "startTiroTts: given text is whitespace only ?!");
             }
+            TTSObserver ttsObserver = new TTSObserver(synthCb, pitch, speed);
+            if (playIfAudioCacheHit(voice.internalName, item, ttsObserver)) return;
 
             final String SampleRate = "" + SAMPLE_RATE_WAV;
             SpeakRequest request = new SpeakRequest("standard", voice.languageCode,
-                    "pcm", SampleRate, text, "text", voice.internalName);
-            mTiroSpeakController.streamAudio(request , new TTSObserver(synthCb, pitch, speed), null);
+                    "pcm", SampleRate, normalized, "text", voice.internalName);
+            mTiroSpeakController.streamAudio(request , ttsObserver, item);
         } else {
             Log.e(LOG_TAG, "startTiroTts: given voice is null ?!");
         }
     }
 
-    public TTSEngineController.SpeakTask startDeviceSpeak(Voice voice, String text, float speed,
+    public TTSEngineController.SpeakTask startDeviceSpeak(Voice voice, CacheItem item, float speed,
                               float pitch, TTSAudioControl.AudioFinishedObserver observer) {
         try {
             mTTSEngineController.LoadEngine(voice);
@@ -257,24 +362,23 @@ public class AppRepository {
             e.printStackTrace();
             return null;
         }
-        // use the sample rate from the Engine
-        return mTTSEngineController.StartSpeak(text, speed, pitch, 22050, observer);
+        // TODO: use the sample rate from the Engine
+        return mTTSEngineController.StartSpeak(item, speed, pitch, 22050, observer);
     }
 
     public void stopDeviceSpeak(TTSEngineController.SpeakTask speakTask) {
-        // use the sample rate from the Engine
         mTTSEngineController.StopSpeak(speakTask);
     }
 
-    public void startTorchTTS(SynthesisCallback synthCb, Voice voice, String text, float speed, float pitch) {
+    public void startTorchTTS(SynthesisCallback synthCb, Voice voice, String itemUuid, float speed, float pitch) {
         try {
             mTTSEngineController.LoadEngine(voice);
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
-        // use the sample rate from the Engine
-        mTTSEngineController.StartSpeak(new TTSObserver(synthCb, pitch, speed, 22050), text);
+        // TODO: use the sample rate from the Engine
+        mTTSEngineController.StartSpeak(new TTSObserver(synthCb, pitch, speed, 22050), itemUuid);
     }
 
     /**
@@ -291,7 +395,6 @@ public class AppRepository {
         List<Voice> voices = mVoiceDao.getAnyVoices();
         for (final Voice voice:voices) {
             if (voice.name.equals(voiceName)) {
-                Log.v(LOG_TAG, "SUCCESS");
                 if (voice.type.equals(Voice.TYPE_TORCH) || voice.type.equals(Voice.TYPE_FLITE)) {
                     try {
                         mTTSEngineController.LoadEngine(voice);
@@ -302,6 +405,7 @@ public class AppRepository {
                 }
                 mSelectedVoice = voice;
                 mAppDataDao.selectCurrentVoice(voice);
+                Log.v(LOG_TAG, "SUCCESS");
                 return TextToSpeech.SUCCESS;
             }
         }
@@ -546,13 +650,43 @@ public class AppRepository {
         return null;
     }
 
-    String getLoadedVoiceName() {
+    public String getLoadedVoiceName() {
         if (mSelectedVoice != null) {
             return mSelectedVoice.name;
         }
         return "";
     }
 
+    /**
+     * Execute normalization and G2P for given text and save the results for the cache item into
+     * the audio speech cache.
+     *
+     * @param text  Raw text as received by the TTS service
+     * @param item  cache item to save into the speech audio cache
+     * @return  updated cache item
+     */
+    synchronized
+    public CacheItem doNormalizationAndG2PAndSaveIntoCache(String text, CacheItem item) {
+        if (item.getUtterance().getNormalized().isEmpty()) {
+            // we always need to normalize the text, but it doesn't hurt, if we always do G2P as well
+            final String normalizedText = mFrontend.getNormalizationManager().process(text);
+            final String phonemes = mFrontend.transcribe(normalizedText);
+            Log.v(LOG_TAG, "onSynthesizeText: original (\"" + text + "\"), normalized (\"" + normalizedText + "\"), phonemes (\"" +  phonemes + "\")");
+            Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
+            item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
+            Log.v(LOG_TAG, "... normalization/G2P saved into cache");
+        } else if (item.getUtterance().getPhonemesCount() == 0) {
+            final String normalizedText = item.getUtterance().getNormalized();
+            final String phonemes = mFrontend.transcribe(normalizedText);
+            Log.v(LOG_TAG, "onSynthesizeText: normalized (\"" + normalizedText + "\"), phonemes (\"" +  phonemes + "\")");
+            Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
+            item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
+            Log.v(LOG_TAG, "... G2P saved into cache");
+        } else {
+            Log.v(LOG_TAG, "normalization/G2P skipped (hot cache)");
+        }
+        return item;
+    }
     /**
      * Update DB according to network voice
      */

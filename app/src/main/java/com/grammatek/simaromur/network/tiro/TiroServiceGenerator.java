@@ -46,16 +46,27 @@ public class TiroServiceGenerator {
         return retrofit.create(serviceClass);
     }
 
-    public static <S> S createService(Class<S> serviceClass, final String token) {
-        if (token != null) {
+    /**
+     * Creates the service and adds given request id to the request header
+     *
+     * @param serviceClass the service class
+     * @param requestId request Id to identify response
+     * @param <S>   service class type
+     * @return created service
+     */
+    public static <S> S createService(Class<S> serviceClass, final String requestId) {
+        if (requestId != null) {
             httpClient.interceptors().clear();
             httpClient.addInterceptor( chain -> {
                 Request original = chain.request();
                 Request.Builder builder1 = original.newBuilder()
-                        .header("Authorization", token);
+                        .header("x-request-id", requestId);
                 Request request = builder1.build();
                 return chain.proceed(request);
             });
+            if (!httpClient.interceptors().contains(logging)) {
+                httpClient.addInterceptor(logging);
+            }
             builder.client(httpClient.build());
             retrofit = builder.build();
         }

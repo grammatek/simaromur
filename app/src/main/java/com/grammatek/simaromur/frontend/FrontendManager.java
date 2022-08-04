@@ -28,6 +28,17 @@ public class FrontendManager {
     }
 
     /**
+     * Returns FrontendManager version. This Version is entered into the UtteranceCache and should
+     * always change in case there is the possibility for a change either in normalization and/or
+     * G2P for any given text.
+     *
+     * @return  String for the frontend version.
+     */
+    public static String getVersion() {
+        return "1.0";
+    }
+
+    /**
      * Processes text for input into a TTS engine. This includes unicode cleaning, tokenizing, and
      * normalizing the the text, and then to convert it into an X-SAMPA transcription.
      *
@@ -40,6 +51,7 @@ public class FrontendManager {
     }
 
     public String transcribe(String text) {
+        Log.v(LOG_TAG, "transcribe() called");
         final String sp = " " + SymbolsLvLIs.SymbolShortPause + " ";
         final String multiPausePattern = "(§sp ?){2,}";
         final String beginEndPausePattern = "^§sp|§sp$";
@@ -55,6 +67,10 @@ public class FrontendManager {
 
         Log.i(LOG_TAG, text + " => (" + transcribedText + ")");
         return transcribedText;
+    }
+
+    public NormalizationManager getNormalizationManager() {
+        return mNormalizationManager;
     }
 
     private void initializePronunciation(Context context) {

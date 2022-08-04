@@ -1,5 +1,7 @@
 package com.grammatek.simaromur;
 
+import static java.nio.file.Files.deleteIfExists;
+
 import android.content.res.AssetManager;
 import android.util.Log;
 
@@ -26,6 +28,35 @@ import java.util.HashMap;
 public class FileUtils {
     private final static String LOG_TAG = "Simaromur_" + FileUtils.class.getSimpleName();
     private static HashMap<String, LocalDateTime> sAssetDateTimeMap;
+
+    /**
+     * Returns boolean, if a file with given file path exists.
+     *
+     * @param filePath  file path used to test if a file exists
+     * @return  true in case file exists, false in case it doesn't exist or the user doesn't have
+     *          sufficient permissions
+     */
+    public static boolean exists(String filePath) {
+        return new File(filePath).isFile();
+    }
+
+    /**
+     * Deletes file from file system.
+     *
+     * @param filePath  file path used to delete a file
+     *
+     * @return  true in case file has been successfully deleted, false in case the file doesn't
+     *          exist or the user doesn't have sufficient permissions
+     */
+    public static boolean delete(String filePath) {
+        boolean rv = false;
+        try {
+            rv = deleteIfExists(Paths.get(filePath));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return rv;
+    }
 
     /**
      * Calculate MD5 message digest of given file and return it as string
@@ -80,6 +111,24 @@ public class FileUtils {
         return sb.toString();
     }
 
+    /**
+     * Calculate MD5 message digest of given file input stream and return it as string
+     */
+    public static String getMD5SumOfString(String aText) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(aText.getBytes());
+            byte[] mdBytes = md.digest();
+
+            StringBuilder hexString = new StringBuilder();
+            for (byte mdByte : mdBytes) hexString.append(Integer.toHexString(0xff & mdByte));
+
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
 
     /**
      * Reads a file from assets and returns it as a byte array.
@@ -169,16 +218,8 @@ public class FileUtils {
         try {
             files = assetManager.list(assetSubPath);
             // create destination assetSubPath if not exists
+            mkdir(destPath);
             String destDir = destPath + "/";
-            try {
-                File dir = new File(destDir);
-                if (!dir.exists()) {
-                    boolean rv = dir.mkdir();
-                    if (!rv)    throw new IOException("Couldn't create " + destDir);
-                }
-            } catch(SecurityException e) {
-                Log.e(LOG_TAG, "Failed to create directory: " + destDir, e);
-            }
             for(String filename : files) {
                 try {
                     String assetFileName = assetSubPath + "/" + filename;
@@ -211,6 +252,29 @@ public class FileUtils {
     }
 
     /**
+     * Creates a directory if it doesn't already exist. Creates also parent directories, if necessary.
+     *
+     * @param destPath  destination path to create
+     *
+     * @return  true in case the directory has been successfully created, false otherwise
+     */
+    public static boolean mkdir(String destPath) {
+        boolean rv = false;
+        try {
+            File dir = new File(destPath);
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
+                    throw new IOException("Couldn't create " + destPath);
+                }
+            }
+            rv = true;
+        } catch(SecurityException | IOException e) {
+            Log.e(LOG_TAG, "Failed to create directory: " + destPath, e);
+        }
+        return rv;
+    }
+
+    /**
      * Copy input stream to output stream. Both streams need to exist and be open
      *
      * @param inStream      Input stream
@@ -219,7 +283,7 @@ public class FileUtils {
      * @throws IOException  In case any I/O error happens
      */
     public static void copyFile(InputStream inStream, OutputStream outStream) throws IOException {
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[4096];
         int read;
         while((read = inStream.read(buffer)) != -1) {
             outStream.write(buffer, 0, read);
