@@ -112,7 +112,7 @@ public class MediaPlayObserver implements AudioObserver {
         @Override
         public void onCompletion(MediaPlayer mp) {
             if (mAudioFinishedObserver != null) {
-                mAudioFinishedObserver.update();
+                mAudioFinishedObserver.hasFinished();
             }
         }
     }
@@ -120,7 +120,7 @@ public class MediaPlayObserver implements AudioObserver {
     // interface implementation
 
     @Override
-    public void update(byte[] audioData) {
+    public void update(byte[] audioData, TTSRequest ttsRequest) {
         ByteArrayMediaDataSource dataSource = new ByteArrayMediaDataSource(audioData);
         try {
             // resetting mediaplayer instance to evade problems
@@ -157,8 +157,25 @@ public class MediaPlayObserver implements AudioObserver {
         }
     }
 
-    public void error(String errorMsg) {
-        Log.e(LOG_TAG, "MediaPlayObserver()::error: " + errorMsg);
+    public void error(String errorMsg, TTSRequest ttsRequest) {
+        Log.e(LOG_TAG, "MediaPlayObserver()::error: " + errorMsg +
+                "for " + ttsRequest.serialize());
+    }
+
+    public void stop(TTSRequest ttsRequest) {
+        Log.v(LOG_TAG, "MediaPlayObserver()::stop: (" + ttsRequest.serialize() + ")");
+    }
+
+    @Override
+    public float getPitch() {
+        // we don't know the current pitch, so return 1.0
+        return 1.0f;
+    }
+
+    @Override
+    public float getSpeed() {
+        // we don't know the current speed, so return 1.0
+        return 1.0f;
     }
 
     public MediaPlayer getMediaPlayer() {

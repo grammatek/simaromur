@@ -102,10 +102,10 @@ public class TTSEnginePyTorch implements TTSEngine {
         Log.v(LOG_TAG, "Inference start ...");
         final IValue melganInput = mAcousticModel.runMethod("mobile_inference",
                 IValue.from(textTensor));
-        Log.v(LOG_TAG, "Inference textTensor");
+        Log.v(LOG_TAG, "Inference acoustic model");
         // vocoder produces 22.05 kHz PCM float values between -20000.0 .. 20000.0
         final IValue voiceOutput = mVocoderModel.runMethod("inference", melganInput);
-        Log.v(LOG_TAG, "Inference voiceOuput");
+        Log.v(LOG_TAG, "Inference vocoder model");
         float[] samples = voiceOutput.toTensor().getDataAsFloatArray();
         byte[] bytes = AudioManager.pcmFloatTo16BitPCMWithDither(samples, 20000.0f, true);
         Instant stopTime = Instant.now();

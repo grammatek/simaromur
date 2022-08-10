@@ -51,7 +51,7 @@ public class VoiceManager extends AppCompatActivity {
             Log.v(LOG_TAG, "onItemClick - Selected Voice: " + voice.name);
             launchVoiceInfoActivity(voice);
         });
-        App.getAppRepository().streamTiroVoices("");
+        App.getAppRepository().streamNetworkVoices("");
         setTitle("Símarómur / " + getResources().getString(R.string.simaromur_voice_manager));
     }
 

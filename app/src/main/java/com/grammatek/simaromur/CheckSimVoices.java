@@ -21,7 +21,7 @@ public class CheckSimVoices extends Activity {
 		Log.i(LOG_TAG, "onCreate");
         super.onCreate(savedInstanceState);
         AppRepository mAppRepository = App.getAppRepository();
-        mAppRepository.streamTiroVoices("");
+        mAppRepository.streamNetworkVoices("");
         int result = TextToSpeech.Engine.CHECK_VOICE_DATA_PASS;
         Intent returnData = new Intent();
 

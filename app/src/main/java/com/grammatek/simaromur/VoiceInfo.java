@@ -135,7 +135,7 @@ public class VoiceInfo extends AppCompatActivity {
      */
     class AudioToggleObserver implements TTSAudioControl.AudioFinishedObserver {
         @Override
-        public void update() {
+        public void hasFinished() {
             runOnUiThread(VoiceInfo.this::toggleSpeakButton);
         }
     }
@@ -147,8 +147,9 @@ public class VoiceInfo extends AppCompatActivity {
         AppRepository appRepo = App.getAppRepository();
 
         CacheItem item = appRepo.getUtteranceCache().addUtterance(text);
-        item = appRepo.doNormalizationAndG2PAndSaveIntoCache(text, item);
-        appRepo.setCurrentUtterance(item);
+        item = appRepo.executeFrontendAndSaveIntoCache(text, item);
+        TTSRequest ttsRequest = new TTSRequest(item.getUuid());
+        appRepo.setCurrentTTSRequest(ttsRequest);
 
         if (mVoice.type.equals(Voice.TYPE_TIRO)) {
             if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {
@@ -158,6 +159,7 @@ public class VoiceInfo extends AppCompatActivity {
             }
             mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
         } else if (mVoice.type.equals(Voice.TYPE_TORCH)) {
+            // do nothing
         } else {
             Log.w(LOG_TAG, "Selected voice type " + mVoice.type + " not yet supported !");
             return;
@@ -171,7 +173,7 @@ public class VoiceInfo extends AppCompatActivity {
     public void onSpinnerClicked(View v) {
         Log.v(LOG_TAG, "onSpinnerClicked");
         mVoiceViewModel.stopSpeaking(mVoice);
-        App.getAppRepository().setCurrentUtterance(null);
+        App.getAppRepository().setCurrentTTSRequest(null);
         toggleSpeakButton();
     }
 
