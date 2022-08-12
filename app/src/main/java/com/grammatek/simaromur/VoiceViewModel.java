@@ -61,20 +61,12 @@ public class VoiceViewModel extends AndroidViewModel {
         return null;
     }
 
-    // Start fetching new voices from API's, if any updates are available, the voice model is
-    // updated as well. This is an async. operation.
-    public void startFetchingNetworkVoices(String languageCode) {
-        mRepository.streamTiroVoices(languageCode);
-        // other voice types follow here ..
-    }
-
     // Start speaking, i.e. make a speak request async.
     public void startSpeaking(Voice voice, CacheItem item, float speed, float pitch,
                               TTSAudioControl.AudioFinishedObserver finishedObserver) {
         switch (voice.type) {
             case Voice.TYPE_TIRO:
-                mRepository.startTiroSpeak(voice.internalName, item, voice.languageCode, speed,
-                        pitch, finishedObserver);
+                mRepository.startNetworkSpeak(voice.internalName, item, voice.languageCode, finishedObserver);
                 break;
             case Voice.TYPE_TORCH:
             case Voice.TYPE_FLITE:  // FALLTHROUGH
@@ -91,7 +83,7 @@ public class VoiceViewModel extends AndroidViewModel {
      */
     public void stopSpeaking(Voice voice) {
         if (voice.type.equals(Voice.TYPE_TIRO)) {
-            mRepository.stopTiroSpeak();
+            mRepository.stopNetworkSpeak();
         } else if (voice.type.equals(Voice.TYPE_TORCH)) {
             mRepository.stopDeviceSpeak(mDevSpeakTask);
         } else {

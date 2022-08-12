@@ -53,9 +53,7 @@ android {
             cmake {
                 arguments "-DFLITE_DIR="+getFliteDir()
                 arguments "-DTHIRD_PARTY_DIR="+get3rdPartyDir()
-                arguments "-DCMAKE_VERBOSE_MAKEFILE=ON", "V=1"
-                arguments "-DCMAKE_CXX_FLAGS -Wno-deprecated"
-                arguments "-DCMAKE_C_FLAGS -Wno-deprecated"
+                arguments "-DCMAKE_VERBOSE_MAKEFILE=ON"
                 cppFlags "-std=c++17"
             }
         }
@@ -99,7 +97,7 @@ android {
     }
     externalNativeBuild {
         cmake {
-            version "3.18.1"
+            version "3.22.1"
             path "src/main/cpp/CMakeLists.txt"
         }
     }

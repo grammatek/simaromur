@@ -1,11 +1,5 @@
 package com.grammatek.simaromur;
 
-import com.grammatek.simaromur.cache.CacheItem;
-import com.grammatek.simaromur.cache.Utterance;
-import com.grammatek.simaromur.cache.UtteranceCacheManager;
-import com.grammatek.simaromur.frontend.NormalizationManager;
-import com.grammatek.simaromur.network.ConnectionCheck;
-
 import android.media.AudioFormat;
 import android.provider.Settings;
 import android.speech.tts.SynthesisCallback;
@@ -15,20 +9,16 @@ import android.speech.tts.TextToSpeechService;
 import android.speech.tts.Voice;
 import android.util.Log;
 
+import com.grammatek.simaromur.audio.AudioManager;
+import com.grammatek.simaromur.audio.AudioObserver;
+import com.grammatek.simaromur.cache.CacheItem;
+import com.grammatek.simaromur.network.ConnectionCheck;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.MissingResourceException;
 import java.util.Optional;
 import java.util.Set;
-
-import static android.speech.tts.TextToSpeech.ERROR_SERVICE;
-import static android.speech.tts.TextToSpeech.LANG_MISSING_DATA;
-import static com.grammatek.simaromur.audio.AudioManager.N_CHANNELS;
-import static com.grammatek.simaromur.audio.AudioManager.SAMPLE_RATE_WAV;
-
-import androidx.annotation.NonNull;
 
 /**
  * Implements the SIM Engine as a TextToSpeechService
@@ -36,7 +26,12 @@ import androidx.annotation.NonNull;
 public class TTSService extends TextToSpeechService {
     private final static String LOG_TAG = "Simaromur_Java_" + TTSService.class.getSimpleName();
     private AppRepository mRepository;
-    private static boolean playNetworkErrorOnce = true;
+
+    // This flag saves the state of a very little state machine that gets activated, if we are not
+    // connected to the internet and should play a network voice: either we have not yet played a
+    // network error warning already, then this value is true, or we have already played it
+    // in which case this value is false and will be reset to true when a new TTS session starts.
+    private static boolean mShouldPlayNetworkError = true;
 
     @Override
     public void onCreate() {
@@ -45,19 +40,17 @@ public class TTSService extends TextToSpeechService {
         mRepository = App.getAppRepository();
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
-        mRepository.streamTiroVoices("");
-
-        Locale[] locales = Locale.getAvailableLocales();
+        mRepository.streamNetworkVoices("");
     }
 
     // mandatory
     @Override
-    protected synchronized int onIsLanguageAvailable(String language, String country, String variant) {
+    protected int onIsLanguageAvailable(String language, String country, String variant) {
         Log.v(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+")");
         if (variant.endsWith(ApiDbUtil.NET_VOICE_SUFFIX)) {
             if (!ConnectionCheck.isTTSServiceReachable()) {
                 Log.v(LOG_TAG, "onIsLanguageAvailable: TTS API NOT reachable");
-                return LANG_MISSING_DATA;
+                return TextToSpeech.LANG_MISSING_DATA;
             }
         }
         int rv = mRepository.isLanguageAvailable(language, country, variant);
@@ -67,7 +60,7 @@ public class TTSService extends TextToSpeechService {
 
     // @todo: seems to be deprecated, but still it's mandatory to implement it ...
     @Override
-    protected synchronized String[] onGetLanguage() {
+    protected String[] onGetLanguage() {
         // @todo: return currently set language as selected from the settings menu
         Log.e(LOG_TAG, "onGetLanguage()");
         return new String[] {"isl", "ISL", ""};
@@ -75,12 +68,12 @@ public class TTSService extends TextToSpeechService {
 
     // mandatory
     @Override
-    protected synchronized int onLoadLanguage(String language, String country, String variant) {
+    protected int onLoadLanguage(String language, String country, String variant) {
         Log.i(LOG_TAG, "onLoadLanguage("+language+","+country+","+variant+")");
         if (variant.endsWith(ApiDbUtil.NET_VOICE_SUFFIX)) {
             if (!ConnectionCheck.isTTSServiceReachable()) {
                 Log.v(LOG_TAG, "onLoadLanguage: TTS API NOT reachable");
-                return LANG_MISSING_DATA;
+                return TextToSpeech.LANG_MISSING_DATA;
             }
         }
         int rv = onIsLanguageAvailable(language, country, variant);
@@ -88,20 +81,32 @@ public class TTSService extends TextToSpeechService {
         return rv;
     }
 
-    // mandatory
-    @Override
-    protected synchronized void onStop() {
-        Log.i(LOG_TAG, "onStop");
-        // @todo stop ongoing speak request, i.e. unregister observers
 
-        // TODO: invalidate current cache item, this way we can stop the speakTask, additionally
-        //      stop speak task, mRepository.startTorchTTS
-        mRepository.setCurrentUtterance(null);
+
+
+    /**
+     * The TTS engine calls this method directly after onSynthesizeText() in case the user wants
+     * to stop the current utterance. In case the audio is already playing, this method is strictly
+     * not necessary any more, because the callback discards the audio data anyway. In case the audio
+     * is currently being prepared, be it via the network or the on-device models, this method stops the
+     * waiting for a TTSProcessingResult inside onSynthesizeText(). If afterwards the audio processing is
+     * finished, the processing result is received and discarded, because the current utterance is
+     * already finished and has changed.
+     *
+     * Note:  mandatory, don't synchronize this method !
+     */
+    @Override
+    protected void onStop() {
+        TTSProcessingResult stoppedProcessingResult =
+                new TTSProcessingResult(mRepository.getCurrentTTsRequest());
+        stoppedProcessingResult.setToStopped();
+        Log.i(LOG_TAG, "onStop: stopping (" + stoppedProcessingResult.getTTSRequest().serialize() + ")");
+        mRepository.enqueueTTSProcessingResult(stoppedProcessingResult);
     }
 
-    // mandatory
+    // mandatory, don't synchronize this method
     @Override
-    protected synchronized void onSynthesizeText(SynthesisRequest request,
+    protected void onSynthesizeText(SynthesisRequest request,
                                                  SynthesisCallback callback) {
         String language = request.getLanguage();
         String country = request.getCountry();
@@ -118,14 +123,15 @@ public class TTSService extends TextToSpeechService {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/"+country+"/"+variant+"), voice: "
-                + voiceName + " speed: " + speechrate + " pitch: " + pitch);
+        Log.v(LOG_TAG, "onSynthesizeText: " + text);
+        Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/" + country + "/" + variant +
+                "), speed: " + speechrate + " pitch: " + pitch);
 
         // if cache item for text already exists: retrieve it, otherwise create a new cache
         // item and save it into cache, then test one-by-one availability of every single
         // requested utterance component and eventually add the missing pieces
         CacheItem item = mRepository.getUtteranceCache().addUtterance(text);
-        item = mRepository.doNormalizationAndG2PAndSaveIntoCache(text, item);
+        item = mRepository.executeFrontendAndSaveIntoCache(text, item);
 
         String loadedVoiceName = mRepository.getLoadedVoiceName();
         if (loadedVoiceName.equals("")) {
@@ -136,8 +142,9 @@ public class TTSService extends TextToSpeechService {
                 loadedVoiceName = mRepository.getLoadedVoiceName();
             } else {
                 Log.w(LOG_TAG, "onSynthesizeText: couldn't load voice ("+voiceNameToLoad+")");
-                callback.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
-                callback.error(ERROR_SERVICE);
+                callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
+                        AudioManager.N_CHANNELS);
+                callback.error(TextToSpeech.ERROR_SERVICE);
                 if (callback.hasStarted() && ! callback.hasFinished()) {
                     callback.done();
                 }
@@ -156,41 +163,154 @@ public class TTSService extends TextToSpeechService {
         }
 
         com.grammatek.simaromur.db.Voice voice = mRepository.getVoiceForName(loadedVoiceName);
-        if (voice != null) {
-            if (text.isEmpty()) {
-                Log.i(LOG_TAG, "onSynthesizeText: End of TTS session");
-                playSilence(callback);
-                return;
-            }
-
-            if ((item.getUtterance().getPhonemesCount() == 0) ||
-                    item.getUtterance().getPhonemesList().get(0).getSymbols().isEmpty()) {
-                Log.w(LOG_TAG, "onSynthesizeText: No phonemes to speak");
-                playSilence(callback);
-                return;
-            }
-
-            mRepository.setCurrentUtterance(item);
-
-            // check if network voice && for network availability
-            if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TIRO)) {
-                if (! testForAndHandleNetworkVoiceIssues(callback, text, voice)) {
-                    return;
-                }
-                if (item.getUtterance().getNormalized().isEmpty()) {
-                    Log.i(LOG_TAG, "onSynthesizeText: normalization failed ?");
-                    playSilence(callback);
-                    return;
-                }
-                mRepository.startTiroTts(callback, voice, item, speechrate/100.0f,pitch/100.0f);
-            } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TORCH)) {
-                mRepository.startTorchTTS(callback, voice, item.getUuid(), speechrate/100.0f,pitch/100.0f);
-            } else {
-                Log.e(LOG_TAG, "Voice type currently unsupported: " + voice.type);
-            }
-        }
-        else {
+        if (voice == null) {
             Log.e(LOG_TAG, "onSynthesizeText: unsupported voice ?!");
+            return;
+        }
+        if (text.isEmpty()) {
+            Log.i(LOG_TAG, "onSynthesizeText: End of TTS session");
+            playSilence(callback);
+            mShouldPlayNetworkError = true;
+            return;
+        }
+        if ((item.getUtterance().getPhonemesCount() == 0) ||
+                item.getUtterance().getPhonemesList().get(0).getSymbols().isEmpty()) {
+            Log.w(LOG_TAG, "onSynthesizeText: No phonemes to speak");
+            playSilence(callback);
+            return;
+        }
+
+        TTSRequest ttsRequest = new TTSRequest(item.getUuid());
+        mRepository.setCurrentTTSRequest(ttsRequest);
+
+        // check if network voice && for network availability
+        if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TIRO)) {
+            if (! testForAndHandleNetworkVoiceIssues(callback, voice)) {
+                Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
+                return;
+            }
+            if (item.getUtterance().getNormalized().isEmpty()) {
+                Log.i(LOG_TAG, "onSynthesizeText: normalization failed ?");
+                playSilence(callback);
+                Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
+                return;
+            }
+            startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_WAV, true);
+            setSpeechMarksToBeginning(callback);
+            mRepository.startNetworkTTS(voice, item, ttsRequest, speechrate/100.0f,pitch/100.0f);
+        } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TORCH)) {
+            startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_TORCH, false);
+            setSpeechMarksToBeginning(callback);
+            mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate/100.0f,pitch/100.0f);
+        } else {
+            Log.e(LOG_TAG, "Voice type currently unsupported: " + voice.type);
+        }
+        handleProcessingResult(callback, item, ttsRequest);
+        Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
+    }
+
+    /**
+     * Wait for the processing result and handle it.
+     * @param callback  the callback to use for the result
+     * @param item     the cache item to use for the result
+     */
+    private void handleProcessingResult(SynthesisCallback callback, CacheItem item, TTSRequest ttsRequest) {
+        Log.v(LOG_TAG, "handleProcessingResult for (" + item.getUuid() + ")");
+        try {
+            // here we wait for the response of the speak request. The result is sent via the queue
+            // and then we need to feed the callback with the audio data from here
+            boolean isHandled = false;
+            do {
+                // todo: we need to handle timeout errors here, e.g. processing
+                //       timeouts, some error, e.g. network timeouts are already taken care of
+                TTSProcessingResult elem = mRepository.dequeueTTSProcessingResult();
+                TTSRequest rcvdTtsRequest = elem.getTTSRequest();
+                Log.v(LOG_TAG, "handleProcessingResult: received result for (" + rcvdTtsRequest.serialize() + ")");
+                // if the received element is not meant for this utterance, we ignore it and wait
+                // until we get the next one. If the received elements uuid is empty, we play an
+                // asset file, for which there is no uuid
+                if (elem.isStopped() && ! rcvdTtsRequest.equals(ttsRequest)) {
+                    Log.w(LOG_TAG, "handleProcessingResult: discard (" + rcvdTtsRequest.serialize() + ")");
+                    continue;
+                }
+                if (rcvdTtsRequest.equals(ttsRequest) ||
+                        rcvdTtsRequest.getCacheItemUuid().equals(AudioObserver.DUMMY_CACHEITEM_UUID)) {
+                    if (! elem.isError()) {
+                        if (elem.isStopped()) {
+                            Log.v(LOG_TAG, "handleProcessingResult: stop " + rcvdTtsRequest.serialize());
+                        } else if (elem.getAudio() == null) {
+                            Log.w(LOG_TAG, "handleProcessingResult: No audio data received ?!");
+                        } else {
+                            // everything seems to be fine, we can now feed the callback
+                            feedTtsCallback(callback, elem);
+                        }
+                    } else {
+                        // todo: we should handle more errors here
+                        Log.e(LOG_TAG, "onSynthesizeText: error during TTS processing");
+                        callback.error(TextToSpeech.ERROR_SERVICE);
+                    }
+                    // we have handled the element, stop the loop
+                    isHandled = true;
+                }
+            } while (!isHandled);
+        } catch (InterruptedException e) {
+            // thread has been interrupted
+            e.printStackTrace();
+        }
+        if (callback.hasStarted() && ! callback.hasFinished()) {
+            callback.done();
+        }
+    }
+
+    /**
+     * Play Audio via the callback for feeding the audio data.
+     *
+     * @param callback  TTS callback
+     * @param elem    TTS processing result element received from the queue
+     */
+    private void feedTtsCallback(SynthesisCallback callback, TTSProcessingResult elem) {
+        String uuid = elem.getTTSRequest().getCacheItemUuid();
+        Log.v(LOG_TAG, "feedTtsCallback: " + uuid);
+
+        if (elem.getAudio() == null) {
+            Log.e(LOG_TAG, "feedTtsCallback: no audio data received");
+            return;
+        }
+
+        Optional<CacheItem> optItem = mRepository.getUtteranceCache().findItemByUuid(uuid);
+        if (!optItem.isPresent()) {
+            Log.e(LOG_TAG, "feedTtsCallback: no cache item found for uuid: " + uuid);
+            return;
+        }
+        final String rawText =  optItem.get().getUtterance().getText();
+        AppRepository.feedBytesToSynthesisCallback(callback, elem.getAudio(), rawText);
+    }
+
+    /**
+     * Set the speech marks to the beginning of the current utterance.
+     * @param callback TTS callback
+     */
+    private static void setSpeechMarksToBeginning(SynthesisCallback callback) {
+        Log.v(LOG_TAG, "setSpeechMarksToBeginning()");
+        callback.rangeStart(0, 0, 1);
+        byte[] silenceData = new byte[callback.getMaxBufferSize()];
+        callback.audioAvailable(silenceData, 0, silenceData.length);
+    }
+
+    /**
+     * Initialize the synthesis process.
+     * @param mSynthCb  TTS callback
+     * @param sampleRate    Sample rate
+     * @param usesNetwork   True if the synthesis is done via the network
+     */
+    private static void startSynthesisCallback(SynthesisCallback mSynthCb, int sampleRate, boolean usesNetwork) {
+        if (usesNetwork && !ConnectionCheck.isTTSServiceReachable()) {
+            Log.e(LOG_TAG, "TTSObserver error: Service is not reachable ?!");
+            mSynthCb.error(TextToSpeech.ERROR_NETWORK);
+            return;
+        }
+        if (! mSynthCb.hasStarted()) {
+            mSynthCb.start(sampleRate, AudioFormat.ENCODING_PCM_16BIT, AudioManager.N_CHANNELS);
         }
     }
 
@@ -201,16 +321,15 @@ public class TTSService extends TextToSpeechService {
      * back the message.
      *
      * @param callback  TTS service callback.
-     * @param text      Text as received from TTS client
      * @param voice     The voice that is about to be used for speaking of text if no issues are found
      *                  Parameter is used to find out if we get end of TTS session.
      *
      * @return  true in case no network voice issues have been found, false otherwise
      */
-    private boolean testForAndHandleNetworkVoiceIssues(SynthesisCallback callback, String text,
+    private boolean testForAndHandleNetworkVoiceIssues(SynthesisCallback callback,
                                                        com.grammatek.simaromur.db.Voice voice)
     {
-        String assetFileName = "";
+        String assetFileName;
         if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {
             Log.w(LOG_TAG, "onSynthesizeText: tiro voice " + voice.name +
                     ": Network problems detected");
@@ -219,24 +338,19 @@ public class TTSService extends TextToSpeechService {
             } else {
                 assetFileName = "audio/connection_problem_dora.pcm";
             }
-            if (playNetworkErrorOnce) {
+            if (mShouldPlayNetworkError) {
                 // Toggle playing network notification. The idea is to just play once the
                 // network warning notification for an ongoing TTS session and ignore any
                 // following utterances as long as the network problem exists.
-                playNetworkErrorOnce = false;
+                mShouldPlayNetworkError = false;
                 App.getAppRepository().speakAssetFile(callback, assetFileName);
             } else {
                 signalTtsError(callback, TextToSpeech.ERROR_NETWORK);
             }
-            if (text.isEmpty()) {
-                Log.v(LOG_TAG, "onSynthesizeText: End of TTS session");
-                // toggle playing network notification
-                playNetworkErrorOnce = true;
-            }
             return false;
         } else {
             // toggle playing network notification
-            playNetworkErrorOnce = true;
+            mShouldPlayNetworkError = true;
         }
         return true;
     }
@@ -252,7 +366,9 @@ public class TTSService extends TextToSpeechService {
      * @param errorCode     Error Code to return to TTS client
      */
     private void signalTtsError(SynthesisCallback callback, int errorCode) {
-        callback.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, N_CHANNELS);
+        Log.w(LOG_TAG, "signalTtsError(): errorCode = " + errorCode);
+        callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
+                AudioManager.N_CHANNELS);
         callback.error(errorCode);
         callback.done();
     }
@@ -263,18 +379,20 @@ public class TTSService extends TextToSpeechService {
      *
      * @param callback  TTS callback provided in the onSynthesizeText() callback
      */
-    public static void playSilence(SynthesisCallback callback) {
+    private static void playSilence(SynthesisCallback callback) {
         Log.v(LOG_TAG, "playSilence() ...");
-        callback.start(SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT, 1);
+        callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
+                    AudioManager.N_CHANNELS);
+        setSpeechMarksToBeginning(callback);
         byte[] silenceData = new byte[callback.getMaxBufferSize()/2];
         callback.audioAvailable(silenceData, 0, silenceData.length);
-        if (callback.hasStarted() && ! callback.hasFinished()) {
+        if (! callback.hasFinished() && callback.hasStarted()) {
             callback.done();
         }
     }
 
     @Override
-    public synchronized String onGetDefaultVoiceNameFor(String language, String country, String variant)
+    public String onGetDefaultVoiceNameFor(String language, String country, String variant)
     {
         Log.i(LOG_TAG, "onGetDefaultVoiceNameFor("+language+","+country+","+variant+")");
         String defaultVoice = mRepository.getDefaultVoiceFor(language, country, variant);
@@ -283,7 +401,7 @@ public class TTSService extends TextToSpeechService {
     }
 
     @Override
-    public synchronized  List<Voice> onGetVoices()
+    public List<Voice> onGetVoices()
     {
         Log.i(LOG_TAG, "onGetVoices");
         List<Voice> announcedVoiceList = new ArrayList<>();
@@ -300,25 +418,9 @@ public class TTSService extends TextToSpeechService {
                 needsNetwork = true;
             } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TORCH)) {
                 latency = Voice.LATENCY_VERY_HIGH;
-                needsNetwork = false;
             }
             Voice ttsVoice = new Voice(voice.name, voice.getLocale(), quality, latency,
                     needsNetwork, features);
-            String voiceLanguage = "";
-            try {
-                voiceLanguage = voice.getLocale().getISO3Language();
-            } catch (MissingResourceException e) {
-                Log.w(LOG_TAG, "Couldn't retrieve ISO 639-2/T language code for locale: "
-                        + voice.getLocale(), e);
-            }
-
-            String voiceCountry = "";
-            try {
-                voiceCountry = voice.getLocale().getISO3Country();
-            } catch (MissingResourceException e) {
-                Log.w(LOG_TAG, "Couldn't retrieve ISO 3166 country code for locale: "
-                        + voice.getLocale(), e);
-            }
             announcedVoiceList.add(ttsVoice);
             Log.v(LOG_TAG, "onGetVoices: " + ttsVoice);
         }
@@ -326,7 +428,7 @@ public class TTSService extends TextToSpeechService {
     }
 
     @Override
-    public synchronized int onIsValidVoiceName(String name)
+    public int onIsValidVoiceName(String name)
     {
         Log.i(LOG_TAG, "onIsValidVoiceName("+name+")");
         for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
@@ -347,7 +449,7 @@ public class TTSService extends TextToSpeechService {
      * @return  TextToSpeech.SUCCESS in case the call was successful, TextToSpeech.ERROR otherwise.
      */
     @Override
-    public synchronized int onLoadVoice(String name)
+    public int onLoadVoice(String name)
     {
         Log.i(LOG_TAG, "onLoadVoice("+name+")");
         if (onIsValidVoiceName(name) == TextToSpeech.SUCCESS) {

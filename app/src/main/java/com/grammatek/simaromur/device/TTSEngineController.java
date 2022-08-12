@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 
 import com.grammatek.simaromur.App;
 import com.grammatek.simaromur.TTSObserver;
+import com.grammatek.simaromur.TTSRequest;
 import com.grammatek.simaromur.audio.AudioManager;
 import com.grammatek.simaromur.cache.CacheItem;
 import com.grammatek.simaromur.cache.PhonemeEntry;
@@ -19,16 +20,18 @@ import com.grammatek.simaromur.cache.UtteranceCacheManager;
 import com.grammatek.simaromur.cache.VoiceAudioDescription;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
-import com.grammatek.simaromur.frontend.FrontendManager;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
- * Class to  manage on-device TTS Engines and to execute TTS utterances on these.
+ * Class to  manage on-device TTS Engines and to execute TTS utterances on these. The audio that
+ * is produced by the TTS engine is for one cached in the utterance cache manager and is either
+ * played directly via the TTSAudioControl or is sent to the TTSService for playback.
  */
 public class TTSEngineController {
     final static String LOG_TAG = "Simaromur_" + TTSEngineController.class.getSimpleName();
@@ -37,21 +40,21 @@ public class TTSEngineController {
     DeviceVoice mCurrentVoice;
     TTSEngine mEngine;
     final ExecutorService mExecutorService;
+    Future<?> mTaskFuture;  // the currently enqueued task, might be executed by the executor service
     final TTSAudioControl mTTSAudioControl;
 
     /**
      * Constructor
      *
      * @param asm       AssetManager reference
-     * @param frontend  Frontend manager reference
      * @throws IOException  In case any problems are detected within device voices
      */
-    public TTSEngineController(AssetManager asm, FrontendManager frontend) throws IOException {
+    public TTSEngineController(AssetManager asm) throws IOException {
         mAssetManager = asm;
         mAVM = new AssetVoiceManager(App.getContext());
         mCurrentVoice = null;
-        mTTSAudioControl = new TTSAudioControl(22050, AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT);
+        mTTSAudioControl = new TTSAudioControl(AudioManager.SAMPLE_RATE_TORCH,
+                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
         // we only need one thread per Audio setting
         mExecutorService = Executors.newSingleThreadExecutor();
     }
@@ -91,16 +94,19 @@ public class TTSEngineController {
      * Start to speak given text with given voice.
      */
     public SpeakTask StartSpeak(CacheItem item, float speed, float pitch, int sampleRate,
-                           TTSAudioControl.AudioFinishedObserver observer) {
+                           TTSAudioControl.AudioFinishedObserver observer, TTSRequest ttsRequest) {
         if (mEngine == null || mCurrentVoice == null) {
             String errorMsg = "No TTS engine loaded !";
             Log.e(LOG_TAG, errorMsg);
             throw new RuntimeException(errorMsg);
         }
 
-        SpeakTask speakTask = new SpeakTask(item.getUuid(), speed, pitch, sampleRate, observer, mCurrentVoice);
+        SpeakTask speakTask = new SpeakTask(item.getUuid(), speed, pitch, sampleRate, observer, mCurrentVoice, ttsRequest);
         Log.v(LOG_TAG, "StartSpeak: scheduling new SpeakTask");
-        mExecutorService.execute(speakTask);
+        if (mTaskFuture != null && !mTaskFuture.isDone()) {
+            mTaskFuture.cancel(true);
+        }
+        mTaskFuture = mExecutorService.submit(speakTask);
         return speakTask;
     }
 
@@ -108,16 +114,19 @@ public class TTSEngineController {
      * Start to speak given text with given voice and use given callback for applying the synthesized
      * output.
      */
-    public void StartSpeak(TTSObserver observer, String itemUuid) {
+    public void StartSpeak(TTSObserver observer, TTSRequest ttsRequest) {
         if (mEngine == null || mCurrentVoice == null) {
             String errorMsg = "No TTS engine loaded !";
             Log.e(LOG_TAG, errorMsg);
             throw new RuntimeException(errorMsg);
         }
 
-        SpeakTask speakTask = new SpeakTask(observer, itemUuid, mCurrentVoice);
+        SpeakTask speakTask = new SpeakTask(observer, ttsRequest, mCurrentVoice);
         Log.v(LOG_TAG, "StartSpeak: scheduling new SpeakTask");
-        mExecutorService.execute(speakTask);
+        if (mTaskFuture != null && !mTaskFuture.isDone()) {
+            mTaskFuture.cancel(true);
+        }
+        mTaskFuture = mExecutorService.submit(speakTask);
     }
 
     /**
@@ -130,8 +139,13 @@ public class TTSEngineController {
         }
     }
 
+    public TTSEngine getEngine() {
+        return mEngine;
+    }
+
     public class SpeakTask implements Runnable {
         private final String LOG_SPEAK_TASK_TAG = "Simaromur_" + SpeakTask.class.getSimpleName();
+        private final TTSRequest ttsRequest;
         CacheItem item;
         float speed;
         float pitch;
@@ -150,9 +164,12 @@ public class TTSEngineController {
          * @param pitch         pitch multiplier of voice, how many times higher/lower than normal voice
          *                      pitch
          * @param sampleRate    sample rate to use for the synthesis
+         * @param ttsRequest    request to be used for the synthesis
          */
         public SpeakTask(String itemUuid, float speed, float pitch, int sampleRate,
-                         TTSAudioControl.AudioFinishedObserver audioObserver, DeviceVoice voice) {
+                         TTSAudioControl.AudioFinishedObserver audioObserver, DeviceVoice voice,
+                         TTSRequest ttsRequest) {
+            this.ttsRequest = ttsRequest;
             Optional<CacheItem> optItem = App.getAppRepository().getUtteranceCache().findItemByUuid(itemUuid);
             this.item = optItem.orElse(null);
             this.speed = speed;
@@ -168,16 +185,17 @@ public class TTSEngineController {
          * initialized with pitch, speed & sample rate
          *
          * @param observer      Observer that gets the synthesized PCM data
-         * @param itemUuid      uuid of cache item to be spoken
+         * @param ttsRequest    Request to be synthesized
+         * @param voice         Voice to be used for synthesis
          */
-        public SpeakTask(TTSObserver observer, String itemUuid, DeviceVoice voice) {
-            Optional<CacheItem> optItem = App.getAppRepository().getUtteranceCache().findItemByUuid(itemUuid);
+        public SpeakTask(TTSObserver observer, TTSRequest ttsRequest, DeviceVoice voice) {
+            this.ttsRequest = ttsRequest;
+            Optional<CacheItem> optItem = App.getAppRepository().getUtteranceCache().findItemByUuid(ttsRequest.getCacheItemUuid());
             this.item = optItem.orElse(null);
             this.audioObserver = null;
             this.observer = observer;
-            // pitch & speed & sampleRate is applied by observer
-            this.speed = 1.0f;
-            this.pitch = 1.0f;
+            this.speed = observer.getSpeed();
+            this.pitch = observer.getPitch();
             this.sampleRate = mEngine.GetNativeSampleRate();
             this.voice = voice;
         }
@@ -185,13 +203,15 @@ public class TTSEngineController {
         /**
          * This will run the synthesis and call either a given callback or use the AudioController
          * to directly play the synthesized voice.
-         * @TODO: unify observers
+         * TODO: unify observers
          */
         public void run() {
             Log.v(LOG_SPEAK_TASK_TAG, "run() called");
             assert(sampleRate == mEngine.GetNativeSampleRate());
 
-            if (shouldStop()) return;
+            if (shouldStop())  {
+                return;
+            }
 
             Utterance utterance = item.getUtterance();
             if (utterance.getPhonemesCount() == 0) {
@@ -204,31 +224,34 @@ public class TTSEngineController {
             // TODO: voiceVersion parameter is not taken into account yet !
             final List<byte[]> audioBuffers =
                     ucm.getAudioForUtterance(item.getUtterance(), mCurrentVoice.InternalName, "v1");
-            if (shouldStop()) return;
-
-            byte[] pcmBytes16Bit;
-            if (!audioBuffers.isEmpty()) {
-                pcmBytes16Bit = audioBuffers.get(0);
-            } else {
-                // no audio for utterance yet
-                PhonemeEntry phonemeEntry = utterance.getPhonemesList().get(0);
-                pcmBytes16Bit = synthesizeSpeech(phonemeEntry);
-                if (pcmBytes16Bit == null) return;
-            }
-
-            if (pcmBytes16Bit.length == 0) {
-                Log.w(LOG_SPEAK_TASK_TAG, "run(): No audio generated ?!");
+            if (shouldStop()) {
                 return;
             }
 
-            if (shouldStop()) return;
+            byte[] audioData;
+            if (!audioBuffers.isEmpty()) {
+                audioData = audioBuffers.get(0);
+            } else {
+                // no audio for utterance yet
+                PhonemeEntry phonemeEntry = utterance.getPhonemesList().get(0);
+                audioData = synthesizeSpeech(phonemeEntry);
+            }
+
+            if ((audioData == null) || (audioData.length == 0)) {
+                Log.w(LOG_SPEAK_TASK_TAG, "run(): No audio generated ?!");
+                return;
+            }
+            if (shouldStop()) {
+                return;
+            }
+
             if (observer == null) {
-                byte[] audio = AudioManager.applyPitchAndSpeed(pcmBytes16Bit, sampleRate, pitch, speed);
                 // TODO: also the media players should stop, if item has changed:
                 //       - pass the cache item along
-                mTTSAudioControl.play(new TTSAudioControl.AudioEntry(audio, audioObserver));
+                byte[] processedAudio = AudioManager.applyPitchAndSpeed(audioData, sampleRate, pitch, speed);
+                mTTSAudioControl.play(new TTSAudioControl.AudioEntry(processedAudio, audioObserver));
             } else {
-                observer.update(pcmBytes16Bit);
+                observer.update(audioData, ttsRequest);
             }
         }
 
@@ -264,19 +287,18 @@ public class TTSEngineController {
 
         /**
          * Test for criteria to stop current synthesis/playback. Either the playback has been actively
-         * stopped via calling method stopSynthesis() or by setting the global current utterance to
+         * stopped via calling method stopSynthesis() or by setting the global tts request to
          * a different value than the one to be used here.
          *
          * @return  true in case the task should stop, false otherwise
          */
         synchronized
         private boolean shouldStop() {
-            CacheItem currentUtterance = App.getAppRepository().getCurrentUtterance();
-            if (currentUtterance == null) {
+            TTSRequest currentTTsRequest = App.getAppRepository().getCurrentTTsRequest();
+            if (currentTTsRequest == null) {
                 return true;
             }
-            final String globalItemUuid = currentUtterance.getUuid();
-            boolean shouldBeStopped = isStopped || (item == null) || (! item.getUuid().equals(globalItemUuid));
+            boolean shouldBeStopped = isStopped || (item == null) || (ttsRequest != currentTTsRequest);
             if (shouldBeStopped && (item != null)) {
                 Log.v(LOG_SPEAK_TASK_TAG, "stopping: " + item.getUuid());
             }
@@ -284,7 +306,7 @@ public class TTSEngineController {
         }
 
         /**
-         * Stops synthesis of a SpeakTask. Stop criterium is checked multiple times, not only before
+         * Stops synthesis of a SpeakTask. Stop criteria is checked multiple times, not only before
          * it's been queued, but also after each atomic step.
          */
         synchronized

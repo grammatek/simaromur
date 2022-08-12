@@ -262,12 +262,12 @@ public class UtteranceCacheManager {
     }
 
     /**
-     * Add utterance to cache and return its cache item. If there is a correspondig cache item for
+     * Add utterance to cache and return its cache item. If there is a corresponding cache item for
      * the given text, this is returned instead.
      *
      * @param text  text to be added to the cache
      *
-     * @return new or existing cache item corresponging to text
+     * @return new or existing cache item corresponding to text
      */
     synchronized
     public CacheItem addUtterance(String text) {
@@ -499,11 +499,11 @@ public class UtteranceCacheManager {
     }
 
     /**
-     * Returns audio filename  for given phonemeEntry and voice audio decsription. The returned filename
+     * Returns audio filename  for given phonemeEntry and voice audio description. The returned filename
      * is deterministic.
      *
      * @param phonemeEntry      phoneme entry, needs the MD5 sum to be prefilled
-     * @param vad               voice audio discription, necessary for the filename suffix
+     * @param vad               voice audio description, necessary for the filename suffix
      * @return  filename for an audio file corresponding to passed parameters
      */
     synchronized
@@ -603,7 +603,7 @@ public class UtteranceCacheManager {
      * Converts a given Protobuf Timestamp to milliseconds since the epoch.
      *
      * @param aTimestamp  Protobuf timestamp
-     * @return  timetamp as milliseconds since the epoch
+     * @return  timestamp as milliseconds since the epoch
      */
     public static long convertTimestampToMillis(Timestamp aTimestamp) {
         return aTimestamp.getSeconds()*1000 + aTimestamp.getNanos()/1000000;
@@ -812,7 +812,7 @@ public class UtteranceCacheManager {
      * are deleted by this call.
      *
      * @param aText     text to be searched
-     * @return  true in case audio for given text could be found and sucessfully deleted, false otherwise
+     * @return  true in case audio for given text could be found and successfully deleted, false otherwise
      */
     synchronized
     public boolean deleteAudioForText(String aText) {
@@ -932,14 +932,14 @@ public class UtteranceCacheManager {
      */
     synchronized
     public long getAudioFileSize(CacheItem item) {
-        long audiosizeOfItem = 0;
+        long audioSizeOfItem = 0;
 
         for (AudioEntry entry: item.getVoiceAudioEntriesMap().values()) {
             for (VoiceAudioDescription vad: entry.getAudioDescriptorsList()) {
-                audiosizeOfItem += vad.getFileSize();
+                audioSizeOfItem += vad.getFileSize();
             }
         }
-        return audiosizeOfItem;
+        return audioSizeOfItem;
     }
 
     /**
@@ -968,7 +968,7 @@ public class UtteranceCacheManager {
      * @param voiceVersion          voice version
      * @return  list of audio data in case audio was available in the cache, otherwise an empty
      *          list in case, no audio data could be found for the given utterance or if some error
-     *          occured while reading the audio file from file system
+     *          occurred while reading the audio file from file system
      */
     synchronized
     public List<byte[]> getAudioForUtterance(Utterance utterance, String voiceName, String voiceVersion) {
@@ -1102,7 +1102,7 @@ public class UtteranceCacheManager {
      *
      * @param utterance     utterance to use for the operation
      *
-     * @return  audio updatetimestamp as milliseconds since 1.1.1970 (i.e. the epoch)
+     * @return  audio update timestamp as milliseconds since 1.1.1970 (i.e. the epoch)
      */
     public long getTimestampMillis(Utterance utterance) {
         assertNotClosed();
@@ -1167,9 +1167,9 @@ public class UtteranceCacheManager {
         long deletedAudio = 0;
         List<CacheItem> allItemsSorted = collectItemsWithAudioSortedByTimestamp(minAudioFileSizeToDelete);
         for (CacheItem item:allItemsSorted) {
-            long audiosizeOfItem = getAudioFileSize(item);
+            long audioSizeOfItem = getAudioFileSize(item);
             if (deleteAudioForItem(item)) {
-                deletedAudio += audiosizeOfItem;
+                deletedAudio += audioSizeOfItem;
             }
             if (deletedAudio >= minAudioFileSizeToDelete) {
                 break;
@@ -1207,9 +1207,9 @@ public class UtteranceCacheManager {
             Optional<CacheItem> optItem = findItemByUuid(uuids.get(i));
             if (optItem.isPresent()) {
                 CacheItem item = optItem.get();
-                long audiosizeOfItem = getAudioFileSize(item);
+                long audioSizeOfItem = getAudioFileSize(item);
                 if (deleteAudioForItem(item)) {
-                    deletedAudio += audiosizeOfItem;
+                    deletedAudio += audioSizeOfItem;
                 }
                 if (deletedAudio >= minAudioFileSizeToDelete) {
                     break;

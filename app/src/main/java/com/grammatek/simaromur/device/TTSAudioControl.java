@@ -17,7 +17,7 @@ public class TTSAudioControl {
     private final LinkedBlockingQueue<AudioEntry> mQueue = new LinkedBlockingQueue<>();
     private AudioEntry mAudioEntry;
     private final AudioTrack mTrack;
-    private boolean isStopped;
+    private boolean mIsStopped;
 
     /**
      * Interface for an observer that is called when finished with playing audio.
@@ -26,7 +26,7 @@ public class TTSAudioControl {
         /**
          * This method is called whenever a queued element is finished playing.
          */
-        void update();
+        void hasFinished();
     }
 
     /**
@@ -58,25 +58,34 @@ public class TTSAudioControl {
             while (true) {
                 try {
                     mAudioEntry = mQueue.take();
-                    Log.d(LOG_TAG, "now playing " + mAudioEntry.audio.length + " bytes");
-                    int bufPos = 0;
-                    while (bufPos < mAudioEntry.audio.length && !isStopped) {
-                        int nBytes = Math.min(minBufferSize, mAudioEntry.audio.length - bufPos);
-                        int written = mTrack.write(mAudioEntry.audio, bufPos, nBytes, AudioTrack.WRITE_BLOCKING);
-                        if ((written > 0) && (!isStopped) && (mTrack.getState() != AudioTrack.PLAYSTATE_PLAYING)) {
-                            mTrack.play();
-                        }
-                        bufPos += written;
-                    }
+                    playTrack(minBufferSize);
                     // finished playing a queue element
-                    if (!isStopped) {
-                        mAudioEntry.observer.update();
+                    if (!mIsStopped) {
+                        mAudioEntry.finishedObserver.hasFinished();
                     }
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "Exception: ", e);
                 }
             }
         });
+    }
+
+    /**
+     * Plays the audio data in the queue element.
+     *
+     * @param minBufferSize Minimum buffer size for the audio track
+     */
+    private void playTrack(int minBufferSize) {
+        Log.d(LOG_TAG, "now playing " + mAudioEntry.audio.length + " bytes");
+        int bufPos = 0;
+        while (bufPos < mAudioEntry.audio.length && !mIsStopped) {
+            int nBytes = Math.min(minBufferSize, mAudioEntry.audio.length - bufPos);
+            int written = mTrack.write(mAudioEntry.audio, bufPos, nBytes, AudioTrack.WRITE_BLOCKING);
+            if ((written > 0) && (!mIsStopped) && (mTrack.getState() != AudioTrack.PLAYSTATE_PLAYING)) {
+                mTrack.play();
+            }
+            bufPos += written;
+        }
     }
 
     /**
@@ -88,25 +97,25 @@ public class TTSAudioControl {
      */
     void play(AudioEntry audioEntry) {
         Log.d(LOG_TAG, "play(): add " + audioEntry.audio.length + " bytes to queue");
-        isStopped = false;
+        mIsStopped = false;
         mQueue.offer(audioEntry);
     }
 
     void stop() {
         Log.d(LOG_TAG, "stop() called");
         mQueue.clear();
-        isStopped = true;
+        mIsStopped = true;
         mTrack.pause();
         mTrack.flush();
     }
 
     public static class AudioEntry {
         final private byte[] audio;
-        AudioFinishedObserver observer;
+        AudioFinishedObserver finishedObserver;
 
         public AudioEntry(byte[] audio, AudioFinishedObserver observer) {
             this.audio = audio;
-            this.observer = observer;
+            this.finishedObserver = observer;
         }
     }
 }

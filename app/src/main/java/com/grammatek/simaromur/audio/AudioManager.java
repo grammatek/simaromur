@@ -19,6 +19,7 @@ public class AudioManager {
     // Some constants used throughout audio conversion
     public static final int SAMPLE_RATE_WAV = 16000;
     public static final int SAMPLE_RATE_MP3 = 22050;
+    public static final int SAMPLE_RATE_TORCH = 22050;
     public static final int N_CHANNELS = 1;
 
     /**
@@ -40,6 +41,7 @@ public class AudioManager {
     static public byte[] applyPitchAndSpeed(final byte[] monoPcmData, int sampleRate, float pitch, float speed) {
         ByteArrayOutputStream outputConversionStream = new ByteArrayOutputStream();
         if (pitch == 1.0 && speed == 1.0) {
+            Log.i(LOG_TAG, "applyPitchAndSpeed: No changes to apply");
             outputConversionStream.write(monoPcmData, 0, monoPcmData.length);
         } else {
             Log.i(LOG_TAG, "Applying pitch " + pitch + ", speed " + speed);
