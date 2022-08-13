@@ -11,7 +11,6 @@ import com.grammatek.simaromur.network.tiro.TiroAPI;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.text.DateFormat;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -27,7 +26,6 @@ public class ConnectionCheck {
     private ScheduledFuture<?> periodicFuture;
     private static boolean isNetworkConnected = false;
     private static boolean isTTSServiceReachable = false;
-    final static DateFormat fmt = DateFormat.getTimeInstance(DateFormat.LONG);
 
     public static boolean isNetworkConnected() {
         return isNetworkConnected;
@@ -35,10 +33,6 @@ public class ConnectionCheck {
 
     public static boolean isTTSServiceReachable() {
         return isTTSServiceReachable;
-    }
-
-    public interface ConnectivityCallback {
-        void onDetected(boolean isConnected);
     }
 
     // You need to pass the context when creating the class
@@ -123,20 +117,17 @@ public class ConnectionCheck {
     }
 
     // And yet another
-    Runnable periodicTask = new Runnable(){
-        @Override
-        public void run() {
-            try{
-                if (isHostAvailable(TiroAPI.SERVER, 443, 2000)) {
-                    isTTSServiceReachable = true;
-                    Log.d(LOG_TAG,"TTS Service available!");
-                } else {
-                    isTTSServiceReachable = false;
-                    Log.d(LOG_TAG, "TTS Service is NOT available !");
-                }
-            } catch (Exception e){
-                Log.w(LOG_TAG, "Exception: " + e.getMessage());
+    Runnable periodicTask = () -> {
+        try{
+            if (isHostAvailable(TiroAPI.SERVER, 443, 2000)) {
+                isTTSServiceReachable = true;
+                Log.d(LOG_TAG,"TTS Service available!");
+            } else {
+                isTTSServiceReachable = false;
+                Log.d(LOG_TAG, "TTS Service is NOT available !");
             }
+        } catch (Exception e){
+            Log.w(LOG_TAG, "Exception: " + e.getMessage());
         }
     };
 }
