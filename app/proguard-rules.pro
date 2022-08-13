@@ -25,3 +25,9 @@
 -dontwarn opennlp.**
 -keep class org.pytorch.** { *; }
 -keep class com.facebook.** { *; }
+
+# warnings generated via okhttp3 internal platform, these seem not to be needed on Android
+-dontwarn okhttp3.internal.platform.*
+-dontwarn org.bouncycastle.jsse.BCSSLParameters
+-dontwarn org.bouncycastle.jsse.BCSSLSocket
+-dontwarn org.conscrypt.Conscrypt

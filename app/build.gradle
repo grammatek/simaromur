@@ -74,6 +74,9 @@ android {
                 files("$projectDir/schemas".toString())
     }
     buildTypes {
+        debug {
+            debuggable true
+        }
 
         release {
             firebaseCrashlytics {
@@ -102,8 +105,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     testOptions {
@@ -117,6 +120,10 @@ android {
     useLibrary 'android.test.runner'
     useLibrary 'android.test.base'
     useLibrary 'android.test.mock'
+    dependenciesInfo {
+        includeInApk true
+        includeInBundle true
+    }
 }
 
 protobuf {
