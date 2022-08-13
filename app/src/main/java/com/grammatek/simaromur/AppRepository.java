@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -113,6 +114,7 @@ public class AppRepository {
     // dependency.
     public AppRepository(Application application) throws IOException {
         Log.v(LOG_TAG, "AppRepository()");
+        mAllCachedVoices = new ArrayList<>();
         ApplicationDb db = ApplicationDb.getDatabase(application);
         mUtteranceCacheManager = new UtteranceCacheManager("utterance_cache.pb",
                 CacheLowWatermark, CacheHighWatermark);
@@ -144,15 +146,13 @@ public class AppRepository {
             App.setFirebaseAnalytics(setCrashLytics);
         });
         mAllVoices = mVoiceDao.getAllVoices();
-        mAllCachedVoices = new ArrayList<>();
         mAllVoices.observeForever(voices -> {
             Log.v(LOG_TAG, "mAllVoices update: " + voices);
             // Update cached voices
-            mAllCachedVoices = voices;
+            mAllCachedVoices = Objects.requireNonNullElseGet(voices, ArrayList::new);
         });
 
         mMediaPlayer = new MediaPlayObserver();
-
         mScheduler = Executors.newSingleThreadScheduledExecutor();
         mScheduler.scheduleAtFixedRate(networkVoicesUpdateRunnable, 0, 60, TimeUnit.SECONDS);
         mScheduler.schedule(assetVoiceRunnable, 1, TimeUnit.SECONDS);
