@@ -54,6 +54,18 @@ public class Pronunciation {
         return sb.toString().trim();
     }
 
+    /**
+     *   Converts a transcription in one alphabet to another alphabet.
+     *   Logs an error if either from or to alphabet is not available for conversion and returns
+     *   the original transcribed string.
+     *   If a symbol in the input string is not found in the respective from alphabet, the symbol is
+     *   kept as is and not converted. A message is logged as a warning if this happens.
+     *
+     * @param transcribed a transcribed string
+     * @param fromAlphabet the alphabet of the transcribed string
+     * @param toAlphabet the alphabet to convert the transcribed string into
+     * @return a converted transcription
+     */
     public String convert(String transcribed, String fromAlphabet, String toAlphabet) {
         final List<String> validAlpha = getValidAlphabets();
         if (!validAlpha.contains(fromAlphabet) || !validAlpha.contains(toAlphabet)) {
@@ -99,6 +111,19 @@ public class Pronunciation {
         }
     }
 
+    /**
+     * Initialize a symbol dictionary where we can look up mappings between all alphabets in ALPHABETS_FILE.
+     * The result is a dictionary of dictionaries, where the top-level keys are the names of the alphabets
+     * and the sub-dictionaries the mappings from a top-level dictionary to all other dictionaries.
+     *
+     * Example:
+     *   {'SAMPA' : {'a' : {'IPA' : 'a', 'SINGLE' : 'a', 'FLITE' : 'a'},
+     *              {'a:' : {'IPA' : 'aː', 'SINGLE' : 'A', 'FLITE' : 'aa'},
+     *              { ... }}
+     *    'IPA'   : { ... },
+     *   }
+     * @return a map with phonetic symbols of different alphabets
+     */
     private Map<String, Map<String, Map<String, String>>> initializeAlphabets() {
         Map<String, Map<String, Map<String, String>>> alphabets = new HashMap<>();
         List<String> fileContent = readAlphabets();
