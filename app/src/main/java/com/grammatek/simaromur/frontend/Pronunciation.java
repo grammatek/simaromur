@@ -116,6 +116,8 @@ public class Pronunciation {
      * The result is a dictionary of dictionaries, where the top-level keys are the names of the alphabets
      * and the sub-dictionaries the mappings from a top-level dictionary to all other dictionaries.
      *
+     * The headers (first line) of the file represent the names of the alphabets.
+     *
      * Example:
      *   {'SAMPA' : {'a' : {'IPA' : 'a', 'SINGLE' : 'a', 'FLITE' : 'a'},
      *              {'a:' : {'IPA' : 'aː', 'SINGLE' : 'A', 'FLITE' : 'aa'},
@@ -126,9 +128,9 @@ public class Pronunciation {
      */
     private Map<String, Map<String, Map<String, String>>> initializeAlphabets() {
         Map<String, Map<String, Map<String, String>>> alphabets = new HashMap<>();
-        List<String> fileContent = FileUtils.readLinesFromResourceFile(this.mContext,
+        final List<String> fileContent = FileUtils.readLinesFromResourceFile(this.mContext,
                 R.raw.sampa_ipa_single_flite);
-        List<String> headers = Arrays.asList(fileContent.get(0).split("\t"));
+        final List<String> headers = Arrays.asList(fileContent.get(0).split("\t"));
         for (String header : headers) {
             int ind = headers.indexOf(header);
             alphabets.put(header, new HashMap());
@@ -150,7 +152,7 @@ public class Pronunciation {
 
     private Map<String, PronDictEntry> readPronDict() {
         Map<String, PronDictEntry> pronDict = new HashMap<>();
-        List<String> fileContent = FileUtils.readLinesFromResourceFile(this.mContext,
+        final List<String> fileContent = FileUtils.readLinesFromResourceFile(this.mContext,
                 R.raw.ice_pron_dict_standard_clear_2201_extended);
        for (String line : fileContent) {
            String[] transcr = line.trim().split("\t");

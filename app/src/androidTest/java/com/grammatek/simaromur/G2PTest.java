@@ -17,19 +17,32 @@ public class G2PTest {
 
     private final static Context context = ApplicationProvider.getApplicationContext();
 
+    private final String INPUT_TEXT = "hlíðin er pökkuð";
+    private final String SAMPA_TRANSCRIPT = "l_0 i: D I n E r p_h 9 h k Y D";
+    private final String FLITE_TRANSCRIPT = "lz ii D I n E r ph oe h k Y D";
+    private final String IPA_TRANSCRIPT = "l̥ iː ð ɪ n ɛ r pʰ œ h k ʏ ð";
+
     @Test
     public void transcribeTest() {
         Pronunciation transcriber = new Pronunciation(context);
-        String transcribed = transcriber.transcribe("hljóðrita þetta");
-        assertEquals("l_0 j ou D r I t a T E h t a", transcribed);
+        String transcribed = transcriber.transcribe(INPUT_TEXT);
+        assertEquals(SAMPA_TRANSCRIPT, transcribed);
     }
 
     @Test
     public void convertTest() {
         Pronunciation transcriber = new Pronunciation(context);
-        String converted = transcriber.convert("l_0 j ou: D r I t_h a T E h t a",
+        String converted = transcriber.convert(SAMPA_TRANSCRIPT,
                 "SAMPA", "FLITE");
-        assertEquals("lz j ouu D r I th a T E h t a", converted);
+        assertEquals(FLITE_TRANSCRIPT, converted);
+
+        converted = transcriber.convert(SAMPA_TRANSCRIPT,
+                "SAMPA", "IPA");
+        assertEquals(IPA_TRANSCRIPT, converted);
+
+        converted = transcriber.convert(IPA_TRANSCRIPT,
+                "IPA", "SAMPA");
+        assertEquals(SAMPA_TRANSCRIPT, converted);
     }
 }
 
