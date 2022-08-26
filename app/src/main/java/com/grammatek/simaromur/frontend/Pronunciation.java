@@ -2,7 +2,9 @@ package com.grammatek.simaromur.frontend;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.util.Log;
 
+import com.grammatek.simaromur.FileUtils;
 import com.grammatek.simaromur.device.NativeG2P;
 import com.grammatek.simaromur.R;
 import com.grammatek.simaromur.device.SymbolsLvLIs;
@@ -21,11 +23,12 @@ import java.util.Map;
  */
 
 public class Pronunciation {
+    private final static String LOG_TAG = "Simaromur_" + Pronunciation.class.getSimpleName();
     private final Context mContext;
     private NativeG2P mG2P;
     private Map<String, PronDictEntry> mPronDict;
-    private Map<String, Map<String, Map<String, String>>> mAlphabets;
-    private String mSilToken = "<sil>";
+    private final Map<String, Map<String, Map<String, String>>> mAlphabets;
+    private final String mSilToken = "<sil>";
 
     public Pronunciation(Context context) {
         this.mContext = context;
@@ -52,21 +55,21 @@ public class Pronunciation {
     }
 
     public String convert(String transcribed, String fromAlphabet, String toAlphabet) {
-        List<String> validAlpha = getValidAlphabets();
+        final List<String> validAlpha = getValidAlphabets();
         if (!validAlpha.contains(fromAlphabet) || !validAlpha.contains(toAlphabet)) {
-            // TODO: handle error
-            System.out.println(fromAlphabet + " and/or " + toAlphabet + " is not a valid" +
-                    " phonetic alphabet. Valid alphabets: " + validAlpha.toString());
+            Log.e(LOG_TAG, fromAlphabet + " and/or " + toAlphabet + " is not a valid" +
+                    " phonetic alphabet. Valid alphabets: " + validAlpha);
+            return transcribed;
         }
         if (fromAlphabet.equals(toAlphabet))
             return transcribed;
 
         StringBuilder converted = new StringBuilder();
-        Map<String, Map<String, String>> currentDict = mAlphabets.get(fromAlphabet);
+        final Map<String, Map<String, String>> currentDict = mAlphabets.get(fromAlphabet);
         for (String symbol : transcribed.split(" ")) {
+            assert currentDict != null;
             if (!currentDict.containsKey(symbol)) {
-                // TODO: log properly
-                System.out.println(symbol + " seems not to be a valid symbol in " + fromAlphabet +
+                Log.w(LOG_TAG, symbol + " seems not to be a valid symbol in " + fromAlphabet +
                         ". Skipping conversion.");
                 converted.append(symbol);
                 converted.append(" ");
