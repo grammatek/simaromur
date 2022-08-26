@@ -11,9 +11,11 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertNotEquals;
@@ -52,5 +54,12 @@ public class FileUtilsTest {
         catch (IOException e) {
             assert(false);
         }
+    }
+
+    @Test
+    public void readResourcesTest() {
+        List<String> fileContent = FileUtils.readLinesFromResourceFile(
+                context, R.raw.sampa_ipa_single_flite);
+        assert(fileContent.size() > 50);
     }
 }
