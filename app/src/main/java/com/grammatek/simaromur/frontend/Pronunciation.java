@@ -126,7 +126,8 @@ public class Pronunciation {
      */
     private Map<String, Map<String, Map<String, String>>> initializeAlphabets() {
         Map<String, Map<String, Map<String, String>>> alphabets = new HashMap<>();
-        List<String> fileContent = readAlphabets();
+        List<String> fileContent = FileUtils.readLinesFromResourceFile(this.mContext,
+                R.raw.sampa_ipa_single_flite);
         List<String> headers = Arrays.asList(fileContent.get(0).split("\t"));
         for (String header : headers) {
             int ind = headers.indexOf(header);
@@ -149,42 +150,14 @@ public class Pronunciation {
 
     private Map<String, PronDictEntry> readPronDict() {
         Map<String, PronDictEntry> pronDict = new HashMap<>();
-        Resources res = this.mContext.getResources();
-        int resID = R.raw.ice_pron_dict_standard_clear_2201_extended;
-        String line = "";
-        try {
-            InputStream is = res.openRawResource(resID);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            if (is != null) {
-                while ((line = reader.readLine()) != null) {
-                    String[] transcr = line.trim().split("\t");
-                    if (transcr.length == 2) {
-                        pronDict.put(transcr[0], new PronDictEntry(transcr[0], transcr[1]));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        List<String> fileContent = FileUtils.readLinesFromResourceFile(this.mContext,
+                R.raw.ice_pron_dict_standard_clear_2201_extended);
+       for (String line : fileContent) {
+           String[] transcr = line.trim().split("\t");
+           if (transcr.length == 2) {
+               pronDict.put(transcr[0], new PronDictEntry(transcr[0], transcr[1]));
+           }
+       }
         return pronDict;
-    }
-
-    private List<String> readAlphabets() {
-        Resources res = this.mContext.getResources();
-        int resID = R.raw.sampa_ipa_single_flite;
-        List<String> fileContent = new ArrayList<>();
-        String line = "";
-        try {
-            InputStream is = res.openRawResource(resID);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            if (is != null) {
-                while ((line = reader.readLine()) != null) {
-                    fileContent.add(line);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return fileContent;
     }
 }

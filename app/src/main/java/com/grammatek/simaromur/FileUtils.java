@@ -2,17 +2,21 @@ package com.grammatek.simaromur;
 
 import static java.nio.file.Files.deleteIfExists;
 
+import android.content.Context;
 import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,7 +27,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class FileUtils {
     private final static String LOG_TAG = "Simaromur_" + FileUtils.class.getSimpleName();
@@ -302,5 +308,31 @@ public class FileUtils {
         Path file = Paths.get(fileName);
         long millis = Files.getLastModifiedTime(file).toMillis();
         return  Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDateTime();
+    }
+
+    /**
+     * Reads a resource file with the given resID, e.g. R.raw.sampa_ipa_single_flite.
+     * Returns the file content as a list of strings.
+     *
+     * @param context
+     * @param resID the resource id
+     * @return a list of strings representing file content
+     */
+    public static List<String> readLinesFromResourceFile(Context context, int resID) {
+        Resources res = context.getResources();
+        List<String> fileContent = new ArrayList<>();
+        String line = "";
+        try {
+            InputStream is = res.openRawResource(resID);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            if (is != null) {
+                while ((line = reader.readLine()) != null) {
+                    fileContent.add(line);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return fileContent;
     }
 }
