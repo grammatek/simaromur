@@ -20,7 +20,7 @@ public class G2PTest {
     @Test
     public void transcribeTest() {
         Pronunciation transcriber = new Pronunciation(context);
-        String transcribed = transcriber.transcribe("Hljóðrita þetta");
+        String transcribed = transcriber.transcribe("hljóðrita þetta");
         assertEquals("l_0 j ou D r I t a T E h t a", transcribed);
     }
 
@@ -29,7 +29,7 @@ public class G2PTest {
         Pronunciation transcriber = new Pronunciation(context);
         String converted = transcriber.convert("l_0 j ou: D r I t_h a T E h t a",
                 "SAMPA", "FLITE");
-        assertEquals("lz j ou: D r I th a T E h t a", converted);
+        assertEquals("lz j ouu D r I th a T E h t a", converted);
     }
 }
 
