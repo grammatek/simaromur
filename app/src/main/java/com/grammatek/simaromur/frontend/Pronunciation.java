@@ -42,13 +42,13 @@ public class Pronunciation {
         StringBuilder sb = new StringBuilder();
         for (String tok : tokens) {
             if (mPronDict.containsKey(tok)) {
-                sb.append(mPronDict.get(tok).getTranscript()).append(" ");
+                sb.append(mPronDict.get(tok).getTranscript().trim()).append(" ");
             }
             else if (tok.equals(mSilToken)){
                 sb.append(SymbolsLvLIs.SymbolShortPause).append(" ");
             }
             else {
-                sb.append(mG2P.process(tok)).append(" ");
+                sb.append(mG2P.process(tok).trim()).append(" ");
             }
         }
         return sb.toString().trim();
