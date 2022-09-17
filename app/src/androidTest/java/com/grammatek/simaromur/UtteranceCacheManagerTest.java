@@ -65,7 +65,7 @@ public class UtteranceCacheManagerTest {
         synchronized(MainUtteranceCacheFilename) {
             if (mCacheManager == null) {
                 // tests can be executed in multiple threads, so we need to make sure that
-                // the stqtic object is a singleton
+                // the static object is a singleton
                 mCacheManager = new UtteranceCacheManager(MainUtteranceCacheFilename, LowWatermark, HighWatermark);
             }
         }
