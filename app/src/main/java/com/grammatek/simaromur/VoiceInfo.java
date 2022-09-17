@@ -116,6 +116,13 @@ public class VoiceInfo extends AppCompatActivity {
     public void onResume() {
         Log.v(LOG_TAG, "onResume:");
         super.onResume();
+        // mVoice can be null if the activity is resumed before the DB query was done
+        if (mVoice == null) {
+            Log.v(LOG_TAG, "onResume: mVoice is null ?! Not changing voice availability icon");
+            return;
+        }
+
+        // change voice availability icon according to network availability and type
         if (mVoice.needsNetwork()) {
             if (ConnectionCheck.isNetworkConnected()) {
                 mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
