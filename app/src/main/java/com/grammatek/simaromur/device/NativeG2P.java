@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.grammatek.simaromur.App;
-import com.grammatek.simaromur.FileUtils;
+import com.grammatek.simaromur.utils.FileUtils;
 
 import java.io.File;
 

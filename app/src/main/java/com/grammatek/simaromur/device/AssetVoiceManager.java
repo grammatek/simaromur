@@ -7,7 +7,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.grammatek.simaromur.App;
-import com.grammatek.simaromur.FileUtils;
+import com.grammatek.simaromur.utils.FileUtils;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
 import com.grammatek.simaromur.device.pojo.DeviceVoiceFile;

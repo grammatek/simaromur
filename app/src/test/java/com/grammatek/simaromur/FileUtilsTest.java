@@ -11,7 +11,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -19,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertNotEquals;
+
+import com.grammatek.simaromur.utils.FileUtils;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = {Build.VERSION_CODES.O_MR1})

@@ -1,18 +1,13 @@
 package com.grammatek.simaromur.frontend;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.util.Log;
 
-import com.grammatek.simaromur.FileUtils;
+import com.grammatek.simaromur.utils.FileUtils;
 import com.grammatek.simaromur.device.NativeG2P;
 import com.grammatek.simaromur.R;
 import com.grammatek.simaromur.device.SymbolsLvLIs;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;

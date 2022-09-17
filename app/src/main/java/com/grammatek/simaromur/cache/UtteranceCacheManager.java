@@ -10,7 +10,7 @@ import androidx.datastore.rxjava3.RxDataStoreBuilder;
 
 import com.google.protobuf.Timestamp;
 import com.grammatek.simaromur.App;
-import com.grammatek.simaromur.FileUtils;
+import com.grammatek.simaromur.utils.FileUtils;
 import com.grammatek.simaromur.frontend.FrontendManager;
 
 import java.io.ByteArrayInputStream;
