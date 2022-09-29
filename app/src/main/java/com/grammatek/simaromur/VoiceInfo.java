@@ -296,12 +296,13 @@ public class VoiceInfo extends AppCompatActivity {
     public void onDownloadClicked(View v) {
         Log.v(LOG_TAG, "onDownloadClicked");
         toggleDownloadButton();
+        // TODO: deprecated API ...
         mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setMax(100); // Progress Dialog Max Value
-        mProgressDialog.setMessage(getResources().getString(R.string.do_download)); // Setting Message
-        mProgressDialog.setTitle(mVoice.name); // Setting Title
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL); // Progress Dialog Style Horizontal
-        mProgressDialog.show(); // Display Progress Dialog
+        mProgressDialog.setMax(100);
+        mProgressDialog.setMessage(getResources().getString(R.string.do_download));
+        mProgressDialog.setTitle(mVoice.name);
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        mProgressDialog.show();
         mProgressDialog.setCancelable(true);
         mProgressDialog.setOnCancelListener(dialog -> {
             Log.v(LOG_TAG, "onDownloadClicked: download cancelled");

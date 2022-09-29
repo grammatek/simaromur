@@ -52,10 +52,8 @@ public class TTSEngineController {
      *                  (to get the list of available asset voices)
      * @param dvm       DownloadVoiceManager reference
      *                  (to get the list of available downloadable voices)
-     *
-     * @throws IOException  In case any problems are detected within device voices
      */
-    public TTSEngineController(AssetVoiceManager avm, DownloadVoiceManager dvm) throws IOException {
+    public TTSEngineController(AssetVoiceManager avm, DownloadVoiceManager dvm) {
         mAVM = avm;
         mDVM = dvm;
         mCurrentVoice = null;

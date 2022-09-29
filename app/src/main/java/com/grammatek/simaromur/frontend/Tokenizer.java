@@ -135,7 +135,7 @@ public class Tokenizer {
     // abbreviation or digits, that should not contain a space before the "."
     private void appendToken(StringBuilder sb, String token) {
         token = token.replace(" ", "");
-        sb.append(token + " ");
+        sb.append(token).append(" ");
     }
 
     // finish a sentence, take a look if if the sb content has a correct sentence ending,

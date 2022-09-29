@@ -58,7 +58,8 @@ public class ApiDbUtil {
                 if (dbVoice.internalName.equals(apiVoice.VoiceId)
                         && dbVoice.type.equals(voiceType)) {
                     // remove known apiVoice from set
-                    assert(newApiVoices.remove(apiVoice));
+                    boolean removed = newApiVoices.remove(apiVoice);
+                    assert(removed);
 
                     // the internal name matches and it's a network voice: examine any other
                     // important attribute

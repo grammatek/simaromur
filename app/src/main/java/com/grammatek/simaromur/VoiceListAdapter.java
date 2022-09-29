@@ -49,9 +49,9 @@ public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.Voic
         if (current.needsNetwork()) {
             holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_network));
         } else if (current.needsDownload()) {
-                holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_local_downloaded));
+            holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_local_downloaded));
         } else {
-                holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_local));
+            holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_local));
         }
     }
 

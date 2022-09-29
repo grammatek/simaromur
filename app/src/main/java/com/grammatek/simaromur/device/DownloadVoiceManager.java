@@ -248,7 +248,7 @@ public class DownloadVoiceManager {
     }
 
     /**
-     * Returns the combines voice information from disk and repository, if available
+     * Returns the combined voice information from disk and repository, if available
      *
      * @return  Voice information about all device voices, whether these are on disk or not yet
      *          downloaded or null if no voice information is available

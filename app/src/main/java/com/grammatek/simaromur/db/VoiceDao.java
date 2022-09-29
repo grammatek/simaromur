@@ -51,7 +51,7 @@ public interface VoiceDao {
     @Query("SELECT * FROM voice_table WHERE url in ('assets') ")
     List<Voice> getAssetVoices();
 
-    // Return voices registered in Assets
+    // Return voices that can or have been downloaded
     @Query("SELECT * FROM voice_table WHERE url LIKE ('network:') OR url LIKE ('disk') ")
     List<Voice> getDownloadableVoices();
 

@@ -54,7 +54,7 @@ extern "C"
 JNIEXPORT jboolean JNICALL
 Java_com_grammatek_simaromur_device_flite_NativeFliteVoice_nativeCreate(JNIEnv *env, jobject thiz, jstring path)
 {
-    const char *path_string = env->GetStringUTFChars(path, 0);
+    const char *path_string = env->GetStringUTFChars(path, nullptr);
 
     auto* jniData = new FliteServiceJNIData();
     auto* logger = new grammatek::Logger("FliteService: nativeCreate");
@@ -87,7 +87,7 @@ Java_com_grammatek_simaromur_device_flite_NativeFliteVoice_nativeSynthesize(JNIE
     auto* jniData = reinterpret_cast<FliteServiceJNIData*>(jniDataHandle);
     auto* logger = new grammatek::Logger("FliteService: nativeSynthesize");
     auto fliteDriverEngine = jniData->fliteDriverEngine;
-    const char *text = env->GetStringUTFChars(aPhonemeString, 0);
+    const char *text = env->GetStringUTFChars(aPhonemeString, nullptr);
     auto* audioData = env->GetDirectBufferAddress(voiceData);
     auto audioDataSize = env->GetDirectBufferCapacity(voiceData);
 

@@ -39,7 +39,7 @@ public class Abbreviations {
     private Set<String> readAbbrFromFile(int resID) {
         Set<String> abbrSet = new HashSet<>();
         Resources res = context.getResources();
-        String line = "";
+        String line;
         try {
             InputStream is = res.openRawResource(resID);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
