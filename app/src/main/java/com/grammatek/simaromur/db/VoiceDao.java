@@ -7,8 +7,6 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
-import com.grammatek.simaromur.device.pojo.DeviceVoice;
-
 import java.util.List;
 
 @Dao
@@ -25,7 +23,7 @@ public interface VoiceDao {
     @Delete
     void deleteVoices(Voice... voices);
 
-    @Query("SELECT * FROM voice_table as voices order by voices.type desc, voices.internal_name asc")
+    @Query("SELECT * FROM voice_table as voices order by voices.name glob '[A-Za-z]*' asc")
     LiveData<List<Voice>> getAllVoices();
 
     /**
@@ -52,6 +50,10 @@ public interface VoiceDao {
     // Return voices registered in Assets
     @Query("SELECT * FROM voice_table WHERE url in ('assets') ")
     List<Voice> getAssetVoices();
+
+    // Return voices registered in Assets
+    @Query("SELECT * FROM voice_table WHERE url LIKE ('network:') OR url LIKE ('disk') ")
+    List<Voice> getDownloadableVoices();
 
     // Return voices according to list of given types
     @Query("SELECT * FROM voice_table WHERE type in (:localTypeNames)")

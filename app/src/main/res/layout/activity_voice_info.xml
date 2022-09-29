@@ -140,6 +140,7 @@
         android:layout_marginTop="16dp"
         android:ems="10"
         android:gravity="start|top"
+        android:hint="@string/enter_text"
         android:importantForAutofill="no"
         android:inputType="textAutoCorrect|textMultiLine"
         android:orientation="vertical"
@@ -175,5 +176,16 @@
         app:layout_constraintEnd_toEndOf="@+id/speak_button"
         app:layout_constraintStart_toStartOf="@+id/speak_button"
         app:layout_constraintTop_toTopOf="@+id/speak_button" />
+
+    <Button
+        android:id="@+id/download_button"
+        style="@style/button_style"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/do_download"
+        app:layout_constraintBottom_toBottomOf="@+id/speakable_text"
+        app:layout_constraintEnd_toEndOf="@+id/speakable_text"
+        app:layout_constraintStart_toStartOf="@+id/speakable_text"
+        app:layout_constraintTop_toTopOf="@+id/speakable_text" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

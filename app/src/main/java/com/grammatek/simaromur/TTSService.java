@@ -202,6 +202,10 @@ public class TTSService extends TextToSpeechService {
             startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_TORCH, false);
             setSpeechMarksToBeginning(callback);
             mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate/100.0f,pitch/100.0f);
+        } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_FLITE)) {
+            startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_FLITE, false);
+            setSpeechMarksToBeginning(callback);
+            mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
         } else {
             Log.e(LOG_TAG, "Voice type currently unsupported: " + voice.type);
         }

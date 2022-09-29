@@ -48,6 +48,38 @@ public class DeviceVoices {
         this.Voices = voices;
     }
 
+    /**
+     * This method combines the given DeviceVoices into one DeviceVoices object. If a voice is
+     * present in both DeviceVoices objects, the corresponding voicesOnDisk object is used.
+     *
+     * @param voicesOnDisk      DeviceVoices object containing the voices on disk
+     * @param voicesOnServer    DeviceVoices object containing the voices on the server
+     *
+     * @return  DeviceVoices object containing the voices on disk and on the server
+     */
+    public static DeviceVoices combine(DeviceVoices voicesOnDisk, DeviceVoices voicesOnServer) {
+        DeviceVoices combinedVoices = new DeviceVoices(voicesOnDisk.Description, new ArrayList<>());
+        // first add all voicesOnDisk
+        combinedVoices.Voices.addAll(voicesOnDisk.Voices);
+
+        // then add all voicesOnServer that are not already present
+        for (DeviceVoice voiceOnServer : voicesOnServer.Voices) {
+            boolean voiceAlreadyPresent = false;
+            for (DeviceVoice voiceOnDisk : voicesOnDisk.Voices) {
+                // this only tests currently the internal name, but should be extended to
+                // test also the version
+                if (voiceOnServer.InternalName.equals(voiceOnDisk.InternalName)) {
+                    voiceAlreadyPresent = true;
+                    break;
+                }
+            }
+            if (!voiceAlreadyPresent) {
+                combinedVoices.Voices.add(voiceOnServer);
+            }
+        }
+        return combinedVoices;
+    }
+
     @NonNull
     @Override
     public String toString() {

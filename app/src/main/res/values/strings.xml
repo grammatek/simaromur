@@ -15,6 +15,7 @@
     <string name="speak_button">Play</string>
     <string name="voice_test_text_network">Þetta er netrödd. Texti til lestrar er sendur á netþjón, sem sendir upplesturinn til baka á snjallsímann. Netraddirnar eru enn sem komið er hraðvirkari en raddirnar á símanum sjálfum.</string>
     <string name="voice_test_text_on_device">Þessi rödd er mynduð á snjallsímanum þínum. Enn sem komið er tekur raddmyndun á síma frekar langan tíma, en því öflugri sem síminn þinn er, því styttri tíma tekur að mynda röddina.</string>
+    <string name="voice_test_text_on_device_fast">Þetta er hröð rödd af heldur minni gæðum en aðrar raddir í Símarómi.</string>
     <string name="voice_name_title">Name</string>
     <string name="voice_gender_title">Gender</string>
     <string name="voice_availability_title">Status</string>
@@ -57,5 +58,8 @@
     <string name="female">Female</string>
     <string name="icon_description">Please press an icon</string>
     <string name="type_local">Device Voice</string>
+    <string name="type_local_downloaded">Downloadable</string>
     <string name="type_network">Network Voice</string>
+    <string name="do_download">Download voice</string>
+    <string name="enter_text">Enter text here</string>
 </resources>

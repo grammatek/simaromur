@@ -55,7 +55,11 @@
     <string name="crashlytics_notice">"Til þess að aðstoða okkur við að bæta Símaróm getur þú leyft okkur að safna nafnlausri notandatölfræði og villuskýrslum gegnum þriðja aðila: Google Firebase. Ef þú gefur samþykki þitt verður IP-tala þín einungis vistuð (nafnlaus) í þessum tilgangi. Þú getur dregið samþykki þitt til baka hvenær sem er gegnum upplýsingaskjá Símaróms. Nánari upplýsingar um meðferð persónuupplýsinga er að finna á https://www.grammatek.com/legal#simaromur"</string>
     <string name="crashlytics_title">Bæta Símaróm</string>
     <string name="type_local">á tæki</string>
+    <string name="type_local_downloaded">til niðurhals</string>
     <string name="type_network">netrödd</string>
     <string name="voice_test_text_network">Þetta er netrödd. Texti til lestrar er sendur á netþjón, sem sendir upplesturinn til baka á snjallsímann. Netraddirnar eru enn sem komið er hraðvirkari en raddirnar á símanum sjálfum.</string>
     <string name="voice_test_text_on_device">Þessi rödd er mynduð á snjallsímanum þínum. Enn sem komið er tekur raddmyndun á síma frekar langan tíma, en því öflugri sem síminn þinn er, því styttri tíma tekur að mynda röddina.</string>
+    <string name="voice_test_text_on_device_fast">Þetta er hröð rödd af heldur minni gæðum en aðrar raddir í Símarómi.</string>
+    <string name="do_download">Hlaða</string>
+    <string name="enter_text">Sláðu inn texta hér</string>
 </resources>

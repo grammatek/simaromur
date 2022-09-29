@@ -40,6 +40,7 @@ public class VoiceRepo {
     private final GitHub mGithub;
     private final GHRepository mRepo;
     private final OkHttpClient mHttpClient = new OkHttpClient();
+    // mind off: with underscore, we also have a voice-info.json in the assets folder with a minus (!)
     private final String VOICE_INFO_FILE = "voice_info.json";
 
     // This exception is thrown when we have exceed our rate limit at GitHub

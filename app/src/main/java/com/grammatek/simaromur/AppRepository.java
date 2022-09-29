@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioFormat;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.provider.Settings;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.TextToSpeech;
@@ -26,6 +27,7 @@ import com.grammatek.simaromur.db.AppDataDao;
 import com.grammatek.simaromur.db.ApplicationDb;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
+import com.grammatek.simaromur.device.DownloadVoiceManager;
 import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.device.TTSEngineController;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
@@ -66,6 +68,7 @@ public class AppRepository {
     private final SpeakController mTiroSpeakController;
     private final ApiDbUtil mApiDbUtil;
     private final AssetVoiceManager mAVM;
+    private final DownloadVoiceManager mDVM;
     // audio cache low/high watermark: 128/256MB, @todo: make configurable
     private static final long CacheLowWatermark = 128 * 1024 * 1024;
     private static final long CacheHighWatermark = 2 * CacheLowWatermark;
@@ -76,7 +79,7 @@ public class AppRepository {
 
     ScheduledExecutorService mScheduler;
     FrontendManager mFrontend;
-    TTSEngineController mTTSEngineController;
+    static TTSEngineController mTTSEngineController;
 
     // this saves the voice name to use for the next speech synthesis
     private Voice mSelectedVoice;
@@ -85,6 +88,35 @@ public class AppRepository {
 
     // contains the currently handled tts request from onSynthesizeText()
     private TTSRequest mCurrentRequest;
+
+    /**
+     * Download given voice from voice repository asynchronously. After download is finished or
+     * has failed, the given observer is called.
+     *
+     * @param voice             Voice to download
+     * @param finishedObserver  VoiceInfo object to update
+     */
+    public void downloadVoiceAsync(Voice voice, DownloadVoiceManager.DownloadObserver finishedObserver) {
+        // when the download is successful, the voice is updated in the database. This happens
+        // asynchonously.
+        mDVM.downloadVoiceAsync(voice, finishedObserver, mVoiceDao);
+    }
+
+    /**
+     * Cancels an eventual download of a voice.
+     */
+    public void cancelDownloadVoice() {
+        mDVM.cancelCurrentDownload();
+    }
+
+    /**
+     * Get the voice download path.
+     *
+     * @return  Path to download voice files to.
+     */
+    public String getVoicePath() {
+        return mDVM.getVoiceDownloadPath();
+    }
 
     /**
      * Observer for Network voice query results.
@@ -122,8 +154,9 @@ public class AppRepository {
         mVoiceDao = db.voiceDao();
         mApiDbUtil = new ApiDbUtil(mVoiceDao);
         mAVM = new AssetVoiceManager(App.getContext());
+        mDVM = new DownloadVoiceManager();
         mFrontend = new FrontendManager(App.getContext());
-        mTTSEngineController = new TTSEngineController(App.getContext().getAssets());
+        mTTSEngineController = new TTSEngineController(mAVM, mDVM);
         mTiroSpeakController = new SpeakController();
         mTiroVoiceController = new VoiceController();
         mAppData = mAppDataDao.getLiveAppData();
@@ -134,6 +167,8 @@ public class AppRepository {
             }
             // Update cached appData
             mCachedAppData = appData;
+            // don't access any network from here, as this is called from the main thread
+            mDVM.readVoiceDescription(false);
             // preload selected voice
             Voice selectedVoice = mVoiceDao.findVoiceWithId(mCachedAppData.currentVoiceId);
             if (selectedVoice != null) {
@@ -149,12 +184,17 @@ public class AppRepository {
         mAllVoices.observeForever(voices -> {
             Log.v(LOG_TAG, "mAllVoices update: " + voices);
             // Update cached voices
-            mAllCachedVoices = Objects.requireNonNullElseGet(voices, ArrayList::new);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                mAllCachedVoices = Objects.requireNonNullElseGet(voices, ArrayList::new);
+            } else {
+                mAllCachedVoices = Objects.requireNonNullElse(voices, new ArrayList<>());
+            }
         });
 
         mMediaPlayer = new MediaPlayObserver();
         mScheduler = Executors.newSingleThreadScheduledExecutor();
         mScheduler.scheduleAtFixedRate(networkVoicesUpdateRunnable, 0, 60, TimeUnit.SECONDS);
+        mScheduler.scheduleAtFixedRate(onDeviceVoicesUpdateRunnable, 1, 600, TimeUnit.SECONDS);
         mScheduler.schedule(assetVoiceRunnable, 1, TimeUnit.SECONDS);
     }
 
@@ -478,7 +518,8 @@ public class AppRepository {
     }
 
     /**
-     * Use our DB model to query availability of voices.
+     * Find if we have the specified language available.
+     * Use our DB model to query availability of voices
      *
      * @param language ISO 639-3 language code, passed from Android
      * @param country  ISO 3166 ALPHA3 country code, passed from Android
@@ -541,6 +582,7 @@ public class AppRepository {
         String rv = null;
 
         if (isLanguageAvailable(iso3Language, iso3Country, variant) == LANG_COUNTRY_VAR_AVAILABLE) {
+            Log.v(LOG_TAG, "Language available, no need to find default voice");
             return variant;
         }
 
@@ -834,6 +876,27 @@ public class AppRepository {
     };
 
     /**
+     * Update DB according to On-Device voices
+     */
+    Runnable onDeviceVoicesUpdateRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // fetch on-device voice lists
+            mDVM.readVoiceDescription(true);
+
+            // only insert if not already in DB
+            final List<Voice> onDeviceVoices = mDVM.getVoiceDbList();
+            for (Voice voice : onDeviceVoices) {
+                // check if voice is already in DB
+                if (mVoiceDao.findVoice(voice.name, voice.internalName, voice.languageCode, voice.languageName, voice.variant) == null) {
+                    Log.w(LOG_TAG, "onDeviceVoiceRunnable Add on device voice " + voice.name);
+                    mVoiceDao.insertVoices(voice);
+                }
+            }
+        }
+    };
+
+    /**
      * Update the Db according to Asset voices
      */
     Runnable assetVoiceRunnable = new Runnable() {
@@ -862,7 +925,7 @@ public class AppRepository {
      * @param setter true for accepting the privacy notice, false for not accepting it
      */
     public void doAcceptPrivacyNotice(Boolean setter) {
-        Log.v(LOG_TAG, "insertVoice");
+        Log.v(LOG_TAG, "doAcceptPrivacyNotice");
         new doAcceptPrivacyNoticeAsyncTask(mAppDataDao).execute(setter);
     }
 
@@ -893,7 +956,7 @@ public class AppRepository {
      *               provider of CrashLytics, false for disabling crash reports and usage statistics
      */
     public void doGiveCrashLyticsUserConsent(Boolean setter) {
-        Log.v(LOG_TAG, "insertVoice");
+        Log.v(LOG_TAG, "doGiveCrashLyticsUserConsent");
         new doGiveCrashLyticsUserConsentAsyncTask(mAppDataDao).execute(setter);
         // the real Firebase settings are updated asynchronously in appData observer
     }

@@ -17,6 +17,7 @@ public class AudioManager {
     private final static String LOG_TAG = "Simaromur_" + AudioManager.class.getSimpleName();
 
     // Some constants used throughout audio conversion
+    public static final int SAMPLE_RATE_FLITE = 16000;
     public static final int SAMPLE_RATE_WAV = 16000;
     public static final int SAMPLE_RATE_MP3 = 22050;
     public static final int SAMPLE_RATE_TORCH = 22050;

@@ -82,12 +82,15 @@ public class VoiceViewModel extends AndroidViewModel {
      * Stops any ongoing speak activity
      */
     public void stopSpeaking(Voice voice) {
+        if (voice == null) {
+            return;
+        }
         if (voice.type.equals(Voice.TYPE_TIRO)) {
             mRepository.stopNetworkSpeak();
         } else if (voice.type.equals(Voice.TYPE_TORCH)) {
             mRepository.stopDeviceSpeak(mDevSpeakTask);
         } else {
-            // other voice types follow here ..
+            mRepository.stopDeviceSpeak(mDevSpeakTask);
         }
         mDevSpeakTask = null;
     }

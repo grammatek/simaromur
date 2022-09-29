@@ -74,7 +74,7 @@ public class ApiDbUtil {
         for (VoiceResponse av:newApiVoices) {
             Log.v(LOG_TAG, "Creating new voice from " + av);
             Voice voice = new Voice(av.Name, av.VoiceId, av.Gender, av.LanguageCode, av.LanguageName,
-                    "", Voice.TYPE_TIRO, "");
+                    "", Voice.TYPE_TIRO, "", "", "", "", 0);
             Log.v(LOG_TAG, "New contents: " + voice);
             try {
                 mVoiceDao.insertVoice(voice);
