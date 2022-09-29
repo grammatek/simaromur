@@ -163,6 +163,32 @@ public class FileUtils {
     }
 
     /**
+     * Reads a file from disk storage and returns it as a byte array.
+     *
+     * @param filePath      the path inside /assets of the file to load
+     * @return  read-in file as a byte-array
+     *
+     * @throws IOException  Thrown, if there was a problem reading the file
+     */
+    public static byte[] readFileFromStorage(String filePath) throws IOException {
+        byte[] voiceBytes = null;
+        if (Files.exists(Paths.get(filePath))) {
+            InputStream iStream = new FileInputStream(filePath);
+            int bytesToRead = iStream.available();
+            voiceBytes = new byte[bytesToRead];
+            while (bytesToRead > 0) {
+                int nRead = iStream.read(voiceBytes);
+                if (nRead == -1) {
+                    break;
+                }
+                bytesToRead -= nRead;
+            }
+            iStream.close();
+        }
+        return voiceBytes;
+    }
+
+    /**
      * Reads the file "lastModified.txt" which contains for each file inside assets the last
      * modification timestamp before packaging it into assets.
      *
@@ -181,7 +207,6 @@ public class FileUtils {
             long epoch = Long.parseLong(kv[0], 10);
             map.put(kv[1], Instant.ofEpochMilli(epoch).atZone(ZoneOffset.UTC).toLocalDateTime());
         }
-
         return map;
     }
 
@@ -314,7 +339,7 @@ public class FileUtils {
      * Reads a resource file with the given resID, e.g. R.raw.sampa_ipa_single_flite.
      * Returns the file content as a list of strings.
      *
-     * @param context
+     * @param context  Context of the app
      * @param resID the resource id
      * @return a list of strings representing file content
      */
@@ -331,8 +356,29 @@ public class FileUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(LOG_TAG, "Could not read resource " + resID + " : " + e.getMessage());
         }
         return fileContent;
+    }
+
+    /**
+     * Writes a buffer of bytes to a file.
+     *
+     * @param filePath      Path to file to be written
+     * @param bytes         Buffer of bytes to be written
+     * @return             true in case of success, false otherwise
+     */
+    public static boolean writeFileToStorage(String filePath, byte[] bytes) {
+        boolean rv = false;
+        try {
+            FileOutputStream fos = new FileOutputStream(filePath);
+            fos.write(bytes);
+            fos.close();
+            rv = true;
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "Could not write file " + filePath + " to storage: "
+                    + e.getMessage());
+        }
+        return rv;
     }
 }

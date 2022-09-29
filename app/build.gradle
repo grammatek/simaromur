@@ -241,6 +241,8 @@ dependencies {
 
     implementation "androidx.datastore:datastore:1.0.0"
 
+    // Github API
+    implementation 'org.kohsuke:github-api:1.308'
 }
 
 // Saves last modified date of bundled assets, so we can determine when

@@ -1,0 +1,28 @@
+{
+"Description": "Voices for release 0.1",
+"Voices" : [
+  {
+    "Name": "Álfur fast",
+    "InternalName": "Alfur_flite",
+    "Description": "Álfur Flite unit selection voice",
+    "Language": "is-IS",
+    "LanguageName": "Íslenska",
+    "Gender": "male",
+    "Type": "flite",
+    "Version": "0.1",
+    "RTF": "100",
+    "Quality": "4",
+    "Files": [
+      {
+        "Description": "Flite clunit",
+        "CompressedFile": "lvl_is_f.zip",
+        "Path": "lvl_is_f/liblvl_is_f.dylib",
+        "Platform": "macos",
+        "Type": "clunit",
+        "PhonemeType": "flite",
+        "Md5Sum": "b315b49831e8eecbf622c29595b1f839"
+      }
+    ]
+  }
+]
+}
