@@ -73,4 +73,5 @@ target_link_libraries( ttsflite PUBLIC
        )
 
 add_subdirectory(g2p)
+add_subdirectory(flite)
 
