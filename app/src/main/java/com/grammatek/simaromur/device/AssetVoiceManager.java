@@ -7,7 +7,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.grammatek.simaromur.App;
-import com.grammatek.simaromur.FileUtils;
+import com.grammatek.simaromur.utils.FileUtils;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
 import com.grammatek.simaromur.device.pojo.DeviceVoiceFile;
@@ -37,7 +37,7 @@ public class AssetVoiceManager {
     AssetManager assetManager;
 
     /**
-     * Constructor. Parses given JSON String and validates it. Afterwards, voice meta data and
+     * Constructor. Parses voice description from assets and validates it. Afterwards, voice meta data and
      * corresponding files are retrievable via getters.
      *
      * @param context   Application context to access assets
@@ -116,6 +116,11 @@ public class AssetVoiceManager {
      * @param name  Name of the voice in assets
      *
      * @return  Voice information about specified voice
+     *
+     * @throws  IllegalArgumentException in case voice is not found
+     *
+     * TODO: shouldn't we use the internalName here? We are doing this already in
+     *       DownloadVoiceManager.getInfoForVoice()
      */
     public DeviceVoice getInfoForVoice(String name) throws IOException {
         for (DeviceVoice voice:getVoiceList().Voices) {

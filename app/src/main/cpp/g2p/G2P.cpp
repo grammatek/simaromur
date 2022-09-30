@@ -121,7 +121,6 @@ void G2P::Initialize()
 
 std::string G2P::process(const std::string& input, bool prepend_output)
 {
-    LOG(INFO) << "Input String: " << input;
     StdVectorFst input_fst;
     StdVectorFst output_fst;
     if (!compiler_->operator()(input, &input_fst))

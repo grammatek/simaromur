@@ -58,7 +58,8 @@ public class ApiDbUtil {
                 if (dbVoice.internalName.equals(apiVoice.VoiceId)
                         && dbVoice.type.equals(voiceType)) {
                     // remove known apiVoice from set
-                    assert(newApiVoices.remove(apiVoice));
+                    boolean removed = newApiVoices.remove(apiVoice);
+                    assert(removed);
 
                     // the internal name matches and it's a network voice: examine any other
                     // important attribute
@@ -74,7 +75,7 @@ public class ApiDbUtil {
         for (VoiceResponse av:newApiVoices) {
             Log.v(LOG_TAG, "Creating new voice from " + av);
             Voice voice = new Voice(av.Name, av.VoiceId, av.Gender, av.LanguageCode, av.LanguageName,
-                    "", Voice.TYPE_TIRO, "");
+                    "", Voice.TYPE_TIRO, "", "", "", "", 0);
             Log.v(LOG_TAG, "New contents: " + voice);
             try {
                 mVoiceDao.insertVoice(voice);

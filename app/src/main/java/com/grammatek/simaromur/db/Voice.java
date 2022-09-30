@@ -10,7 +10,7 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
-import com.grammatek.simaromur.FileUtils;
+import com.grammatek.simaromur.utils.FileUtils;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
 import com.grammatek.simaromur.device.pojo.DeviceVoiceFile;
 
@@ -106,7 +106,8 @@ public class Voice {
 
     // MD5 checksum of downloaded/packaged voice as String, empty if not yet downloaded or in case
     // of a network voice
-    @ColumnInfo(name = "md5_sum") public String md5Sum;
+    @ColumnInfo(name = "md5_sum")
+    public String md5Sum;
 
     // file size if local voice file, 0 means not yet downloaded or network voice
     @ColumnInfo(name = "local_size")
@@ -120,7 +121,11 @@ public class Voice {
                  @NonNull String languageName,
                  @NonNull String variant,
                  @NonNull String type,
-                 @NonNull String url) {
+                 @NonNull String url,
+                 @NonNull String downloadPath,
+                 @NonNull String version,
+                 @NonNull String md5Sum,
+                 long size) {
         this.name = name;
         this.internalName = internalName;
         this.gender = gender;
@@ -134,6 +139,10 @@ public class Voice {
             throw new AssertionError("Given voice type (" + type + ") not valid !");
         }
         this.url = url;
+        this.downloadPath = downloadPath;
+        this.version = version;
+        this.md5Sum = md5Sum;
+        this.size = size;
         this.updateTime = new Date();
     }
 
@@ -205,6 +214,15 @@ public class Voice {
     }
 
     /**
+     * Returns boolean if voice is downloadable
+     *
+     * @return  true in case voice is downloadable, false otherwise
+     */
+    public boolean needsDownload() {
+        return (this.url.startsWith("network:") || this.url.startsWith("http"));
+    }
+
+    /**
      * Returns if given voice is available. For network voices, true is given, but no
      * network API query is done. For local voices, the download date, size > 0 and md5Sum
      * is checked.
@@ -220,7 +238,7 @@ public class Voice {
             rv = true;
         } else {
             // local voice sanity checks ...
-            if (! this.md5Sum.isEmpty()) {
+            if ((this.md5Sum != null) && ! this.md5Sum.isEmpty()) {
                 // Check download date to be valid
                 Calendar cal = Calendar.getInstance();
                 cal.setLenient(false);
@@ -303,6 +321,7 @@ public class Voice {
                 + SEP
                 + this.gender;
     }
+
     /**
      * Checks, if given ISO-3 language, country and variant matches our voice locale.
      * Parameters country and variant are optional, but if provided, they are used for checking.
@@ -330,5 +349,14 @@ public class Voice {
         return (voiceLocale.getISO3Language().equals(givenLocale.getISO3Language())
                 && voiceLocale.getISO3Country().equals(givenLocale.getISO3Country())
                 && voiceLocale.getVariant().equals(givenLocale.getVariant()));
+    }
+
+    /**
+     * Returns boolean if we have a fast voice type
+     *
+     * @return      true in case voice is fast, false otherwise
+     */
+    public boolean isFast() {
+        return (this.type.equals(Voice.TYPE_FLITE));
     }
 }

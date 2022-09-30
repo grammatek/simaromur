@@ -1,18 +1,13 @@
 package com.grammatek.simaromur.frontend;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.util.Log;
 
-import com.grammatek.simaromur.FileUtils;
+import com.grammatek.simaromur.utils.FileUtils;
 import com.grammatek.simaromur.device.NativeG2P;
 import com.grammatek.simaromur.R;
 import com.grammatek.simaromur.device.SymbolsLvLIs;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -64,9 +59,11 @@ public class Pronunciation {
      * @param transcribed a transcribed string
      * @param fromAlphabet the alphabet of the transcribed string
      * @param toAlphabet the alphabet to convert the transcribed string into
+     * @param filterUnknown if true, unknown symbols in toAlphabet are filtered out, otherwise
+     *                      they are kept as is
      * @return a converted transcription
      */
-    public String convert(String transcribed, String fromAlphabet, String toAlphabet) {
+    public String convert(String transcribed, String fromAlphabet, String toAlphabet, boolean filterUnknown) {
         final List<String> validAlpha = getValidAlphabets();
         if (!validAlpha.contains(fromAlphabet) || !validAlpha.contains(toAlphabet)) {
             Log.e(LOG_TAG, fromAlphabet + " and/or " + toAlphabet + " is not a valid" +
@@ -81,10 +78,11 @@ public class Pronunciation {
         for (String symbol : transcribed.split(" ")) {
             assert currentDict != null;
             if (!currentDict.containsKey(symbol)) {
-                Log.w(LOG_TAG, symbol + " seems not to be a valid symbol in " + fromAlphabet +
+                Log.w(LOG_TAG, "Symbol (" + symbol + ") seems not to be a valid symbol in " + fromAlphabet +
                         ". Skipping conversion.");
-                converted.append(symbol);
-                converted.append(" ");
+                if (!filterUnknown) {
+                    converted.append(symbol).append(" ");
+                }
             }
             else {
                 String convertedSymbol = currentDict.get(symbol).get(toAlphabet);

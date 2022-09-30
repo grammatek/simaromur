@@ -13,17 +13,6 @@ repositories {
     }
 }
 
-def getFliteDir() {
-    Properties properties = new Properties()
-    properties.load(new File(rootDir.absolutePath + "/local.properties").newDataInputStream())
-    def externalModuleDir = properties.getProperty('flite.dir', null)
-    if (externalModuleDir == null) {
-        throw new GradleException(
-                "Flite location not found. Define location with flite.dir in the local.properties file !")
-    }
-    return externalModuleDir
-}
-
 def get3rdPartyDir() {
     Properties properties = new Properties()
     properties.load(new File(rootDir.absolutePath + "/local.properties").newDataInputStream())
@@ -51,7 +40,6 @@ android {
         // testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-                arguments "-DFLITE_DIR="+getFliteDir()
                 arguments "-DTHIRD_PARTY_DIR="+get3rdPartyDir()
                 arguments "-DCMAKE_VERBOSE_MAKEFILE=ON"
                 cppFlags "-std=c++17"
@@ -241,6 +229,8 @@ dependencies {
 
     implementation "androidx.datastore:datastore:1.0.0"
 
+    // Github API
+    implementation 'org.kohsuke:github-api:1.308'
 }
 
 // Saves last modified date of bundled assets, so we can determine when

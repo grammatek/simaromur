@@ -13,9 +13,9 @@ We replaced many deprecated API's and also use current TTS Service Android API's
 for integrating the C++ part instead of ndk-build and adapted the JNI part to be compatible with 64Bit
 platforms.
 
-We are using PyTorch mobile for inferencing the on-device neural network voices, but we plan usage of
-"old-school" FLite based voices as well. The network voices are currently CPU-only and need a powerful
-processor to run with acceptable inference speed.
+We are using PyTorch mobile for inferencing the on-device neural network voices, but we have also
+integrated support for "old-school" FLite based voices as well. The network voices are currently CPU-only and need a powerful
+processor to run with acceptable inference speed, whereas the FLite voices are much faster.
 
 ## Text Normalization & G2P
 
@@ -26,12 +26,7 @@ computationally more demanding [LSTM g2p-models](https://github.com/grammatek/g2
 
 ## Build Prerequisites
 
-This project uses the [FLite library](https://github.com/grammatek/Flite) for local TTS. We have adapted it to build
-all necessary binaries in the branch `android-grammatek`. Therefore, you should build this project first and
-use the appropriate path in file `local.properties` as explained further down. This is necessary, so that
-linking the C++ native library `libttsflite.so` succeeds.
-
-Furthermore, you need our versions of [OpenFST](https://github.com/grammatek/openfst) &
+This project uses our versions of [OpenFST](https://github.com/grammatek/openfst) &
 [Thrax](https://github.com/grammatek/thrax) with the appropriate fixes to build for Android inside
 the branch `android`. Please build & install these first, before compiling Símarómur.
 
@@ -46,7 +41,6 @@ Set environment variables for the used release versions, e.g. :
 ```bash
 export OPENFST_VER=1.8.1-android
 export THRAX_VER=1.3.6-android
-export FLITE_VER=v2.3-pre1-android
 ```
 
 Then run this script:
@@ -65,12 +59,10 @@ Fetch the voice assets subdirectory via
 git submodule update --init
 ```
 
-Then create the file `local.properties` if it doesn't already exist and add variables `flite.dir` to
-point either to the absolute path of your FLite root directory and `3rdparty.dir` for the installed
-OpenFST/Thrax libraries, e.g.
+Then create the file `local.properties` if it doesn't already exist and add variables `3rdparty.dir`
+for the installed OpenFST/Thrax libraries, e.g.
 
 ```text
-flite.dir=/Users/fred/projects/flite
 3rdparty.dir=/Users/fred/install-android
 ```
 
@@ -78,7 +70,6 @@ or in case you have downloaded our releases via `dl_3rdparty.sh`, point these va
 project directory `simaromur/3rdparty/ndk`, e.g.:
 
 ```text
-flite.dir=/Users/fred/projects/simaromur/3rdparty/ndk
 3rdparty.dir=/Users/fred/projects/simaromur/3rdparty/ndk
 ```
 
@@ -95,8 +86,12 @@ You can contribute to this project by forking it, creating a branch and opening 
 
 All new code is Copyright © 2021-2022 Grammatek ehf and licensed under the [Apache License](LICENSE).
 
-Native C++ files starting with `edu_cmu_XXX` and related Java bindings are Copyright 2010-2012 by Carnegie Mellon University and are licensed under [LICENSE-CMU](LICENSE-CMU.txt). 
-We use the 3rdparty library Sonic for audio speed and pitch manipulation. Sonic is Copyright 2010, 2011 by Bill Cox and is licensed under the [Apache License](LICENSE)
+## Acknowledgements
+We use the 3rdparty libraries [Sonic](https://github.com/waywardgeek/sonic) for audio speed and pitch manipulation.
+Sonic is Copyright 2010, 2011 by Bill Cox and is licensed under the [Apache License](LICENSE). Símarómur uses
+adapted versions of [Thrax](https://www.openfst.org/twiki/bin/view/GRM/Thrax) and
+[OpenFST](https://www.openfst.org/twiki/bin/view/FST/WebHome) for G2P. These are also licensed under the [Apache License](LICENSE).
+Furthermore, we use OpenNLP for tokenization and sentence splitting. OpenNLP is licensed under the [Apache License](LICENSE).
 
 This software is developed under the auspices of the Icelandic Government 5-Year Language Technology Program, described
 [here](https://www.stjornarradid.is/lisalib/getfile.aspx?itemid=56f6368e-54f0-11e7-941a-005056bc530c) and

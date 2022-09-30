@@ -82,6 +82,7 @@ JNICALL Java_com_grammatek_simaromur_device_NativeG2P_nativeDestroy(
         JNIEnv *env, jobject object) {
     uint64_t jni_data_address = env->GetLongField(object, FIELD_mNativeData);
     auto* jni_data = reinterpret_cast<G2PJNIData*>(jni_data_address);
+    delete(jni_data);
     return JNI_TRUE;
 }
 

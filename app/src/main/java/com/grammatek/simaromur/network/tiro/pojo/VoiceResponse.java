@@ -1,5 +1,7 @@
 package com.grammatek.simaromur.network.tiro.pojo;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
@@ -33,6 +35,7 @@ public class VoiceResponse {
     @SerializedName("VoiceId")
     public String VoiceId;
 
+    @NonNull
     @Override
     public String toString() {
         return "VoiceResponse{" +
