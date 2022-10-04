@@ -20,6 +20,10 @@
     <string name="voice_type">Tegund</string>
     <string name="speak_voice_title">Spila</string>
     <string name="play_voice_title_description">Lesa sýndan texta</string>
+    <string name="info_other">Annað</string>
+    <string name="info_github">Github</string>
+    <string name="info_about_device_title">Upplýsingar um Tæki</string>
+    <string name="info_copyright_url">https://www.grammatek.com</string>
     <string name="open_in_new">Opna í nýjum glugga</string>
     <string name="is_IS">Íslenska</string>
     <string name="en_EN">Enska</string>

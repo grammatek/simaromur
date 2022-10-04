@@ -60,10 +60,10 @@ public class InfoViewer extends AppCompatActivity {
                 add(getString(R.string.info_app_version));
                 add(emptyString);
                 add(emptyString);
-                add("Device Information");
+                add(getString(R.string.info_about_device_title));
                 add(getString(R.string.info_android_version));
                 add(getString(R.string.info_phone_model));
-                add("Other");
+                add(getString(R.string.info_other));
                 add(emptyString);
                 add(emptyString);
             }
@@ -72,7 +72,7 @@ public class InfoViewer extends AppCompatActivity {
             {
                 add(emptyString);
                 add(getAppVersion());
-                add("github");
+                add(getString(R.string.info_github));
                 add(emptyString);
                 add(emptyString);
                 add(android.os.Build.VERSION.RELEASE);
@@ -92,7 +92,7 @@ public class InfoViewer extends AppCompatActivity {
                 add(emptyString);
                 add(emptyString);
                 add(emptyString);
-                add("https://www.grammatek.com");
+                add(getString(R.string.info_copyright_url));
                 add(getString(R.string.info_privacy_notice_url));
             }
         };
@@ -101,7 +101,7 @@ public class InfoViewer extends AppCompatActivity {
                 add(emptyString);
                 add(emptyString);
                 add(emptyString);
-                add("Bæta Símaróm");
+                add(getString(R.string.crashlytics_title));
                 add(emptyString);
                 add(emptyString);
                 add(emptyString);
