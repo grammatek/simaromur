@@ -100,6 +100,7 @@ public class DeviceVoice {
                 ", type='" + Type + '\'' +
                 ", version='" + Version + '\'' +
                 ", residence='" + Residence + '\'' +
+                ", release='" + Release + '\'' +
                 ", files=[" + Files.toString() + ']' +
                 '}';
     }
