@@ -22,6 +22,7 @@
     <string name="voice_type">Type</string>
     <string name="speak_voice_title">Play</string>
     <string name="play_voice_title_description">Speak the shown text</string>
+    <string name="open_in_new">Open in new</string>
     <string name="voice_lang_title">Language</string>
     <string name="is_IS">Icelandic</string>
     <string name="en_EN">English</string>

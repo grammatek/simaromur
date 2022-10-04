@@ -4,7 +4,7 @@
         <item name="android:numColumns">2</item>
     </style>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
@@ -19,9 +19,9 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
     <style name="text_view_style">
         <item name="android:layout_width">match_parent</item>
@@ -45,6 +45,19 @@
         <item name="android:layout_gravity">center</item>
         <item name="android:padding">16dp</item>
         <item name="android:textColor">@color/colorTextPrimary</item>
+    </style>
+
+    <style name="about_card_view">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textAppearance">
+            @android:style/TextAppearance.Medium
+        </item>
+    </style>
+    <style name="about_card_title">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textAppearance">
+            @android:style/TextAppearance.Large
+        </item>
     </style>
 
     <style name="info_view_style_1">
@@ -74,4 +87,5 @@
         <item name="android:layout_marginTop">16dp</item>
         <item name="android:textColor">@color/colorTextPrimary</item>
     </style>
+
 </resources>
