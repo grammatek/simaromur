@@ -24,10 +24,24 @@ def get3rdPartyDir() {
     return externalModuleDir
 }
 
+// Load keystore, you should have a file named keystore.properties in the root directory of the project
+def keystorePropertiesFile = rootProject.file("keystore.properties");
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
 android {
     compileSdkVersion 32
     // use specific NDK version
     ndkVersion '23.1.7779620'
+
+    signingConfigs {
+        release {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
 
     defaultConfig {
         applicationId "com.grammatek.simaromur"
@@ -50,6 +64,7 @@ android {
                 arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
             }
         }
+        signingConfig signingConfigs.release
     }
 
     sourceSets {
@@ -84,6 +99,7 @@ android {
             ndk {
                 debugSymbolLevel 'full'
             }
+            signingConfig signingConfigs.release
         }
     }
     externalNativeBuild {
