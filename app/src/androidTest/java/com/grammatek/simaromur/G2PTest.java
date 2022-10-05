@@ -33,15 +33,15 @@ public class G2PTest {
     public void convertTest() {
         Pronunciation transcriber = new Pronunciation(context);
         String converted = transcriber.convert(SAMPA_TRANSCRIPT,
-                "SAMPA", "FLITE");
+                "SAMPA", "FLITE", true);
         assertEquals(FLITE_TRANSCRIPT, converted);
 
         converted = transcriber.convert(SAMPA_TRANSCRIPT,
-                "SAMPA", "IPA");
+                "SAMPA", "IPA", false);
         assertEquals(IPA_TRANSCRIPT, converted);
 
         converted = transcriber.convert(IPA_TRANSCRIPT,
-                "IPA", "SAMPA");
+                "IPA", "SAMPA", false);
         assertEquals(SAMPA_TRANSCRIPT, converted);
     }
 }

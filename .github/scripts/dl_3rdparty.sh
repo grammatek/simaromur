@@ -4,7 +4,6 @@
 # The following Android Release artifacts are needed:
 #   - OpenFst
 #   - Thrax
-#   - Flite
 #
 # These are downloaded from their corresponding Github Release pages according to the following
 # environment variables:
@@ -14,14 +13,13 @@ set -o pipefail
 #set -x
 set -e
 
-if [ -z "$OPENFST_TAG" ] || [ -z "$THRAX_TAG" ] || [ -z "$FLITE_TAG" ]; then
-  echo "At least one variable of [OPENFST_TAG, THRAX_TAG, FLITE_TAG] is not set! Giving up."
+if [ -z "$OPENFST_TAG" ] || [ -z "$THRAX_TAG" ]; then
+  echo "At least one variable of [OPENFST_TAG, THRAX_TAG] is not set! Giving up."
   exit 1
 fi
 
 echo "Using OPENFST_TAG: $OPENFST_TAG"
 echo "Using THRAX_TAG: $THRAX_TAG"
-echo "Using FLITE_TAG: $FLITE_TAG"
 
 # Download release infos
 OPENFST_URL=https://api.github.com/repos/grammatek/openfst/releases
@@ -29,9 +27,6 @@ OPENFST_REL_JSON=$(curl -sH "Accept: application/vnd.github.v3+json" "$OPENFST_U
 
 THRAX_URL=https://api.github.com/repos/grammatek/thrax/releases
 THRAX_REL_JSON=$(curl -sH "Accept: application/vnd.github.v3+json" "$THRAX_URL")
-
-FLITE_URL=https://api.github.com/repos/grammatek/Flite/releases
-FLITE_REL_JSON=$(curl -sH "Accept: application/vnd.github.v3+json" "$FLITE_URL")
 
 # Checks given version against version in given json string
 #
@@ -86,11 +81,6 @@ if [ ! -f ".$THRAX_TAG.tgz.extracted" ]; then
     dl_asset "$THRAX_TAG" "$THRAX_REL_JSON"
     tar xf "$THRAX_TAG.tgz" --strip-components=1 -C ../ndk && touch ".$THRAX_TAG.tgz.extracted"
     rm -f "$THRAX_TAG.tgz"
-fi
-if [ ! -f ".$FLITE_TAG.tgz.extracted" ]; then
-    dl_asset "$FLITE_TAG" "$FLITE_REL_JSON"
-    tar xf "$FLITE_TAG.tgz" --strip-components=1 -C ../ndk && touch ".$FLITE_TAG.tgz.extracted"
-    rm -f "$FLITE_TAG.tgz"
 fi
 
 popd >/dev/null

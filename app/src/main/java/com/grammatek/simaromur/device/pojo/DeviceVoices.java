@@ -43,6 +43,11 @@ public class DeviceVoices {
     @SerializedName("voices")
     public List<DeviceVoice> Voices;
 
+    /** Is needed for GSON */
+    public DeviceVoices() {
+        Voices = new ArrayList<>();
+    }
+
     public DeviceVoices(String description, ArrayList<DeviceVoice> voices) {
         this.Description = description;
         this.Voices = voices;

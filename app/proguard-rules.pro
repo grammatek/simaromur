@@ -20,11 +20,24 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep class com.grammatek.simaromur.device.NativeG2P { *; }
+-keep class com.grammatek.simaromur.device.Native* { *; }
+-keep class com.grammatek.simaromur.device.flite.Native* { *; }
+
 -keep class opennlp.** { *; }
 -dontwarn opennlp.**
+
 -keep class org.pytorch.** { *; }
 -keep class com.facebook.** { *; }
+-keep class org.kohsuke.github** { *; }
+
+# warnings generated via kohsuke github api
+-dontwarn com.infradna.tool.bridge_method_injector.BridgeMethodsAdded
+-dontwarn com.infradna.tool.bridge_method_injector.WithBridgeMethods
+-dontwarn edu.umd.cs.findbugs.annotations.CheckForNull
+-dontwarn edu.umd.cs.findbugs.annotations.NonNull
+-dontwarn edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+-dontwarn java.beans.ConstructorProperties
+-dontwarn java.beans.Transient
 
 # warnings generated via okhttp3 internal platform, these seem not to be needed on Android
 -dontwarn okhttp3.internal.platform.*
