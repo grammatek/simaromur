@@ -14,6 +14,13 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
+      - name: Decode Keystore
+        env:
+          ENCODED_STRING: ${{ secrets.KEYSTORE }}
+        run: |
+          TMP_KEYSTORE_FILE_PATH="${RUNNER_TEMP}"/keystore
+          mkdir -p "${TMP_KEYSTORE_FILE_PATH}"
+          echo $ENCODED_KS_FILE_STRING | base64 -di > "${TMP_KEYSTORE_FILE_PATH}"/simaromur_ks.jks
       - name: set up JDK
         uses: actions/setup-java@v1
         with:
@@ -52,6 +59,10 @@ jobs:
           git submodule update --init
           ./gradlew assemble
           ./gradlew build -x test
+        env:
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
       - name: Archive reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v2
