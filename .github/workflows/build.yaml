@@ -35,7 +35,6 @@ jobs:
           ls -al $ANDROID_HOME/
       - name: "Create local.properties"
         run: |
-          echo "flite.dir=`pwd`/3rdparty/ndk">local.properties
           echo "3rdparty.dir=`pwd`/3rdparty/ndk" >>local.properties
       - name: Cache native libs
         uses: actions/cache@v2
