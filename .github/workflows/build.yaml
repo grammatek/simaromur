@@ -6,21 +6,22 @@ on: [push]
 jobs:
   Build:
     runs-on: ubuntu-20.04
+    environment: CI
     env:
       OPENFST_TAG: 1.8.1-android
       THRAX_TAG: 1.3.6-android
-      FLITE_TAG: v2.3-pre1-android
       NDK_VER: 23.1.7779620
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
       - name: Decode Keystore
         env:
-          ENCODED_STRING: ${{ secrets.KEYSTORE }}
+          ENCODED_KS: ${{ secrets.KEYSTORE }}
         run: |
           TMP_KEYSTORE_FILE_PATH="${RUNNER_TEMP}"/keystore
           mkdir -p "${TMP_KEYSTORE_FILE_PATH}"
-          echo $ENCODED_KS_FILE_STRING | base64 -di > "${TMP_KEYSTORE_FILE_PATH}"/simaromur_ks.jks
+          echo "$ENCODED_KS" | base64 -di > "${TMP_KEYSTORE_FILE_PATH}"/simaromur_ks.jks
+          ls -al "${TMP_KEYSTORE_FILE_PATH}"
       - name: set up JDK
         uses: actions/setup-java@v1
         with:
@@ -50,7 +51,7 @@ jobs:
         with:
           # cache key is unique to the combination of all native lib tags
           path: 3rdparty/
-          key: ${{ env.OPENFST_TAG }}_${{ env.THRAX_TAG }}_${{ env.FLITE_TAG }}_dl_${{ env.cache-name }}
+          key: ${{ env.OPENFST_TAG }}_${{ env.THRAX_TAG }}_dl_${{ env.cache-name }}
       - name: "Download & extract native libs"
         run: .github/scripts/dl_3rdparty.sh
         shell: bash

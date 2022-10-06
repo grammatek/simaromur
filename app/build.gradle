@@ -40,7 +40,7 @@ android {
             def keystoreKeyPassword = ""
 
             if (keystorePropertiesFile.exists()) {
-                logger.info('keystore.properties file found, loading keystore properties ...')
+                logger.warn('keystore.properties file found, loading keystore properties ...')
                 def keystoreProperties = new Properties()
                 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
                 keystoreFile = keystoreProperties['storeFile']
@@ -51,13 +51,16 @@ android {
                 logger.warn('No keystore.properties file found, assuming CI build ...')
                 // if not: we probably run on the CI and we get the keystore from the environment variable, which
                 // is redirected to a temporary file in the CI script
-                def tmpFilePath = System.getProperty("user.home") + "/work/_temp/keystore/"
+                def tmpFilePath = System.getenv("RUNNER_TEMP") + "/keystore/"
                 def allFilesFromDir = new File(tmpFilePath).listFiles()
-                if (allFilesFromDir != null) {
-                    def keystoreFiles = allFilesFromDir.first()
-                    def keystoreFilename = "keystore/simaromur_ks.jks"
-                    keystoreFiles.renameTo(keystoreFilename)
-                    keystoreFile = keystoreFilename
+                if ((allFilesFromDir != null) && (allFilesFromDir.size() > 0)) {
+                    def tmpKeystoreFile = allFilesFromDir.first()
+                    logger.warn('Found keystore file: ' + tmpKeystoreFile)
+                    //def newKeystoreFilename = project.rootDir.toString() + "/simaromur_ks.jks"
+                    //tmpKeystoreFile.(newKeystoreFilename)
+                    //tmpKeystoreFile.renameTo(newKeystoreFilename)
+                    //keystoreFile = newKeystoreFilename
+                    keystoreFile = tmpKeystoreFile
                     keystorePassword = System.getenv("SIGNING_STORE_PASSWORD")
                     keystoreKeyAlias = System.getenv("SIGNING_KEY_ALIAS")
                     keystoreKeyPassword = System.getenv("SIGNING_KEY_PASSWORD")
