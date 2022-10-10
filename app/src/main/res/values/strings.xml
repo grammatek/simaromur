@@ -9,7 +9,7 @@
     <string name="simaromur_feedback">Feedback</string>
     <string name="email_subject">Feedback on Símarómur</string>
     <string name="email_message">Feedback: </string>
-    <string name= "send_message">Send mail …</string>
+    <string name="send_message">Send mail …</string>
     <string name="tts_settings_label">TTS Settings</string>
     <string name="voice_list_update">Download Voice List</string>
     <string name="speak_button">Play</string>
@@ -73,4 +73,8 @@
     <string name="cache_progress_percent">%1$d%%</string>
     <string name="megabyte"> MB</string>
     <string name="percentage">%</string>
+    <string name="downloading_voice">Downloading voice…</string>
+    <string name="downloading_progress">0%</string>
+    <string name="unzipping_voice">Setting up voice…</string>
+    <string name="download_failed">Something went wrong, please try again.</string>
 </resources>

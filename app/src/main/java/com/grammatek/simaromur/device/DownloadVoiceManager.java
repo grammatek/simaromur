@@ -383,6 +383,7 @@ public class DownloadVoiceManager {
                             App.getContext().getFilesDir().getPath() + "/voices", ignoreList);
 
                     if (!decompress.unzip()) {
+                        // TODO: please try again
                         Log.e(LOG_TAG, "Could not unzip voice file " + fileName);
                         FileUtils.delete(fileName);
                     } else {
@@ -471,13 +472,13 @@ public class DownloadVoiceManager {
 
             @Override
             public void onPostExecute() {
-                // reset spinner
-                aDownloadObserver.hasFinished(isDownloadOk());
                 if (!voiceRepoOk) {
                     Log.w(LOG_TAG, "Voice repository not available, probable rate limit exceeded");
                     Log.w(LOG_TAG, "Try again later");
                     // showTryAgainDialog();
                 }
+                // reset spinner
+                aDownloadObserver.hasFinished(isDownloadOk());
             }
         };
         mAsyncThread.execute("DownloadVoiceThread");

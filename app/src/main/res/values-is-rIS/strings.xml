@@ -73,4 +73,8 @@
     <string name="cache_cleared">Skyndiminni hreinsað</string>
     <string name="megabyte"> MB</string>
     <string name="percentage">%</string>
+    <string name="downloading_voice">Sæki rödd…</string>
+    <string name="downloading_progress">0%</string>
+    <string name="unzipping_voice">Uppsetning á rödd…</string>
+    <string name="download_failed">Það fór eitthvað úrskeiðis, vinsamlegast reyndu aftur.</string>
 </resources>
