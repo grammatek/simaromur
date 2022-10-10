@@ -188,4 +188,14 @@
         app:layout_constraintStart_toStartOf="@+id/speakable_text"
         app:layout_constraintTop_toTopOf="@+id/speakable_text" />
 
+    <include
+        android:id="@+id/llProgressBar"
+        android:visibility="gone"
+        layout="@layout/activity_progress_bar" />
+
+    <include
+        android:id="@+id/ccProgressBar"
+        android:visibility="gone"
+        layout="@layout/activity_progress_bar_indeterminate" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
