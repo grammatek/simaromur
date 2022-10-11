@@ -13,6 +13,7 @@
 
      <color name="gray">#999999</color>
      <color name="green">#00BB00</color>
+     <color name="white">#FFFFFFFF</color>
      <color name="chrome">#FEE699</color>
      <color name="themeblue">#222831</color>
      <color name="colorPrimary">#37474f</color>

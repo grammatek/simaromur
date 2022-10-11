@@ -39,8 +39,8 @@ inside your project directory via the following procedure:
 Set environment variables for the used release versions, e.g. :
 
 ```bash
-export OPENFST_VER=1.8.1-android
-export THRAX_VER=1.3.6-android
+export OPENFST_TAG=1.8.1-android
+export THRAX_TAG=1.3.6-android
 ```
 
 Then run this script:

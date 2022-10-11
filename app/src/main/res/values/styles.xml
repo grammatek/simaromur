@@ -47,6 +47,19 @@
         <item name="android:textColor">@color/colorTextPrimary</item>
     </style>
 
+    <style name="about_card_view">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textAppearance">
+            @android:style/TextAppearance.Medium
+        </item>
+    </style>
+    <style name="about_card_title">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textAppearance">
+            @android:style/TextAppearance.Large
+        </item>
+    </style>
+
     <style name="info_view_style_1">
         <item name="android:textAppearance">
             @android:style/TextAppearance.Large</item>
@@ -74,4 +87,5 @@
         <item name="android:layout_marginTop">16dp</item>
         <item name="android:textColor">@color/colorTextPrimary</item>
     </style>
+
 </resources>
