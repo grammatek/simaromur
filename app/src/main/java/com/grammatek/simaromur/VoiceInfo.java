@@ -224,6 +224,7 @@ public class VoiceInfo extends AppCompatActivity {
             // hide from the UI whether the download is a success or not.
             findViewById(R.id.ccProgressBar).setVisibility(View.GONE);
             if (!success) {
+                findViewById(R.id.llProgressBar).setVisibility(View.GONE);
                 AlertDialog.Builder b = new AlertDialog.Builder(VoiceInfo.this);
                 b.setMessage(R.string.download_failed);
                 b.setCancelable(true);
