@@ -1,19 +1,17 @@
 package com.grammatek.simaromur.network.remoteasset;
 
-import android.os.Build;
-import android.os.LimitExceededException;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
+import com.grammatek.simaromur.App;
 
 import org.kohsuke.github.GHAsset;
 import org.kohsuke.github.GHRateLimit;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
-import org.kohsuke.github.GitHubRateLimitHandler;
 import org.kohsuke.github.PagedIterable;
 
 import java.io.File;
@@ -61,7 +59,14 @@ public class VoiceRepo {
      */
     public VoiceRepo(String assetRepoUrl) throws IOException, LimitExceededException {
         mAssetRepoUrl = assetRepoUrl;
-        mGithub = GitHub.connectAnonymously();
+        // your personal access token is required to avoid rate limiting (60 requests per hour)
+        final String oAuthToken = App.getAppRepository().getAssetConfigValueFor("github_auth0_token");
+        if (oAuthToken.isEmpty()) {
+            mGithub = GitHub.connectAnonymously();
+        } else {
+            // this sets the rate limit to 5000 requests per hour
+            mGithub = GitHub.connectUsingOAuth(oAuthToken);
+        }
         GHRateLimit rateLimit = mGithub.getRateLimit();
         Log.v(LOG_TAG, "GitHub rate limit: remaining " + rateLimit.getRemaining() + " accesses, reset at " + rateLimit.getResetDate());
         if (rateLimit.getRemaining() == 0) {
