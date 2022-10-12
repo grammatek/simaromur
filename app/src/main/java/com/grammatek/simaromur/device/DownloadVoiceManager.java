@@ -352,7 +352,10 @@ public class DownloadVoiceManager {
                 // get the voice file download url
                 String voiceUrl = mVoiceRepo.getDownloadUrlForVoice(sReleaseName,
                         anInternalName, SystemUtils.androidArchName());
-                assert(voiceUrl != null);
+                if (voiceUrl == null) {
+                    Log.e(LOG_TAG, "downloadVoiceAsync: no download url for voice " + anInternalName);
+                    return;
+                }
 
                 final String tmpFolder = App.getContext().getCacheDir().getAbsolutePath();
                 final String baseNameCompressedFile = voiceUrl.substring(voiceUrl.lastIndexOf('/') + 1);
