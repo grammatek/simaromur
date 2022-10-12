@@ -28,11 +28,11 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Álfur P er bestur";
+        String input = "sjö ,p,k,r,s";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("álfur p er bestur .",
+        assertEquals("sjö , p , k , r , s .",
                 processed);
     }
 
@@ -165,6 +165,7 @@ public class NormalizationManagerTest {
         testSentences.put("© grammatek", "höfundarréttur grammatek .");
         testSentences.put("Álfur P er bestur", "álfur p er bestur .");
         testSentences.put("Það bíður pk eftir þér", "það bíður pakki eftir þér .");
+        testSentences.put("sjö ,p,k,r,s", "sjö , p , k , r , s .");
 
         return testSentences;
     }
