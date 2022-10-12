@@ -38,6 +38,7 @@ import com.grammatek.simaromur.network.tiro.SpeakController;
 import com.grammatek.simaromur.network.tiro.VoiceController;
 import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
 import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
+import com.grammatek.simaromur.utils.FileUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -88,6 +89,21 @@ public class AppRepository {
 
     // contains the currently handled tts request from onSynthesizeText()
     private TTSRequest mCurrentRequest;
+
+    /**
+     * Returns configuration value for given key in the config.properties file.
+     *
+     * @param key   key to look up
+     * @return    value for key or empty string if not found
+     */
+    public String getAssetConfigValueFor(String key) {
+        try {
+            return FileUtils.getAssetConfigProperty(App.getContext().getAssets(), key);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
 
     /**
      * Download given voice from voice repository asynchronously. After download is finished or
