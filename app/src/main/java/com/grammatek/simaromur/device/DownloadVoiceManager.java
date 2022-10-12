@@ -2,6 +2,8 @@ package com.grammatek.simaromur.device;
 
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.grammatek.simaromur.App;
@@ -310,6 +312,7 @@ public class DownloadVoiceManager {
      *
      * @param voice        Voice to download
      * @param downloadObserver    Voice information
+     * @param voiceDao    VoiceDao to update the voice information
      */
     public void downloadVoiceAsync(Voice voice, DownloadObserver downloadObserver, VoiceDao voiceDao) {
         mAsyncThread = new AsyncThread() {
@@ -327,10 +330,12 @@ public class DownloadVoiceManager {
 
             @Override
             public void onPreExecute() {
+                Log.v(LOG_TAG, "downloadVoiceAsync: starting download of " + anInternalName);
             }
 
             @Override
             public void doInBackground() {
+                Log.v(LOG_TAG, "downloadVoiceAsync: downloading voice " + anInternalName);
                 voiceRepoOk = lazyInitVoiceRepo();
                 if (!voiceRepoOk) {
                     Log.e(LOG_TAG, "Voice repository not available !");
@@ -341,73 +346,56 @@ public class DownloadVoiceManager {
                     return;
                 }
 
-                // Search the VoiceInfo inside mVoicesOnServer
-                DeviceVoice voiceInfo = null;
-                Log.v(LOG_TAG, "downloadVoiceAsync: checking given voice in mVoicesOnServer");
-                for (DeviceVoice aVoiceInfo : mVoicesOnServer.Voices) {
-                    Log.v(LOG_TAG, "" + aVoiceInfo);
-                    if (aVoiceInfo.InternalName.equals(anInternalName) &&
-                            aVoiceInfo.Version.equals(voice.version)) {
-                        voiceInfo = aVoiceInfo;
-                        break;
-                    }
-                }
-                if (voiceInfo == null) {
-                    Log.e(LOG_TAG, "Could not find voice info in repository for voice " + anInternalName);
-                    return;
-                }
-                // get the voice file download url and return it in the member variable
+                DeviceVoice voiceInfo = searchVoiceInfo(anInternalName, mVoicesOnServer);
+                if (voiceInfo == null) return;
+
+                // get the voice file download url
                 String voiceUrl = mVoiceRepo.getDownloadUrlForVoice(sReleaseName,
                         anInternalName, SystemUtils.androidArchName());
-                assert(voiceUrl != null);
+                if (voiceUrl == null) {
+                    Log.e(LOG_TAG, "downloadVoiceAsync: no download url for voice " + anInternalName);
+                    return;
+                }
 
                 final String tmpFolder = App.getContext().getCacheDir().getAbsolutePath();
                 final String baseNameCompressedFile = voiceUrl.substring(voiceUrl.lastIndexOf('/') + 1);
                 final String fileName = tmpFolder + "/" + baseNameCompressedFile;
+                FileUtils.delete(fileName);
 
+                CleanupStack downloadedFiles = new CleanupStack();
+                downloadedFiles.addFile(fileName);
+
+                // start download
                 listener = new ProgressListener(fileName, aDownloadObserver);
-
                 mCallDownloadVoice = mVoiceRepo.downloadVoiceFileAsync(sReleaseName, baseNameCompressedFile,
                         new ProgressObserver(listener, 1024*1024));
-
+                // TODO: we need a timeout here
                 waitForCompletion();
+                if (!listener.isComplete()) {
+                        Log.e(LOG_TAG, "Download of voice file " + fileName + " failed");
+                        downloadedFiles.cleanup();
+                        return;
+                }
 
-                if (listener.isComplete()) {
-                    // download was successful, now extract the voice file
-                    final String voiceFolder = App.getContext().getFilesDir().getAbsolutePath() + "/voices";
-                    FileUtils.mkdir(voiceFolder);
-                    final List<String> ignoreList = List.of("voice_driver.h",
-                            "Makefile.aarch64-linux-android", "Makefile.armv7a-linux-androideabi",
-                            "Makefile.i686-linux-android", "Makefile.x86_64-linux-android");
-                    Decompress decompress = new Decompress(fileName,
-                            App.getContext().getFilesDir().getPath() + "/voices", ignoreList);
+                // download successful, extract voice files
+                final String voiceFolder = App.getContext().getFilesDir().getAbsolutePath() + "/voices";
+                FileUtils.mkdir(voiceFolder);
+                final List<String> ignoreList = List.of("voice_driver.h",
+                        "Makefile.aarch64-linux-android", "Makefile.armv7a-linux-androideabi",
+                        "Makefile.i686-linux-android", "Makefile.x86_64-linux-android");
+                Decompress decompress = new Decompress(fileName,
+                        App.getContext().getFilesDir().getPath() + "/voices", ignoreList);
 
-                    if (!decompress.unzip()) {
-                        // TODO: please try again
-                        Log.e(LOG_TAG, "Could not unzip voice file " + fileName);
-                        FileUtils.delete(fileName);
-                    } else {
-                        // delete the downloaded zip file
-                        Log.v(LOG_TAG, "Deleting downloaded voice file " + fileName);
-                        FileUtils.delete(fileName);
+                CleanupStack decompressedFiles = new CleanupStack(decompress.getDestinationPathEntries());
 
-                        // check MD5sum of the decompressed voice file
+                if (!decompress.unzip()) {
+                    Log.e(LOG_TAG, "Could not unzip voice file " + fileName);
+                } else {
+                    try {
                         String decompressedFileName = decompress.getLastEntry();
-                        Log.v(LOG_TAG, "Checking MD5sum of " + decompressedFileName);
-                        String md5sum = FileUtils.getMD5SumOfFile(decompressedFileName);
-                        if (md5sum == null ) {
-                            Log.e(LOG_TAG, "No MD5sum available for voice file " + decompressedFileName);
-                            // TODO delete unzipped files
-                            return;
-                        }
-                        Log.v(LOG_TAG, "md5sum: " + md5sum);
-                        boolean md5sumOk = false;
-                        md5sumOk = compareMd5Sum(voiceInfo, md5sum);
-                        if (!md5sumOk) {
-                            Log.e(LOG_TAG, "MD5sum does not match any of the voice files");
-                            // TODO delete unzipped files
-                            return;
-                        }
+                        String md5sum = getMd5sum(voiceInfo, decompressedFileName);
+                        if (md5sum == null) return;
+
                         // update voice information
                         Log.v(LOG_TAG, "Updating voice information");
                         voiceInfo.Residence = "disk";
@@ -445,12 +433,40 @@ public class DownloadVoiceManager {
                                 Log.e(LOG_TAG, "Could not convert voice info to DB voice");
                             }
                         }
+                    } finally {
+                        if (!downloadOk) {
+                            decompressedFiles.cleanup();
+                        }
+                        downloadedFiles.cleanup();
                     }
                 }
             }
 
+            @Nullable
+            private DeviceVoice searchVoiceInfo(String internalVoiceName, DeviceVoices voicesOnServer) {
+                // Search the VoiceInfo inside mVoicesOnServer
+                DeviceVoice voiceInfo = null;
+                Log.v(LOG_TAG, "downloadVoiceAsync: checking given voice in mVoicesOnServer");
+                for (DeviceVoice aVoiceInfo : voicesOnServer.Voices) {
+                    Log.v(LOG_TAG, "" + aVoiceInfo);
+                    if (aVoiceInfo.InternalName.equals(internalVoiceName) &&
+                            aVoiceInfo.Version.equals(voice.version)) {
+                        voiceInfo = aVoiceInfo;
+                        break;
+                    }
+                }
+                if (voiceInfo == null) {
+                    Log.e(LOG_TAG, "Could not find voice info in repository for voice "
+                            + internalVoiceName);
+                    return null;
+                }
+                return voiceInfo;
+            }
+
             /**
              * Wait for the download to complete
+             *
+             * TODO: set a timeout
              */
             private void waitForCompletion() {
                 while (!mCallDownloadVoice.isExecuted()) {
@@ -485,8 +501,28 @@ public class DownloadVoiceManager {
         // async execution, return immediately
     }
 
+    @Nullable
+    private String getMd5sum(DeviceVoice voiceInfo, String decompressedFileName) {
+        Log.v(LOG_TAG, "Checking MD5sum of " + decompressedFileName);
+        String md5sum = FileUtils.getMD5SumOfFile(decompressedFileName);
+        if (md5sum == null ) {
+            Log.e(LOG_TAG, "No MD5sum available for voice file " + decompressedFileName);
+            return null;
+        }
+        Log.v(LOG_TAG, "md5sum: " + md5sum);
+        boolean md5sumOk = false;
+        md5sumOk = compareMd5Sum(voiceInfo, md5sum);
+        if (!md5sumOk) {
+            Log.e(LOG_TAG, "MD5sum does not match any of the voice files");
+            return null;
+        }
+        return md5sum;
+    }
+
     private boolean compareMd5Sum(DeviceVoice voiceInfo, String md5sum) {
         boolean md5sumOk = false;
+        // this really only tests the md5sum of one of the voice files,
+        // TODO: if there are more than one voice files, we should test all of them
         for (DeviceVoiceFile voiceFile: voiceInfo.Files) {
             if (voiceFile.Md5Sum.equals(md5sum)) {
                 Log.v(LOG_TAG, "MD5sum matches");
@@ -537,7 +573,7 @@ public class DownloadVoiceManager {
             mFileSize = totalBytes;
             File aFile = new File(mFileName);
             try {
-                mFs = new FileOutputStream(aFile, true);
+                mFs = new FileOutputStream(aFile, false);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -575,5 +611,55 @@ public class DownloadVoiceManager {
         public boolean isComplete() {
             return mBytesDownloaded == mFileSize;
         }
+    }
+
+    /**
+     * This class is used for cleaning up files that are not needed anymore.
+     */
+    static class CleanupStack {
+        static final String LOG_TAG = "DownloadManager.CleanupStack";
+        final List<String> mFiles = new ArrayList<>();
+
+        /**
+         * Constructor
+         */
+        public CleanupStack() {
+        }
+
+        /**
+         * Constructor for multiple files
+         * @param files     list of files
+         */
+        public CleanupStack(ArrayList<String> files) {
+            addFiles(files);
+        }
+
+        /**
+         * Adds a file to the cleanup stack.
+         * @param fileName  The file to be added.
+         */
+        public void addFile(String fileName) {
+            mFiles.add(fileName);
+        }
+
+        /**
+         * Add given list of files to the cleanup stack.
+         *
+         * @param fileNames     The list of files to be added.
+         */
+        public void addFiles(ArrayList<String> fileNames) {
+            mFiles.addAll(fileNames);
+        }
+
+        /**
+         * Remove all files from the cleanup stack.
+         */
+        public void cleanup() {
+            for (String fileName: mFiles) {
+                Log.v(LOG_TAG, "Cleanup: " + fileName);
+                FileUtils.delete(fileName);
+            }
+        }
+
     }
 }
