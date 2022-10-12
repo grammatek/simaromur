@@ -12,7 +12,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -24,6 +23,8 @@ import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
 import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_ID;
+
+import java.util.Objects;
 
 /**
  * This class displays an info screen for a voice.
@@ -218,17 +219,13 @@ public class VoiceInfo extends AppCompatActivity {
 
         @Override
         public void hasFinished(boolean success) {
-            runOnUiThread(VoiceInfo.this::toggleDownloadButton);
-            toggleDownloadButton();
 
             // hide from the UI whether the download is a success or not.
             findViewById(R.id.ccProgressBar).setVisibility(View.GONE);
             if (!success) {
+                mProgressBar.setProgress(0);
+                mProgressBarPercentage.setText("0%");
                 findViewById(R.id.llProgressBar).setVisibility(View.GONE);
-                AlertDialog.Builder b = new AlertDialog.Builder(VoiceInfo.this);
-                b.setMessage(R.string.download_failed);
-                b.setCancelable(true);
-                b.create().show();
             }
         }
         @Override
@@ -249,10 +246,16 @@ public class VoiceInfo extends AppCompatActivity {
         }
         @Override
         public void hasError(String error) {
-            runOnUiThread(() -> {
-                Toast.makeText(VoiceInfo.this, error, Toast.LENGTH_LONG).show();
-                toggleDownloadButton();
-            });
+            // Tell user something went wrong unless it's from him cancelling the download.
+            if (!Objects.equals(error, "stream was reset: CANCEL (-1)")) {
+                runOnUiThread(() -> {
+                    findViewById(R.id.llProgressBar).setVisibility(View.GONE);
+                    AlertDialog.Builder b = new AlertDialog.Builder(VoiceInfo.this);
+                    b.setMessage(R.string.download_failed);
+                    b.setCancelable(true);
+                    b.create().show();
+                });
+            }
         }
     }
 
@@ -320,7 +323,7 @@ public class VoiceInfo extends AppCompatActivity {
         cancelButton.setOnClickListener(view -> {
             Log.v(LOG_TAG, "onDownloadClicked: download cancelled");
             App.getAppRepository().cancelDownloadVoice();
-            toggleDownloadButton();
+            findViewById(R.id.download_button).setVisibility(View.VISIBLE);
             findViewById(R.id.llProgressBar).setVisibility(View.GONE);
         });
         App.getAppRepository().downloadVoiceAsync(mVoice, new DownloadObserver(mProgressBar));
@@ -343,24 +346,23 @@ public class VoiceInfo extends AppCompatActivity {
     }
 
     /**
-     * Toggles Speak button to spinning if it was visible before, or the spinning wheel to the
-     * play button back again otherwise.
+     * Toggles the download button off if it was visible, if it's invisible and the voice is
+     * downloaded the button text is made visible again and it's text changed to "play"
      */
     private void toggleDownloadButton() {
         Log.d(LOG_TAG, "toggling");
         Button button = findViewById(R.id.download_button);
         if (button.getVisibility() == View.VISIBLE) {
-            button.setVisibility(View.INVISIBLE);
-        } else {
-
-            if (! mVoice.needsDownload()) {
-                // voice download finished, so we can start playing
-                button.setVisibility(View.VISIBLE);
-                button.setText(R.string.speak_voice_title);
-                mUserText.setVisibility(View.VISIBLE);
+            if(ConnectionCheck.isNetworkConnected()) {
+                button.setVisibility(View.INVISIBLE);
             } else {
-                button.setVisibility(View.VISIBLE);
+                App.getAppRepository().showTtsBackendWarningDialog(this);
             }
+        } else if (! mVoice.needsDownload()) {
+            // voice download finished, so we can start playing
+            button.setVisibility(View.VISIBLE);
+            button.setText(R.string.speak_voice_title);
+            mUserText.setVisibility(View.VISIBLE);
         }
     }
 }
