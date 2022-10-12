@@ -30,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
 public class FileUtils {
     private final static String LOG_TAG = "Simaromur_" + FileUtils.class.getSimpleName();
@@ -380,5 +381,20 @@ public class FileUtils {
                     + e.getMessage());
         }
         return rv;
+    }
+
+    /**
+     * Reads the config.properties file from the assets directory and returns the contents of the
+     * given key
+     * @param assetManager      AssetManager to be used for operation
+     * @param key               Key to be used for operation
+     * @return            Value of key in config.properties
+     */
+    public static String getAssetConfigProperty(AssetManager assetManager, String key) throws IOException {
+        InputStream inputStream = assetManager.open("config.properties");
+        Properties properties = new Properties();
+        properties.load(inputStream);
+        inputStream.close();
+        return properties.getProperty(key);
     }
 }
