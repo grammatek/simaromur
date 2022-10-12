@@ -29,12 +29,13 @@ import java.util.Locale;
         indices = {@Index(value = {"internal_name", "gender", "language_code", "type"}, unique = true)})
 public class Voice {
     private final static String LOG_TAG = "Simaromur_Java_" + Voice.class.getSimpleName();
-    public final static String TYPE_TIRO = "tiro";
+    public final static String TYPE_NETWORK_OLD = "tiro";
+    public final static String TYPE_NETWORK = "network";
     public final static String TYPE_TORCH = "torchscript";
     public final static String TYPE_TFLOW = "tensorflow";
     public final static String TYPE_FLITE = "flite";
 
-    public static final List<String> Types = Arrays.asList(TYPE_TIRO, TYPE_FLITE, TYPE_TORCH, TYPE_TFLOW);
+    public static final List<String> Types = Arrays.asList(TYPE_NETWORK, TYPE_NETWORK_OLD, TYPE_FLITE, TYPE_TORCH, TYPE_TFLOW);
     static final String SEP = "-";
 
     @PrimaryKey(autoGenerate = true)
@@ -77,7 +78,7 @@ public class Voice {
 
     // Voice type (verified)
     // local voices: "clustergen", "clunits", "torchscript", "phoneme"
-    // network voices: "tiro"
+    // network voices: "network"
     @ColumnInfo(name = "type")
     public String type;
 
@@ -210,7 +211,7 @@ public class Voice {
      * @return  true in case voice needs network access, false otherwise
      */
     public boolean needsNetwork() {
-        return (this.type.equals(Voice.TYPE_TIRO));
+        return (this.type.equals(Voice.TYPE_NETWORK));
     }
 
     /**

@@ -41,7 +41,7 @@ public class TTSObserver implements AudioObserver {
      * values given in mPitch and mSpeed, and then feed the resulting buffer piece by piece to
      * the callback object provided by the Android TTS API.
      *
-     * @param audioData Audio response data from Tiro API
+     * @param audioData Audio response data from Network API
      */
     public synchronized void update(final byte[] audioData, TTSRequest ttsRequest) {
         Log.v(LOG_TAG, "update() for (" + ttsRequest.serialize() + ")");

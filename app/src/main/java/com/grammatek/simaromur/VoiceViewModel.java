@@ -65,7 +65,7 @@ public class VoiceViewModel extends AndroidViewModel {
     public void startSpeaking(Voice voice, CacheItem item, float speed, float pitch,
                               TTSAudioControl.AudioFinishedObserver finishedObserver) {
         switch (voice.type) {
-            case Voice.TYPE_TIRO:
+            case Voice.TYPE_NETWORK:
                 mRepository.startNetworkSpeak(voice.internalName, item, voice.languageCode, finishedObserver);
                 break;
             case Voice.TYPE_TORCH:
@@ -85,7 +85,7 @@ public class VoiceViewModel extends AndroidViewModel {
         if (voice == null) {
             return;
         }
-        if (voice.type.equals(Voice.TYPE_TIRO)) {
+        if (voice.type.equals(Voice.TYPE_NETWORK)) {
             mRepository.stopNetworkSpeak();
         } else if (voice.type.equals(Voice.TYPE_TORCH)) {
             mRepository.stopDeviceSpeak(mDevSpeakTask);

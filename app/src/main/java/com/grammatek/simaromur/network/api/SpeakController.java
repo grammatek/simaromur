@@ -1,4 +1,4 @@
-package com.grammatek.simaromur.network.tiro;
+package com.grammatek.simaromur.network.api;
 
 import static com.grammatek.simaromur.cache.AudioFormat.AUDIO_FMT_MP3;
 import static com.grammatek.simaromur.cache.AudioFormat.AUDIO_FMT_PCM;
@@ -24,7 +24,7 @@ import com.grammatek.simaromur.cache.SampleRate;
 import com.grammatek.simaromur.cache.Utterance;
 import com.grammatek.simaromur.cache.UtteranceCacheManager;
 import com.grammatek.simaromur.cache.VoiceAudioDescription;
-import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
+import com.grammatek.simaromur.network.api.pojo.SpeakRequest;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -37,7 +37,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class SpeakController implements Callback<ResponseBody> {
-    private final static String LOG_TAG = "Simaromur_Tiro" + SpeakController.class.getSimpleName();
+    private final static String LOG_TAG = "Simaromur_Network" + SpeakController.class.getSimpleName();
     private AudioObserver mAudioObserver;       // Audio observer given in streamAudio()
     private Call<ResponseBody> mCall;           // Caller object created in streamAudio(),
                                                 // saved for being cancelable via stop().
@@ -46,10 +46,10 @@ public class SpeakController implements Callback<ResponseBody> {
     private TTSRequest mTTSRequest;             // the tts request that is being processed
 
     /**
-     *  Starts streaming speech audio from Tiro API. This call is done asynchronously and can be
+     *  Starts streaming speech audio from Network API. This call is done asynchronously and can be
      *  cancelled via stop().
      *
-     * @param request           the request to be sent to the Tiro Speak API
+     * @param request           the request to be sent to the Network Speak API
      * @param audioObserver     the audio observer to be used for available audio data / error
      */
     public synchronized void streamAudio(SpeakRequest request, AudioObserver audioObserver, CacheItem item, TTSRequest ttsRequest) {
@@ -83,10 +83,10 @@ public class SpeakController implements Callback<ResponseBody> {
     }
 
     /**
-     * Executes a speak request to Tiro API synchronously. The resulting audio is returned in a
+     * Executes a speak request to Network API synchronously. The resulting audio is returned in a
      * byte[] array.
      *
-     * @param request   the request to be sent to the Tiro Speak API.
+     * @param request   the request to be sent to the Network Speak API.
      *
      * @return  audio data buffer - data format is dependent on given request.OutputFormat
      *
@@ -113,25 +113,32 @@ public class SpeakController implements Callback<ResponseBody> {
     }
 
     /**
-     * Builds a Retrofit caller object for the Tiro API without calling its endpoint yet.
+     * Builds a Retrofit caller object for the Network API without calling its endpoint yet.
      *
      * @param speakRequest   The speak request to build
      *
      * @return  a caller object, still needs to be executed
      */
     private Call<ResponseBody> buildSpeakCall(SpeakRequest speakRequest) {
-        TiroAPI tiroAPI = TiroServiceGenerator.createService(TiroAPI.class, mTTSRequest.serialize());
-        return tiroAPI.postSpeakRequest(speakRequest);
+        Endpoint networkAPI = NetworkServiceGenerator.createService(Endpoint.class, mTTSRequest.serialize());
+        return networkAPI.postSpeakRequest(speakRequest);
     }
 
     @Override
     public synchronized void onResponse(@NotNull Call<ResponseBody> call, Response<ResponseBody> response) {
         Log.v(LOG_TAG, "onResponse()");
         assert (mAudioObserver != null);
-        final String xRequestId = response.headers().get("X-Request-Id");
-        if (response.isSuccessful() && xRequestId != null) {
-            Log.v(LOG_TAG, "onResponse: X-Request-Id: " + xRequestId);
+
+        if (response.isSuccessful()) {
+            String xRequestId = response.headers().get("X-Request-Id");
+            if (xRequestId == null) {
+                xRequestId = mTTSRequest.serialize();
+                Log.v(LOG_TAG, "onResponse: Server hasn't provided a valid X-Request-Id, using: " + xRequestId);
+            } else {
+                Log.v(LOG_TAG, "onResponse: X-Request-Id: " + xRequestId);
+            }
             TTSRequest ttsRequest;
+
             try {
                 ttsRequest = TTSRequest.restore(xRequestId);
             }
@@ -161,7 +168,6 @@ public class SpeakController implements Callback<ResponseBody> {
         } else {
             String errMsg;
             try {
-                assert response.errorBody() != null;
                 errMsg = response.errorBody().string();
                 Log.e(LOG_TAG, "API Error: " + errMsg);
             } catch (IOException e) {

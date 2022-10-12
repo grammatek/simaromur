@@ -6,7 +6,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.util.Log;
 
-import com.grammatek.simaromur.network.tiro.TiroAPI;
+import com.grammatek.simaromur.network.api.Endpoint;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -119,15 +119,18 @@ public class ConnectionCheck {
     // And yet another
     Runnable periodicTask = () -> {
         try{
-            if (isHostAvailable(TiroAPI.SERVER, 443, 2000)) {
+            final String serverName = Endpoint.SERVER;
+            Log.v(LOG_TAG, "Checking " + serverName + " availability");
+            if (isHostAvailable(serverName, 443, 2000)) {
                 isTTSServiceReachable = true;
-                Log.d(LOG_TAG,"TTS Service available!");
+                Log.d(LOG_TAG,"TTS Service alive: " + serverName);
             } else {
                 isTTSServiceReachable = false;
                 Log.d(LOG_TAG, "TTS Service is NOT available !");
             }
         } catch (Exception e){
             Log.w(LOG_TAG, "Exception: " + e.getMessage());
+            isTTSServiceReachable = false;
         }
     };
 }

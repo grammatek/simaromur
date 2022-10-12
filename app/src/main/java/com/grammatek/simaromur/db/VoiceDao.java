@@ -44,7 +44,7 @@ public interface VoiceDao {
     Voice findVoice(String name, String internalName, String languageCode, String languageName,
                     String variant);
 
-    @Query("SELECT * FROM voice_table WHERE type LIKE 'tiro' ")
+    @Query("SELECT * FROM voice_table WHERE type LIKE 'network' ")
     List<Voice> findNetworkVoices();
 
     // Return voices registered in Assets

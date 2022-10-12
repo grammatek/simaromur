@@ -24,8 +24,8 @@ import java.util.List;
 )
 public abstract class ApplicationDb extends RoomDatabase {
     private final static String LOG_TAG = "Simaromur_" + ApplicationDb.class.getSimpleName();
-    static final int LATEST_VERSION = 4;
-    private static ApplicationDb INSTANCE;
+    static final int LATEST_VERSION = 5;
+    private static volatile ApplicationDb INSTANCE;
 
     public abstract AppDataDao appDataDao();
     public abstract VoiceDao voiceDao();
@@ -33,6 +33,7 @@ public abstract class ApplicationDb extends RoomDatabase {
     static public final Migration MIGRATION_1_2 = new Migration(1, 2){ // From version 1 to version 2
         @Override
         public void migrate(SupportSQLiteDatabase database){
+            Log.v(LOG_TAG, "MIGRATION_1_2");
             // Remove the table
             database.execSQL("DROP INDEX index_voice_table_name_gender_language_code_type");
             database.execSQL("DROP TABLE voice_table");
@@ -43,6 +44,7 @@ public abstract class ApplicationDb extends RoomDatabase {
     static public final Migration MIGRATION_2_3 = new Migration(2, 3){  // v2 => 3
         @Override
         public void migrate(SupportSQLiteDatabase database){
+            Log.v(LOG_TAG, "MIGRATION_2_3");
             database.execSQL("ALTER TABLE app_data_table "
                     + " ADD COLUMN privacy_info_dialog_accepted INTEGER NOT NULL DEFAULT(0)");
         }
@@ -50,8 +52,16 @@ public abstract class ApplicationDb extends RoomDatabase {
     static public final Migration MIGRATION_3_4 = new Migration(3, 4){  // v3 => 4
         @Override
         public void migrate(SupportSQLiteDatabase database){
+            Log.v(LOG_TAG, "MIGRATION_3_4");
             database.execSQL("ALTER TABLE app_data_table "
                     + " ADD COLUMN crash_lytics_user_consent_accepted INTEGER NOT NULL DEFAULT(0)");
+        }
+    };
+    static public final Migration MIGRATION_4_5 = new Migration(4, 5){  // v4 => 5
+        @Override
+        public void migrate(SupportSQLiteDatabase database){
+            Log.v(LOG_TAG, "MIGRATION_5_6");
+            database.execSQL("DELETE FROM voice_table WHERE type = 'tiro'");
         }
     };
     public static ApplicationDb getDatabase(final Context context) {
@@ -61,7 +71,7 @@ public abstract class ApplicationDb extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             ApplicationDb.class, "application_db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                             // Wipes and rebuilds instead of migrating if no Migration object.
                             .fallbackToDestructiveMigration()
                             .allowMainThreadQueries()

@@ -7,6 +7,6 @@
         </trust-anchors>
     </base-config>
     <domain-config>
-        <domain includeSubdomains="true">tts.tiro.is</domain>
+        <domain includeSubdomains="true">api.grammatek.com</domain>
     </domain-config>
 </network-security-config>

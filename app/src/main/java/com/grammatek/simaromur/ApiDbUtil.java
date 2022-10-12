@@ -4,7 +4,7 @@ import android.util.Log;
 
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
-import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
+import com.grammatek.simaromur.network.api.pojo.VoiceResponse;
 
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +37,7 @@ public class ApiDbUtil {
         modelVoice.internalName = apiVoice.VoiceId;
         modelVoice.languageCode = apiVoice.LanguageCode;
         modelVoice.languageName = apiVoice.LanguageName;
-        modelVoice.type = Voice.TYPE_TIRO;
+        modelVoice.type = Voice.TYPE_NETWORK;
         mVoiceDao.updateVoices(modelVoice);
     }
 
@@ -75,7 +75,7 @@ public class ApiDbUtil {
         for (VoiceResponse av:newApiVoices) {
             Log.v(LOG_TAG, "Creating new voice from " + av);
             Voice voice = new Voice(av.Name, av.VoiceId, av.Gender, av.LanguageCode, av.LanguageName,
-                    "", Voice.TYPE_TIRO, "", "", "", "", 0);
+                    "", Voice.TYPE_NETWORK, "", "", "", "", 0);
             Log.v(LOG_TAG, "New contents: " + voice);
             try {
                 mVoiceDao.insertVoice(voice);
@@ -114,7 +114,7 @@ public class ApiDbUtil {
      *      apiVoice.LanguageCode   == modelVoice.languageCode
      *      apiVoice.LanguageName   == modelVoice.languageName
      *      apiVoice.Gender         == modelVoice.gender
-     *      "tiro"                  == modelVoice.type
+     *      "network"               == modelVoice.type
      *
      * @param apiVoice      API voice as returned from API endpoint
      * @param modelVoice    Model voice inside db
@@ -128,6 +128,6 @@ public class ApiDbUtil {
                 apiVoice.LanguageCode.equals(modelVoice.languageCode) &&
                 apiVoice.LanguageName.equals(modelVoice.languageName) &&
                 apiVoice.Gender.equals(modelVoice.gender) &&
-                Voice.TYPE_TIRO.equals(modelVoice.type));
+                Voice.TYPE_NETWORK.equals(modelVoice.type));
     }
 }

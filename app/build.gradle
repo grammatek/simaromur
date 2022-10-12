@@ -56,10 +56,6 @@ android {
                 if ((allFilesFromDir != null) && (allFilesFromDir.size() > 0)) {
                     def tmpKeystoreFile = allFilesFromDir.first()
                     logger.warn('Found keystore file: ' + tmpKeystoreFile)
-                    //def newKeystoreFilename = project.rootDir.toString() + "/simaromur_ks.jks"
-                    //tmpKeystoreFile.(newKeystoreFilename)
-                    //tmpKeystoreFile.renameTo(newKeystoreFilename)
-                    //keystoreFile = newKeystoreFilename
                     keystoreFile = tmpKeystoreFile
                     keystorePassword = System.getenv("SIGNING_STORE_PASSWORD")
                     keystoreKeyAlias = System.getenv("SIGNING_KEY_ALIAS")

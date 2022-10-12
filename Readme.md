@@ -4,7 +4,7 @@ This project provides an Icelandic TTS application for the Android TTS service.
 
 ## Voices
 
-Símarómur provides access to network voices of the [Tíro TTS API](https://tts.tiro.is/v0/voices) and
+Símarómur provides access to network voices of the [Grammatek TTS API](https://api.grammatek.com/) and
 [on-device voices](https://github.com/grammatek/simaromur_voices) that are bundled via assets.
 
 Handling of device-local voices started originally based on [Flite TTS Engine For Android](https://github.com/happyalu/Flite-TTS-Engine-for-Android),

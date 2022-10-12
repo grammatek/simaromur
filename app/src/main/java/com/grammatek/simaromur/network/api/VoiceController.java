@@ -1,10 +1,10 @@
-package com.grammatek.simaromur.network.tiro;
+package com.grammatek.simaromur.network.api;
 
 import static com.grammatek.simaromur.ApiDbUtil.NET_VOICE_SUFFIX;
 
 import android.util.Log;
 
-import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
+import com.grammatek.simaromur.network.api.pojo.VoiceResponse;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,7 +17,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class VoiceController implements Callback<List<VoiceResponse>> {
-    private final static String LOG_TAG = "Simaromur_Tiro" + VoiceController.class.getSimpleName();
+    private final static String LOG_TAG = "Simaromur_Network" + VoiceController.class.getSimpleName();
 
     /**
      * Observer interface for async. voice list reception.
@@ -69,15 +69,15 @@ public class VoiceController implements Callback<List<VoiceResponse>> {
     }
 
     /**
-     * Builds a Retrofit caller object for the Tiro API without calling its endpoint yet.
+     * Builds a Retrofit caller object for the Network API without calling its endpoint yet.
      *
      * @param languageCode   Language Code filter to use for the voice list
      *
      * @return  a caller object, still needs to be executed
      */
     private  Call<List<VoiceResponse>> buildQueryVoicesCall(String languageCode) {
-        TiroAPI tiroAPI = TiroServiceGenerator.createService(TiroAPI.class);
-        return tiroAPI.queryVoices(languageCode);
+        Endpoint networkAPI = NetworkServiceGenerator.createService(Endpoint.class);
+        return networkAPI.queryVoices(languageCode);
     }
 
     @Override

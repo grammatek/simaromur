@@ -1,4 +1,4 @@
-package com.grammatek.simaromur.network.tiro;
+package com.grammatek.simaromur.network.api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -13,19 +13,19 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
- * Generate TiroService accessor.
+ * Generate NetworkService accessor.
  * All members of the class are statically initialized and therefore cached for the lifetime of
- * the application. This way, we use the same Http client for all further requests to Tiro API.
+ * the application. This way, we use the same Http client for all further requests to Network API.
  * Furthermore explicitly use the order of protocols http_2, http_1_1. okhttp
  * will use automatically http2, if server supports it.
  */
-public class TiroServiceGenerator {
+public class NetworkServiceGenerator {
 
     private static final Gson gson = new GsonBuilder().setLenient().create();
 
     private static final Retrofit.Builder builder
             = new Retrofit.Builder()
-            .baseUrl(TiroAPI.URL)
+            .baseUrl(Endpoint.URL)
             .addConverterFactory(GsonConverterFactory.create(gson));
 
     private static Retrofit retrofit = builder.build();

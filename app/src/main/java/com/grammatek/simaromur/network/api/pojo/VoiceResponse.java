@@ -1,4 +1,4 @@
-package com.grammatek.simaromur.network.tiro.pojo;
+package com.grammatek.simaromur.network.api.pojo;
 
 import androidx.annotation.NonNull;
 
@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 /*
-    GSON adaptions for Response of $ curl -X GET https://tts.tiro.is/v0/voices | jq
+    GSON adaptions for Response of $ curl -X GET https://api.grammatek.com/v0/voices | jq
       [
         {
           "Name": "Other",
