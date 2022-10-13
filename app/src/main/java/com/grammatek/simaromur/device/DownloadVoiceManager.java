@@ -367,11 +367,18 @@ public class DownloadVoiceManager {
 
                 // start download
                 listener = new ProgressListener(fileName, aDownloadObserver);
+                if (mAsyncThread.isShutdown()) {
+                    Log.v(LOG_TAG, "downloadVoiceAsync: download of " + anInternalName + " cancelled");
+                    return;
+                }
                 mCallDownloadVoice = mVoiceRepo.downloadVoiceFileAsync(sReleaseName, baseNameCompressedFile,
                         new ProgressObserver(listener, 1024*1024));
-                // TODO: we need a timeout here
-                waitForCompletion();
-                if (!listener.isComplete()) {
+                if (mCallDownloadVoice == null) {
+                    Log.e(LOG_TAG, "downloadVoiceAsync: download of " + anInternalName + " failed");
+                    return;
+                }
+                // 10 Minutes timeout, this should suffice even for slow internet connections
+                if (!waitForCompletion(10*60)) {
                         Log.e(LOG_TAG, "Download of voice file " + fileName + " failed");
                         downloadedFiles.cleanup();
                         return;
@@ -387,10 +394,17 @@ public class DownloadVoiceManager {
                         App.getContext().getFilesDir().getPath() + "/voices", ignoreList);
 
                 CleanupStack decompressedFiles = new CleanupStack(decompress.getDestinationPathEntries());
-
+                if (mAsyncThread.isShutdown()) {
+                    Log.v(LOG_TAG, "unzipping: cancelled");
+                    return;
+                }
                 if (!decompress.unzip()) {
                     Log.e(LOG_TAG, "Could not unzip voice file " + fileName);
                 } else {
+                    if (mAsyncThread.isShutdown()) {
+                        Log.v(LOG_TAG, "md5 sum checking cancelled");
+                        return;
+                    }
                     try {
                         String decompressedFileName = decompress.getLastEntry();
                         String md5sum = getMd5sum(voiceInfo, decompressedFileName);
@@ -428,6 +442,10 @@ public class DownloadVoiceManager {
                                 // TODO we need to update also the voice information in the
                                 //  VoiceInfo object on disk
 
+                                if (mAsyncThread.isShutdown()) {
+                                    Log.v(LOG_TAG, "voice registration cancelled");
+                                    return;
+                                }
                                 downloadOk = true;
                             } else {
                                 Log.e(LOG_TAG, "Could not convert voice info to DB voice");
@@ -468,22 +486,41 @@ public class DownloadVoiceManager {
              *
              * TODO: set a timeout
              */
-            private void waitForCompletion() {
-                while (!mCallDownloadVoice.isExecuted()) {
+            private boolean waitForCompletion(int timeoutInSecs) {
+                // measure current time and loop until timeout reached
+                long startTime = System.currentTimeMillis();
+                long currentTime = startTime;
+
+                while (!mCallDownloadVoice.isExecuted() && (currentTime - startTime < timeoutInSecs * 1000L)) {
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(100);
+                        if (mAsyncThread.isShutdown()) {
+                            Log.v(LOG_TAG, "waitForCompletion: cancelled");
+                            return false;
+                        }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    currentTime = System.currentTimeMillis();
                 }
-                assert(mCallDownloadVoice.isExecuted());
-                while (!mCallDownloadVoice.isCanceled() && !listener.isComplete()) {
+                if (!mCallDownloadVoice.isExecuted()) {
+                    Log.e(LOG_TAG, "Download of voice file failed");
+                    return false;
+                }
+                while (!mCallDownloadVoice.isCanceled() && !listener.isComplete() &&
+                        (currentTime - startTime < timeoutInSecs * 1000L)) {
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(100);
+                        if (mAsyncThread.isShutdown()) {
+                            Log.v(LOG_TAG, "waitForCompletion: cancelled");
+                            return false;
+                        }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    currentTime = System.currentTimeMillis();
                 }
+                return listener.isComplete();
             }
 
             @Override

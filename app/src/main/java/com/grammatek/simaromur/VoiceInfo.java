@@ -24,6 +24,7 @@ import com.grammatek.simaromur.network.ConnectionCheck;
 
 import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_ID;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -184,6 +185,7 @@ public class VoiceInfo extends AppCompatActivity {
         Log.v(LOG_TAG, "onDestroy:");
         super.onDestroy();
         mVoiceViewModel.stopSpeaking(mVoice);
+        App.getAppRepository().cancelDownloadVoice();
     }
 
     @Override
@@ -215,6 +217,8 @@ public class VoiceInfo extends AppCompatActivity {
         ProgressBar mProgressBar;
         DownloadObserver(ProgressBar progressBar) {
             mProgressBar = progressBar;
+            mProgressBar.setProgress(0);
+            mProgressBarPercentage.setText("0%");
         }
 
         @Override
@@ -247,7 +251,7 @@ public class VoiceInfo extends AppCompatActivity {
         @Override
         public void hasError(String error) {
             // Tell user something went wrong unless it's from him cancelling the download.
-            if (!Objects.equals(error, "stream was reset: CANCEL (-1)")) {
+            if (!error.matches("(?i).*cancel.*")) {
                 runOnUiThread(() -> {
                     findViewById(R.id.llProgressBar).setVisibility(View.GONE);
                     AlertDialog.Builder b = new AlertDialog.Builder(VoiceInfo.this);
