@@ -176,7 +176,6 @@ public class Tokenizer {
                 || token.endsWith(" :"));
     }
 
-
     //If a token contains some other character(s) than alphabetic characters, we take a closer look.
     private String processSpecialCharacters(String token) {
 
@@ -188,20 +187,22 @@ public class Tokenizer {
         // for all kinds of punctuation we need to insert spaces at the correct positions
         // Patterns
         String processedToken = token;
-        String insertSpaceAfterAnywhere = "(.*)([(\\[{\\-_])(.*)";
-        String insertSpaceBeforeAnywhere = "(.+)([)\\[}\\-_])(.*)";
-        String insertSpaceAfterIfBeginning = "^(\")(.+)";
-        String insertSpaceBeforeIfEnd = "(.+)([\":,.!?])$";
-        String insertSpaceBeforeIfEndAndPunct = "(.+)([\":,.!?])(\\s[\":,.!?])$";
+        // Matches all kinds of opening parentheses and some punctuation
+        // Example: "text in (parenthesis)" "a,b,c"
+        String insertSpaceAfterAnywhere = "([(\\[{\\-_,\"?!])";
+        // Matches all kinds of closing parentheses and some punctuation
+        // Example: "text in (parenthesis)" "a,b,c"
+        String insertSpaceBeforeAnywhere = "([)\\]}\\-_,\"?!])";
+        // Matches a token ending with ':' or '.'. We don't want to interfere with tokens
+        // containing these chars within, that is the task of the normalizer, e.g. urls, etc.
+        String insertSpaceBeforeIfEnd = "(.+)([:.])$";
 
         // replacements
-        processedToken = processedToken.replaceAll(insertSpaceAfterAnywhere, "$1$2" + " " + "$3");
-        processedToken = processedToken.replaceAll(insertSpaceBeforeAnywhere, "$1" + " " + "$2$3");
-        processedToken = processedToken.replaceAll(insertSpaceAfterIfBeginning, "$1" + " " + "$2");
+        processedToken = processedToken.replaceAll(insertSpaceAfterAnywhere, "$1 ");
+        processedToken = processedToken.replaceAll(insertSpaceBeforeAnywhere, " $1");
         processedToken = processedToken.replaceAll(insertSpaceBeforeIfEnd, "$1" + " " + "$2");
-        processedToken = processedToken.replaceAll(insertSpaceBeforeIfEndAndPunct, "$1" + " " + "$2$3");
-
-        return processedToken;
+      
+        return processedToken.replaceAll("\\s+", " ").trim();
     }
 
     /* We assume 'token' contains some non-alphabetic characters and we test
@@ -216,7 +217,7 @@ public class Tokenizer {
         if (token.matches("\\d+\\.?"))
             return false;
         // a more complex combination of digits and punctuations, e.g. dates and large numbers
-        if (token.matches("(\\d+[.,:]\\d+)+[,.]?"))
+        if (token.matches("(\\d+[.,:]\\d+)+[,.]?%?"))
             return false;
         // telephone number, don't split on hyphen
         if (token.matches("\\d{3}-?\\d{4}"))
@@ -235,5 +236,4 @@ public class Tokenizer {
             return true;
         return mAbbreviationsNonending.contains(token.toLowerCase());
     }
-
 }
