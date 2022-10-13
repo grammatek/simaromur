@@ -187,20 +187,22 @@ public class Tokenizer {
         // for all kinds of punctuation we need to insert spaces at the correct positions
         // Patterns
         String processedToken = token;
-        String insertSpaceAfterAnywhere = "([(\\[{\\-_,])";
-        String insertSpaceBeforeAnywhere = "([)\\[}\\-_,])";
-        String insertSpaceAfterIfBeginning = "^(\")(.+)";
-        String insertSpaceBeforeIfEnd = "(.+)([\":,.!?])$";
-        String insertSpaceBeforeIfEndAndPunct = "(.+)([\":,.!?])(\\s[\":,.!?])$";
+        // Matches all kinds of opening parentheses and some punctuation
+        // Example: "text in (parenthesis)" "a,b,c"
+        String insertSpaceAfterAnywhere = "([(\\[{\\-_,\"?!])";
+        // Matches all kinds of closing parentheses and some punctuation
+        // Example: "text in (parenthesis)" "a,b,c"
+        String insertSpaceBeforeAnywhere = "([)\\]}\\-_,\"?!])";
+        // Matches a token ending with ':' or '.'. We don't want to interfere with tokens
+        // containing these chars within, that is the task of the normalizer, e.g. urls, etc.
+        String insertSpaceBeforeIfEnd = "(.+)([:.])$";
 
         // replacements
         processedToken = processedToken.replaceAll(insertSpaceAfterAnywhere, "$1 ");
         processedToken = processedToken.replaceAll(insertSpaceBeforeAnywhere, " $1");
-        processedToken = processedToken.replaceAll(insertSpaceAfterIfBeginning, "$1" + " " + "$2");
         processedToken = processedToken.replaceAll(insertSpaceBeforeIfEnd, "$1" + " " + "$2");
-        processedToken = processedToken.replaceAll(insertSpaceBeforeIfEndAndPunct, "$1" + " " + "$2$3");
-
-        return processedToken.replaceAll("\\s+", " ");
+      
+        return processedToken.replaceAll("\\s+", " ").trim();
     }
 
     /* We assume 'token' contains some non-alphabetic characters and we test

@@ -28,11 +28,11 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "sjö ,p,k,r,s";
+        String input = "Mynd / elg@vf.is";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("sjö , p , k , r , s .",
+        assertEquals("mynd skástrik e l g hjá v f punktur is .",
                 processed);
     }
 
