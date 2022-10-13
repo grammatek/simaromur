@@ -76,8 +76,8 @@ public class TTSEngineController {
     public void LoadEngine(Voice voice) throws IOException {
         DeviceVoice devVoice = null;
         switch (voice.type) {
-            case Voice.TYPE_TIRO:
-                Log.v(LOG_TAG, "LoadEngine: Voice.TYPE_TIRO not supported");
+            case Voice.TYPE_NETWORK:
+                Log.v(LOG_TAG, "LoadEngine: Voice.TYPE_NETWORK not supported");
                 break;
             case Voice.TYPE_TORCH:
                 devVoice = mAVM.getInfoForVoice(voice.name);

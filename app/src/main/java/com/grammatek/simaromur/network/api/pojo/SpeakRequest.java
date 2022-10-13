@@ -1,4 +1,4 @@
-package com.grammatek.simaromur.network.tiro.pojo;
+package com.grammatek.simaromur.network.api.pojo;
 
 import androidx.annotation.NonNull;
 
@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName;
 /*
     GSON adaptions for Request of:
 
-    API_URL="https://tts.tiro.is/v0/speech"
+    API_URL="https://api.grammatek.com/v0/speech"
     BODY=$(cat <<'END_HEREDOC'
     {
      "Engine": "standard",

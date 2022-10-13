@@ -184,7 +184,7 @@ public class TTSService extends TextToSpeechService {
         mRepository.setCurrentTTSRequest(ttsRequest);
 
         // check if network voice && for network availability
-        if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TIRO)) {
+        if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_NETWORK)) {
             if (! testForAndHandleNetworkVoiceIssues(callback, voice)) {
                 Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
                 return;
@@ -335,7 +335,7 @@ public class TTSService extends TextToSpeechService {
     {
         String assetFileName;
         if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {
-            Log.w(LOG_TAG, "onSynthesizeText: tiro voice " + voice.name +
+            Log.w(LOG_TAG, "onSynthesizeText: network voice " + voice.name +
                     ": Network problems detected");
             if (!ConnectionCheck.isTTSServiceReachable()) {
                 assetFileName = "audio/service_not_available_dora.pcm";
@@ -416,7 +416,7 @@ public class TTSService extends TextToSpeechService {
             boolean needsNetwork = false;
             Set<String> features = new HashSet<>();
 
-            if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TIRO)) {
+            if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_NETWORK)) {
                 latency = Voice.LATENCY_VERY_HIGH;
                 features.add(TextToSpeech.Engine.KEY_FEATURE_NETWORK_RETRIES_COUNT);
                 needsNetwork = true;

@@ -34,11 +34,11 @@ import com.grammatek.simaromur.device.pojo.DeviceVoice;
 import com.grammatek.simaromur.frontend.FrontendManager;
 import com.grammatek.simaromur.device.AssetVoiceManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
-import com.grammatek.simaromur.network.tiro.SpeakController;
-import com.grammatek.simaromur.network.tiro.VoiceController;
-import com.grammatek.simaromur.network.tiro.pojo.SpeakRequest;
-import com.grammatek.simaromur.network.tiro.pojo.VoiceResponse;
 import com.grammatek.simaromur.utils.FileUtils;
+import com.grammatek.simaromur.network.api.SpeakController;
+import com.grammatek.simaromur.network.api.VoiceController;
+import com.grammatek.simaromur.network.api.pojo.SpeakRequest;
+import com.grammatek.simaromur.network.api.pojo.VoiceResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,8 +65,8 @@ public class AppRepository {
     private LiveData<List<com.grammatek.simaromur.db.Voice>> mAllVoices;
     private AppData mCachedAppData;
     private List<com.grammatek.simaromur.db.Voice> mAllCachedVoices;
-    private final VoiceController mTiroVoiceController;
-    private final SpeakController mTiroSpeakController;
+    private final VoiceController mNetworkVoiceController;
+    private final SpeakController mNetworkSpeakController;
     private final ApiDbUtil mApiDbUtil;
     private final AssetVoiceManager mAVM;
     private final DownloadVoiceManager mDVM;
@@ -149,12 +149,12 @@ public class AppRepository {
                 }
                 Log.v(LOG_TAG, "Network API returned: " + voice.VoiceId);
             }
-            new updateVoicesAsyncTask(mApiDbUtil, "tiro").execute(voices);
+            new updateVoicesAsyncTask(mApiDbUtil, Voice.TYPE_NETWORK).execute(voices);
             new updateAppDataVoiceListTimestampAsyncTask(mAppDataDao).execute();
         }
 
         public void error(String errorMsg) {
-            Log.e(LOG_TAG, "TiroVoiceQueryObserver()::error: " + errorMsg);
+            Log.e(LOG_TAG, "NetworkVoiceQueryObserver()::error: " + errorMsg);
         }
     }
 
@@ -173,8 +173,8 @@ public class AppRepository {
         mDVM = new DownloadVoiceManager();
         mFrontend = new FrontendManager(App.getContext());
         mTTSEngineController = new TTSEngineController(mAVM, mDVM);
-        mTiroSpeakController = new SpeakController();
-        mTiroVoiceController = new VoiceController();
+        mNetworkSpeakController = new SpeakController();
+        mNetworkVoiceController = new VoiceController();
         mAppData = mAppDataDao.getLiveAppData();
         mAppData.observeForever(appData -> {
             Log.v(LOG_TAG, "mAppData update: " + appData);
@@ -317,7 +317,7 @@ public class AppRepository {
      */
     public void streamNetworkVoices(String languageCode) {
         Log.v(LOG_TAG, "streamNetworkVoices");
-        mTiroVoiceController.streamQueryVoices(languageCode, new NetworkVoiceQueryObserver());
+        mNetworkVoiceController.streamQueryVoices(languageCode, new NetworkVoiceQueryObserver());
     }
 
     /**
@@ -346,7 +346,7 @@ public class AppRepository {
         SpeakRequest request = new SpeakRequest("standard", langCode,
                 "mp3", SampleRate, normalizedText, "text", voiceId);
         mMediaPlayer.getMediaPlayer().setOnCompletionListener(new MediaPlayObserver.MPOnCompleteListener(finishedObserver));
-        mTiroSpeakController.streamAudio(request, mMediaPlayer, item, ttsRequest);
+        mNetworkSpeakController.streamAudio(request, mMediaPlayer, item, ttsRequest);
     }
 
     /**
@@ -410,7 +410,7 @@ public class AppRepository {
      * Stops speaking current voice, if playing.
      */
     public void stopNetworkSpeak() {
-        mTiroSpeakController.stop();
+        mNetworkSpeakController.stop();
         mMediaPlayer.stop();
     }
 
@@ -438,7 +438,7 @@ public class AppRepository {
             }
             SpeakRequest request = new SpeakRequest("standard", voice.languageCode,
                     "pcm", SampleRate, normalized, "text", voice.internalName);
-            mTiroSpeakController.streamAudio(request, ttsObserver, item, ttsRequest);
+            mNetworkSpeakController.streamAudio(request, ttsObserver, item, ttsRequest);
         } else {
             Log.e(LOG_TAG, "startNetworkTTS: given voice is null ?!");
         }

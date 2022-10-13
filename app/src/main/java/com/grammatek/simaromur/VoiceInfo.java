@@ -2,7 +2,6 @@ package com.grammatek.simaromur;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -60,7 +59,7 @@ public class VoiceInfo extends AppCompatActivity {
 
         // create our instance of the view model
         ViewModelProvider.Factory factory =
-                ViewModelProvider.AndroidViewModelFactory.getInstance(App.getApplication());
+                (ViewModelProvider.Factory) ViewModelProvider.AndroidViewModelFactory.getInstance(App.getApplication());
         mVoiceViewModel = new ViewModelProvider(this, factory).get(VoiceViewModel.class);
 
         // fill in the default user text
@@ -268,7 +267,7 @@ public class VoiceInfo extends AppCompatActivity {
         TTSRequest ttsRequest = new TTSRequest(item.getUuid());
         appRepo.setCurrentTTSRequest(ttsRequest);
 
-        if (mVoice.type.equals(Voice.TYPE_TIRO)) {
+        if (mVoice.type.equals(Voice.TYPE_NETWORK)) {
             if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {
                 mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
                 appRepo.showTtsBackendWarningDialog(this);
