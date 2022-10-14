@@ -299,9 +299,7 @@ public class TTSNormalizer {
     }
 
     /*
-     * Normalize URLs and e-mail addresses. In the current implementation, everything but the suffix .com / .is / .org
-     * is separated character by character. We need to have a method that allows us to speak urls like "rúv punktur is",
-     * "visir punktur is" etc. instead of "r u v punktur is", as is done right now.
+     * Normalize URLs and e-mail addresses.
      *
      * This is an "everyday-friendly" implementation, if requests for 1:1 reading of URLs and similar patterns
      * come up, we need to implement an additional handling of those tokens.
