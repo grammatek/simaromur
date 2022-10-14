@@ -299,7 +299,7 @@ public class TTSNormalizer {
     }
 
     /*
-     * Normalize URLs and e-mail addresses.
+     * Normalize URLs, e-mail addresses, and twitter/instagram handles ("@my_twitter_name").
      *
      * This is an "everyday-friendly" implementation, if requests for 1:1 reading of URLs and similar patterns
      * come up, we need to implement an additional handling of those tokens.
@@ -311,8 +311,8 @@ public class TTSNormalizer {
      * Possible input patterns:
      *  - starting with http or www
      *  - starting with http or file, possibly including localhost
-     *  - e-mail patterns (extend to patterns containing @ to deal with twitter and instagram handles?)
-     *  - starting with hashtag
+     *  - e-mail patterns
+     *  - twitter and instagram handles (containing '@')
      */
     private String normalizeURL(String token) {
         String normalized = "";
