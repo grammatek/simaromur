@@ -222,6 +222,9 @@ public class Tokenizer {
         // telephone number, don't split on hyphen
         if (token.matches("\\d{3}-?\\d{4}"))
             return false;
+        // don't touch urls, they might contain '-' which we otherwise split on
+        if (token.startsWith("http") || token.startsWith("www"))
+            return false;
         if (isAbbreviation(token))
             return false;
         return !isUpperCaseAbbr(token);

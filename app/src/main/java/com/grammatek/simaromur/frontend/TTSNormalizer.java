@@ -1,5 +1,7 @@
 package com.grammatek.simaromur.frontend;
 
+import androidx.annotation.NonNull;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,11 +20,10 @@ import java.util.stream.Stream;
 
 public class TTSNormalizer {
 
-    /*
-    public TTSNormalizer(Context context) {
-        this.mContext = context;
-        this.mRegexMap = readAbbreviations();
-    }*/
+    public static String VOWELS = "[AEIOUYÁÉÍÓÚÝÖaeiouyáéíóúýö]";
+    // Max length of a token that should be spelled out, even if it contains a vowel.
+    // Do we have examples of longer tokens?
+    public static Integer MAX_SPELLED_OUT = 4;
 
     public TTSNormalizer() {
 
@@ -116,12 +117,13 @@ public class TTSNormalizer {
             else if (token.matches(NumberHelper.LETTERS_PTRN) && token.length() > 1) {
                 token = processLettersPattern(token);
             }
+            else if (token.matches(linksPattern) || token.matches(".+@.+"))
+                token = normalizeURL(token);
+
             else if (token.length() > 1 && token.charAt(0) == token.charAt(1))
                 token = insertSpaces(token);
-            else if (token.matches(linksPattern))
-                token = normalizeURL(token);
             else if (token.matches(NormalizationDictionaries.NOT_LETTER))
-                token = normalizeSymbols(token);
+                token = normalizeDigits(token);
 
             sb.append(token.trim()).append(" ");
             lastToken = tokens[i + 1];
@@ -149,17 +151,40 @@ public class TTSNormalizer {
         return replaced;
     }
 
-    // This is a hack to make sure we don't corrupt tokens that look like they should e.g.
-    // be space separated (COVID -> C O V I D), because we don't have direct access to the
-    // pronunciation dictionary on the server. Need a better workflow for this.
+    /*
+    * Pronounce letter patterns/uppercase tokens letter by letter
+    * UNLESS they are either contained in the pronunciation dictionary or
+    * pass the test in pronounceAsWord(). However, all shorter tokens than MAX_SPELLED_OUT
+    * that are not contained in the dictionary are returned as spelled out.
+    *
+    * //TODO:
+    * We might still run occasionally into problems here: the acronym 'FÁ' (a school in Reykjavík)
+    * should always be spelled out, but the verb 'fá' could also be in the dictionary causing
+    * this token to be returned as a word.
+    * We could keep some kind of a whitelist, but we also need context: if 'FÁ' occurs in lowercase
+    * context ("she studies at FÁ") then it should be spelled out, but in an uppercase context
+    * ("ÉG ÆTLA AÐ FÁ ÞETTA") it should be spoken as word.
+    *
+    * Example:
+    *  - ELDGOS -> eldgos (in dict)
+    *  - UNESCO -> unesco (pronounceAsWord: true)
+    *  - ASÍ -> a s í (too short to be sent to pronounceAsWord)
+    */
     private String processLettersPattern(String token) {
         String lower = token.toLowerCase();
         if (TTSUnicodeNormalizer.inDictionary(lower))
+            return lower;
+        // if we have a short uppercase token that isn't in the dictionary, let's spell it out
+        // check for vowel consonant ratio for longer tokens
+        if (lower.length() > MAX_SPELLED_OUT && pronounceAsWord(lower))
             return lower;
         token = insertSpaces(token);
         return token.toLowerCase();
     }
 
+    /*
+     * Insert space between all characters in 'token'
+     */
     private String insertSpaces(String token) {
         return token.replaceAll(".", "$0 ").trim();
     }
@@ -277,65 +302,156 @@ public class TTSNormalizer {
      * Normalize URLs and e-mail addresses. In the current implementation, everything but the suffix .com / .is / .org
      * is separated character by character. We need to have a method that allows us to speak urls like "rúv punktur is",
      * "visir punktur is" etc. instead of "r u v punktur is", as is done right now.
+     *
+     * This is an "everyday-friendly" implementation, if requests for 1:1 reading of URLs and similar patterns
+     * come up, we need to implement an additional handling of those tokens.
+     * By "everyday-friendly" we mean e.g. skipping the initial 'www' and/or 'http', which is cumbersome
+     * to pronounce in Icelandic ("tvöfalt vaff tvöfalt vaff ...").
+     * Example:
+     *  https://www.visir.is/     becomes: vísir punktur is
+     *
+     * Possible input patterns:
+     *  - starting with http or www
+     *  - starting with http or file, possibly including localhost
+     *  - e-mail patterns (extend to patterns containing @ to deal with twitter and instagram handles?)
+     *  - starting with hashtag
      */
     private String normalizeURL(String token) {
-        String normalized = token;
-        int ind = token.indexOf('.');
-        // does the token end with a domain name?
-        if (ind >= 2) {
-            String prefix = token.substring(0, ind);
-            String suffix = token.substring(ind + 1);
-            // how can we choose which words to keep as words and which to separate?
-            prefix = insertSpaces(prefix);
-
-            for (String symbol : NumberHelper.WLINK_NUMBERS.keySet()) {
-                prefix = prefix.replaceAll(symbol, NumberHelper.WLINK_NUMBERS.get(symbol));
-            }
-            if (suffix.indexOf('/') > 0) {
-                String postSuffix = processSubPath(suffix);
-                suffix = suffix.substring(0, suffix.indexOf('/')) + " " + postSuffix;
-            }
-            normalized = prefix + " punktur " + suffix;
+        String normalized = "";
+        // analyse a URL or e-mail pattern
+        if (token.indexOf('.') > 0) {
+            normalized = processTokenWithDots(token);
         }
-        // we do not have a domain name, maybe a twitter handle with @ symbol
-        else {
-            normalized = insertSpaces(token);
-            for (String symbol : NumberHelper.WLINK_NUMBERS.keySet()) {
-                normalized = normalized.replaceAll(symbol, NumberHelper.WLINK_NUMBERS.get(symbol));
-            }
-            if (normalized.indexOf('/') > 0) {
-                String postSuffix = processSubPath(token);
-                normalized = normalized.substring(0, normalized.indexOf('/')) + " " + postSuffix;
-            }
+        else
+            normalized = token;
+        // don't pronounce the last "slash" at the end of a URL
+        // "mbl.is/frettir/" becomes "m b l punktur is skástrik fréttir"
+        if (normalized.endsWith("/"))
+            normalized = normalized.substring(0, normalized.length() - 1);
+        // replace symbols that might be left in the normalized string
+        for (String symbol : NumberHelper.WLINK_NUMBERS.keySet()) {
+            normalized = normalized.replaceAll(symbol,
+                    " " + NumberHelper.WLINK_NUMBERS.get(symbol) + " ");
         }
         return normalized;
     }
 
-    // that token contains '/' should be checked before calling this method
-    private String processSubPath(String token) {
-        String postSuffix = token.substring(token.indexOf('/'));
-        postSuffix = insertSpaces(postSuffix);
-        for (String symbol : NumberHelper.WLINK_NUMBERS.keySet()) {
-            postSuffix = postSuffix.replaceAll(symbol, NumberHelper.WLINK_NUMBERS.get(symbol));
+    @NonNull
+    private String processTokenWithDots(String token) {
+        String normalized = "";
+        String[] arr = token.split("\\.");
+        String prefix = arr[0];
+        // only keep the first part if it is not an 'http' or a 'www' prefix
+        if (prefix.matches("https?://.+")) {
+            prefix = prefix.substring(prefix.indexOf("//") + 2);
         }
-        return postSuffix;
+        if (prefix.startsWith("www")) {
+            prefix = "";
+        }
+        // process each element between dots, insert " punktur " (" dot ") between
+        // elements
+        String tokenRepr = "";
+        for (int i = 0; i < arr.length; i++) {
+            String tok = "";
+            if (i == 0) {
+                tok = prefix;
+            }
+            else
+                tok = arr[i];
+            tokenRepr = processElement(tok);
+            if (normalized.isEmpty())
+                normalized += tokenRepr;
+            else
+                normalized += " punktur " + tokenRepr;
+        }
+        return normalized;
     }
 
-    private String normalizeSymbols(String token) {
-        for (String symbol : NumberHelper.DIGIT_NUMBERS.keySet()) {
-            token = token.replaceAll(symbol, NumberHelper.DIGIT_NUMBERS.get(symbol));
+    /*
+     * Process an element from a URL or an e-mail address, an element between two dots.
+     * The element might contain "@", we split on that and send on to core element processing.
+     * '@' is replaced with ' hjá ' (Icelandic for "at")
+     */
+    private String processElement(String token) {
+        String processed = "";
+        String[] arr = token.split("@");
+        if (arr.length > 1) {
+            for (String s : arr) {
+                String processedElem = processURLElement(s);
+                if (processed.isEmpty())
+                    processed += processedElem;
+                else
+                    processed += " hjá " + processedElem;
+            }
         }
-        return token;
+        else
+            processed = processURLElement(token);
+        return processed;
+    }
+
+    /*
+     * Process a single element from a URL or an e-mail address, e.g. "mbl" from "www.mbl.is".
+     * Convert to Icelandic orthography if necessary or insert spaces for spelled out
+     * pronunciation.
+     */
+    private String processURLElement(String token) {
+        if (pronounceAsWord(token)) {
+            return convert2Ice(token);
+        }
+        else {
+            return insertSpaces(token);
+        }
+    }
+
+    /*
+     * Should this token be spoken as a word or spelled out?
+     * Simple heuristic, a token having a reasonable vowel/consonant ratio should be
+     * spoken as a word, otherwise spelled out
+     */
+    private boolean pronounceAsWord(String token) {
+        Pattern vowelPattern = Pattern.compile(VOWELS);
+        Matcher matcher = vowelPattern.matcher(token);
+        double count = 0.0;
+        while (matcher.find())
+            count++;
+
+        // Somewhat arbitrary ratio, we have an example like 'Busch' with a vowel-consonant
+        // ratio of 0.2 where we definitely want to keep the token as is.
+        // TODO: examine this further as we get more borderline examples
+        return count/token.length() > 0.15;
+    }
+
+    /* URLs mostly contain ASCII characters only, but we want them to be read as if they
+     * were written including Icelandic letters from the original word where appropriate.
+     *
+     * Examples: visir -> vísir, ruv -> rúv, fotbolti -> fótbolti
+     * This is necessary for the correct dictionary lookup or g2p
+     *
+     * The input token might contain '/', if so, we split and process each token separately
+     * and concatenate the '/' again afterwards.
+     */
+    private String convert2Ice(String token) {
+        String converted = "";
+        String[] arr = token.split("/");
+        for (String s : arr) {
+            converted += NormalizationDictionaries.urlElements.getOrDefault(s, s);
+            if (arr.length > 1)
+                converted += "/";
+        }
+        return converted;
     }
 
     private String normalizeDigitOrdinal(String token) {
         for (String digit : NumberHelper.DIGITS_ORD.keySet())
-            token = token.replaceAll("^0" + digit + "\\.$", "núll " + NumberHelper.DIGITS_ORD.get(digit));
+            token = token.replaceAll("^0" + digit + "\\.$",
+                    "núll " + NumberHelper.DIGITS_ORD.get(digit));
         return token;
     }
 
     /* The default/fallback normalization method. We have checked all patterns that might need special handling
      * now we simply replace digits by their default word representation.
+     * The replacement process replaces single digits and replaces them with their
+     * nominative representation, also  '+', '/', ':' are replaced.
      */
     private String normalizeDigits(String token) {
         token = token.replaceAll(" ", "<sil> ");
