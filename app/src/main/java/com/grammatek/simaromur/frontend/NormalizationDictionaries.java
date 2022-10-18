@@ -4,7 +4,11 @@ import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.map.ListOrderedMap;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Normalization dictionaries for abbreviations, digits and other non-standard-words.
@@ -54,6 +58,29 @@ public class NormalizationDictionaries {
     public static final String NUMBER_ANY = "(((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)?";
 
     private NormalizationDictionaries() {}
+
+    // words from common URLs written in ASCII only, mapped to their Icelandic orthography
+    public static Map<String, String> urlElements = new HashMap<>();
+    static {
+        urlElements.put("adrar-ithrottir", "aðrar íþróttir");
+        urlElements.put("dagskra", "dagskrá");
+        urlElements.put("fotbolti", "fótbolti");
+        urlElements.put("frettabladid", "fréttablaðið");
+        urlElements.put("frettir", "fréttir");
+        urlElements.put("frjalsar", "frjálsar");
+        urlElements.put("ithrottir", "íþróttir");
+        urlElements.put("jardskjalftar", "jarðskjálftar");
+        urlElements.put("keflavik", "keflavík");
+        urlElements.put("korfubolti", "körfubolti");
+        urlElements.put("mannlif", "mannlíf");
+        urlElements.put("ruv", "rúv");
+        urlElements.put("skjalftar-og-eldgos", "skjálftar og eldgos");
+        urlElements.put("sjonvarp", "sjónvarp");
+        urlElements.put("stadaspar", "staðaspár");
+        urlElements.put("utvarp", "útvarp");
+        urlElements.put("vedur", "veður");
+        urlElements.put("visir", "vísir");
+    }
 
     // prepositions control the case of the following word, can be used to determine number formats
     public static Map<String, String> prepositions = new HashMap<>();
