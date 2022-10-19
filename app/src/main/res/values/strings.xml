@@ -23,9 +23,9 @@
     <string name="speak_voice_title">Play</string>
     <string name="play_voice_title_description">Speak the shown text</string>
     <string name="info_other">Other</string>
-    <string name="info_github">Github</string>
+    <string name="wiki_github">Instructions</string>
     <string name="info_about_device_title">Device Information</string>
-    <string name="info_copyright_url">https://www.grammatek.com</string>
+    <string name="info_copyright_url">https://github.com/grammatek/simaromur/blob/master/LICENSE</string>
     <string name="open_in_new">Open in new</string>
     <string name="voice_lang_title">Language</string>
     <string name="is_IS">Icelandic</string>
@@ -49,7 +49,7 @@
     <string name="info_supported_abis">Supported ABIs</string>
     <string name="info_phone_model">Phone Model</string>
     <string name="info_about">© (2021–2022) Grammatek ehf.\nhttps://www.grammatek.com</string>
-    <string name="info_repo_url">https://github.com/grammatek/simaromur</string>
+    <string name="info_repo_url">https://github.com/grammatek/simaromur/wiki</string>
     <string name="info_benchmark">Benchmark</string>
     <string name="info_benchmark_value">times faster than real time</string>
     <string name="privacy_notice">Símarómur sends text to a 3rd party speech service to convert it to spoken language. Neither the text, nor the audio data or your IP address are stored on the mobile phone or on these servers.\n\nPlease visit our privacy policy at https://www.grammatek.com/legal#simaromur</string>
@@ -67,4 +67,10 @@
     <string name="type_network">Network Voice</string>
     <string name="do_download">Download voice</string>
     <string name="enter_text">Enter text here</string>
+    <string name="cache">Cache</string>
+    <string name="cache_cleared">Cache cleared</string>
+    <string name="cache_size_mb">%1$d MB</string>
+    <string name="cache_progress_percent">%1$d%%</string>
+    <string name="megabyte"> MB</string>
+    <string name="percentage">%</string>
 </resources>

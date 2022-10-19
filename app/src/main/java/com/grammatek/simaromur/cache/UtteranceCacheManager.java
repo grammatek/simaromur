@@ -875,7 +875,8 @@ public class UtteranceCacheManager {
      *
      * @return Size of all audio files in cache for all utterances and all voices.
      */
-    private long summarizeAudioFileSize() {
+    synchronized
+    public long summarizeAudioFileSize() {
         assertNotClosed();
         long audioFileSizeInBytes = 0;
         for (CacheItem item: mUtteranceCacheBuilder.getEntriesMap().values()) {
@@ -886,6 +887,15 @@ public class UtteranceCacheManager {
             }
         }
         return audioFileSizeInBytes;
+    }
+
+    /**
+     * Returns high watermark of the cache size in bytes.
+     *
+     * @return  high watermark of the cache size in bytes
+     */
+    public long getCacheSizeHighWatermark() {
+        return mCacheSizeHighWatermark;
     }
 
     /**
