@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:gravity="center"
     android:orientation="vertical"
-    android:background="#E6FFFFFF"
+    android:background="@color/colorPrimaryDark"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -15,7 +15,7 @@
         android:layout_marginBottom="8dp"
         android:gravity="center_horizontal"
         android:text="@string/downloading_voice"
-        android:textColor="@color/colorPrimary"
+        android:textColor="@color/white"
         android:textStyle="bold" />
 
     <ProgressBar
@@ -25,9 +25,9 @@
         android:minWidth="260dp"
         android:minHeight="50dp"
         android:max="100"
-        android:progress="0"
-        style="?android:attr/progressBarStyleHorizontal"
-        />
+        android:progress="50"
+        android:progressBackgroundTint="@color/white"
+        style="?android:attr/progressBarStyleHorizontal" />
 
     <TextView
         android:id="@+id/pbPercentage"
@@ -36,7 +36,7 @@
         android:layout_marginTop="0dp"
         android:gravity="center"
         android:text="@string/downloading_progress"
-        android:textColor="@color/colorPrimary"
+        android:textColor="@color/white"
         android:textStyle="bold" />
 
     <Button
