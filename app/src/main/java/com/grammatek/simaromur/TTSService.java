@@ -26,6 +26,8 @@ import java.util.Set;
 public class TTSService extends TextToSpeechService {
     private final static String LOG_TAG = "Simaromur_Java_" + TTSService.class.getSimpleName();
     private AppRepository mRepository;
+    private boolean mRmCacheItemAfterPlaying = false;
+    private boolean mRmCacheItemForFastVoices = false;
 
     // This flag saves the state of a very little state machine that gets activated, if we are not
     // connected to the internet and should play a network voice: either we have not yet played a
@@ -41,6 +43,14 @@ public class TTSService extends TextToSpeechService {
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
         mRepository.streamNetworkVoices("");
+        String val = mRepository.getAssetConfigValueFor("rm_cache_item_after_playing");
+        if (val.equals("true")) {
+            mRmCacheItemAfterPlaying = true;
+        }
+        val = mRepository.getAssetConfigValueFor("rm_cache_item_for_fast_voices");
+        if (val.equals("true")) {
+            mRmCacheItemForFastVoices = true;
+        }
     }
 
     // mandatory
@@ -80,9 +90,6 @@ public class TTSService extends TextToSpeechService {
         Log.i(LOG_TAG, "onLoadLanguage: returns " + rv);
         return rv;
     }
-
-
-
 
     /**
      * The TTS engine calls this method directly after onSynthesizeText() in case the user wants
@@ -221,6 +228,9 @@ public class TTSService extends TextToSpeechService {
     private void handleProcessingResult(SynthesisCallback callback, CacheItem item, TTSRequest ttsRequest) {
         Log.v(LOG_TAG, "handleProcessingResult for (" + item.getUuid() + ")");
         try {
+            // get the current time for caclulating the amount of time that we have waited
+            long startTime = System.currentTimeMillis();
+
             // here we wait for the response of the speak request. The result is sent via the queue
             // and then we need to feed the callback with the audio data from here
             boolean isHandled = false;
@@ -228,6 +238,8 @@ public class TTSService extends TextToSpeechService {
                 // todo: we need to handle timeout errors here, e.g. processing
                 //       timeouts, some error, e.g. network timeouts are already taken care of
                 TTSProcessingResult elem = mRepository.dequeueTTSProcessingResult();
+                float rtf = estimateRTF(startTime, System.currentTimeMillis(), item, elem);
+
                 TTSRequest rcvdTtsRequest = elem.getTTSRequest();
                 Log.v(LOG_TAG, "handleProcessingResult: received result for (" + rcvdTtsRequest.serialize() + ")");
                 // if the received element is not meant for this utterance, we ignore it and wait
@@ -239,14 +251,26 @@ public class TTSService extends TextToSpeechService {
                 }
                 if (rcvdTtsRequest.equals(ttsRequest) ||
                         rcvdTtsRequest.getCacheItemUuid().equals(AudioObserver.DUMMY_CACHEITEM_UUID)) {
-                    if (! elem.isError()) {
+                    if (elem.isOk()) {
                         if (elem.isStopped()) {
                             Log.v(LOG_TAG, "handleProcessingResult: stop " + rcvdTtsRequest.serialize());
                         } else if (elem.getAudio() == null) {
                             Log.w(LOG_TAG, "handleProcessingResult: No audio data received ?!");
                         } else {
-                            // everything seems to be fine, we can now feed the callback
+                            // everything is fine, feed the Android TTS callback
                             feedTtsCallback(callback, elem);
+                            if (mRmCacheItemAfterPlaying) {
+                                Log.v(LOG_TAG, "rm_cache_item_after_playing: delete cache item "
+                                        + rcvdTtsRequest.serialize());
+                                mRepository.getUtteranceCache().deleteCacheItem(item.getUuid());
+                            } else if (mRmCacheItemForFastVoices) {
+                                // if the voice is fast, we can delete the cache item after playing
+                                if (rtf > 20.0f) {
+                                    Log.v(LOG_TAG, "rm_cache_item_for_fast_voices: delete cache item "
+                                            + rcvdTtsRequest.serialize());
+                                    mRepository.getUtteranceCache().deleteCacheItem(item.getUuid());
+                                }
+                            }
                         }
                     } else {
                         // todo: we should handle more errors here
@@ -264,6 +288,41 @@ public class TTSService extends TextToSpeechService {
         if (callback.hasStarted() && ! callback.hasFinished()) {
             callback.done();
         }
+    }
+
+    /**
+     * Estimate the real time factor for the given cache item and the processing result.
+     * We use the real time factor to determine if we can delete the cache item after playing.
+     * Some of the necessary parameters for calculation are not yet available here, so we assume
+     * some conservative default values for now.
+     *
+     * @param startTimeMillis   time when the processing started
+     * @param stopTimeMillis    time when the processing stopped
+     * @param item              cache item
+     * @param elem              processing result
+     * @return the real time factor
+     */
+    private float estimateRTF(long startTimeMillis, long stopTimeMillis, CacheItem item, TTSProcessingResult elem) {
+        String uuid = elem.getTTSRequest().getCacheItemUuid();
+        Log.v(LOG_TAG, "estimateRTF for: " + uuid);
+
+        if (elem.getAudio() == null) {
+            Log.e(LOG_TAG, "estimateRTF: no audio data received ?!");
+            return 1.0f;
+        }
+
+        // assume currently slowest used sample rate, i.e. 16kHz and 16 bit with 1 channel
+        // TODO: we should use the real sample rate here, but this needs to be passed via the
+        //       TTSProcessingResult
+        final int sampleRate = AudioManager.SAMPLE_RATE_WAV;
+        final int bytesPerSample = 2;
+        final int channels = 1;
+
+        // calculate the real time factor
+        float durationInSecs = (float) elem.getAudio().length / (sampleRate * bytesPerSample * channels);
+        final float rtf = durationInSecs * 1000 / (stopTimeMillis - startTimeMillis);
+        Log.v(LOG_TAG, "rtf=" + rtf + " duration=" + durationInSecs + "s");
+        return  rtf;
     }
 
     /**

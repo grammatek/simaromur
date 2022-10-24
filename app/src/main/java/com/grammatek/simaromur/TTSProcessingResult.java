@@ -64,6 +64,13 @@ public class TTSProcessingResult {
     }
 
     /**
+     * Returns true if everythin is ok, false otherwise.
+     */
+    public boolean isOk() {
+        return !isError();
+    }
+
+    /**
      * Returns true if the com.grammatek.simaromur.TTSProcessingResult is an error state.
      *
      * @return true if the com.grammatek.simaromur.TTSProcessingResult is an error state, false otherwise.
