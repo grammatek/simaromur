@@ -75,6 +75,8 @@ public class VoiceInfo extends AppCompatActivity {
         playButton.setOnClickListener(this::onPlayClicked);
         Button downloadButton = findViewById(R.id.download_button);
         downloadButton.setOnClickListener(this::onDownloadClicked);
+        Button deleteButton = findViewById(R.id.delete_button);
+        deleteButton.setOnClickListener(this::onDeleteClicked);
         ProgressBar pg = findViewById(R.id.progressBarPlay);
         pg.setOnClickListener(this::onSpinnerClicked);
 
@@ -114,6 +116,9 @@ public class VoiceInfo extends AppCompatActivity {
         TextView genderTextView = findViewById(R.id.textViewGender);
         TextView typeTextView = findViewById(R.id.textViewType);
         TextView speakableTextView = mUserText;
+        ViewModelProvider.Factory factory =
+                (ViewModelProvider.Factory) ViewModelProvider.AndroidViewModelFactory.getInstance(App.getApplication());
+        mVoiceViewModel = new ViewModelProvider(this, factory).get(VoiceViewModel.class);
 
         // setup buttons / spinner
         Button playButton = findViewById(R.id.speak_button);
@@ -137,6 +142,7 @@ public class VoiceInfo extends AppCompatActivity {
                 genderTextView.setText(getResources().getString(R.string.female));
             }
             if (mVoice.needsNetwork()) {
+                Log.v(LOG_TAG, "updateUi: voice needs network");
                 typeTextView.setText(getResources().getString(R.string.type_network));
                 speakableTextView.setText(getResources().getString(R.string.voice_test_text_network));
                 // change voice availability icon according to network availability and type
@@ -315,6 +321,32 @@ public class VoiceInfo extends AppCompatActivity {
         mVoiceViewModel.stopSpeaking(mVoice);
         App.getAppRepository().setCurrentTTSRequest(null);
         toggleSpeakButton();
+    }
+
+    public void onDeleteClicked(View v) {
+        // TODO: We need to hide this button if download is available
+        Log.v(LOG_TAG, "onDeleteClicked");
+        if(!App.getAppRepository().deleteVoiceAsync(mVoice)) {
+            AlertDialog.Builder b = new AlertDialog.Builder(VoiceInfo.this);
+            b.setMessage("You cannot delete the voice you are currently using, please " +
+                    "unload the voice and then try again");
+            b.setCancelable(true);
+            b.create().show();
+        }
+
+        updateUi();
+
+//        Button speakButton = findViewById(R.id.speak_button);
+//        speakButton.setVisibility(View.GONE);
+//
+//        Button downloadButton = findViewById(R.id.download_button);
+//        downloadButton.setVisibility(View.VISIBLE);
+//        mUserText.setVisibility(View.GONE);
+
+        // TODO: toggleDownloadButton() ?
+        //  maybe we need to create an observer for the uninstallation just to know when we should
+        //  be displaying the download button again. We could also show a circular progress bar where
+        //  download/play is located when it's in the progress of deleting
     }
 
     public void onDownloadClicked(View v) {

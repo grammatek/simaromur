@@ -7,6 +7,8 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.grammatek.simaromur.App;
+import com.grammatek.simaromur.AppRepository;
+import com.grammatek.simaromur.VoiceViewModel;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
@@ -305,6 +307,113 @@ public class DownloadVoiceManager {
             }
         }
         throw new IOException("No such voice: " + internalName);
+    }
+
+    public void deleteVoice(Voice voice, VoiceDao voiceDao) {
+        // TODO: we can safely assume that the voice is not loaded from this point.
+        //       and it's actually in the database.
+
+        mAsyncThread = new AsyncThread() {
+            final String anInternalName = voice.internalName;
+
+
+            boolean voiceRepoOk = false;
+            // TODO: Do we need some type of observer to watch the progress of the uninstallation?
+
+            @Override
+            public void onPreExecute() {
+                Log.v(LOG_TAG, "UninstallVoiceAsync: starting uninstallation of " + anInternalName);
+            }
+
+            @Override
+            public void doInBackground() {
+                // TODO: check if we actually have the voice downloaded
+                // TODO: this is actually deleting the voice from DB, we need to uninstall it rather.
+
+//                voiceDao.deleteVoices(voice);
+                voiceRepoOk = lazyInitVoiceRepo();
+                if (!voiceRepoOk) {
+                    Log.e(LOG_TAG, "Voice repository not available !");
+                    return;
+                }
+
+                DeviceVoice voiceInfo = searchVoiceInfo(anInternalName, mVoicesOnServer);
+                if (voiceInfo == null) {
+                    Log.v(LOG_TAG, "voiceInfo IS NUUUUUUUUUUUUULLL");
+                    return;
+                }
+                Log.v(LOG_TAG, "voiceInfo DEV VOICE: " + voiceInfo.toString());
+                voiceInfo.convertToDbVoice();
+                Log.v(LOG_TAG, "voiceInfo DEV VOICE2: " + voiceInfo.toString());
+
+                // doesn't do anything afaik
+//                mVoicesOnDisk.Voices.remove(voiceInfo);
+
+
+//              get the voice file download url
+                String voiceUrl = mVoiceRepo.getDownloadUrlForVoice(sReleaseName,
+                        anInternalName, SystemUtils.androidArchName());
+                if (voiceUrl == null) {
+                    Log.e(LOG_TAG, "downloadVoiceAsync: no download url for voice " + anInternalName);
+                    return;
+                }
+                Log.v(LOG_TAG, "voiceUrl: " + voiceUrl);
+                final String tmpFolder = App.getContext().getCacheDir().getAbsolutePath();
+                final String baseNameCompressedFile = voiceUrl.substring(voiceUrl.lastIndexOf('/') + 1);
+                final String fileName = tmpFolder + "/" + baseNameCompressedFile;
+
+
+
+                boolean deletedTwo = FileUtils.delete(voice.downloadPath);
+                Log.v(LOG_TAG, "was file deleted?: " + deletedTwo);
+
+                voiceInfo.Residence = "network:grammatek/simaromur_voices:0.1 release";
+
+                if (mVoicesOnDisk != null) {
+                    // append the new voice to the list of voices on disk
+//                    mVoicesOnDisk.Voices.add(voiceInfo);
+                    mVoicesOnDisk.Voices.remove(voiceInfo);
+                }
+
+                Voice dbVoice = voiceInfo.convertToDbVoice();
+                if (dbVoice != null) {
+                    voiceDao.updateVoices(dbVoice);
+                }
+
+                if (mAsyncThread.isShutdown()) {
+                    Log.v(LOG_TAG, "voice deletion cancelled");
+//                    return;
+                }
+            }
+
+            @Override
+            public void onPostExecute() {
+                Log.v(LOG_TAG, "voice deletion complete");
+            }
+
+            @Nullable
+            private DeviceVoice searchVoiceInfo(String internalVoiceName, DeviceVoices voicesOnServer) {
+                // Search the VoiceInfo inside mVoicesOnServer
+                DeviceVoice voiceInfo = null;
+                Log.v(LOG_TAG, "downloadVoiceAsync: checking given voice in mVoicesOnServer");
+                for (DeviceVoice aVoiceInfo : voicesOnServer.Voices) {
+                    Log.v(LOG_TAG, "" + aVoiceInfo);
+                    if (aVoiceInfo.InternalName.equals(internalVoiceName) &&
+                            aVoiceInfo.Version.equals(voice.version)) {
+                        voiceInfo = aVoiceInfo;
+                        break;
+                    }
+                }
+                if (voiceInfo == null) {
+                    Log.e(LOG_TAG, "Could not find voice info in repository for voice "
+                            + internalVoiceName);
+                    return null;
+                }
+                return voiceInfo;
+            }
+        };
+
+        mAsyncThread.execute("DeleteVoiceThread");
     }
 
     /**
@@ -609,6 +718,7 @@ public class DownloadVoiceManager {
             mBytesDownloaded = 0;
             mFileSize = totalBytes;
             File aFile = new File(mFileName);
+            Log.v(LOG_TAG, "le filename: " + mFileName);
             try {
                 mFs = new FileOutputStream(aFile, false);
             } catch (FileNotFoundException e) {

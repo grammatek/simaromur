@@ -211,6 +211,7 @@ public class Voice {
      * @return  true in case voice needs network access, false otherwise
      */
     public boolean needsNetwork() {
+        Log.v(LOG_TAG, "typeee: " + this.type + " url: " + this.url);
         return (this.type.equals(Voice.TYPE_NETWORK));
     }
 
@@ -220,6 +221,7 @@ public class Voice {
      * @return  true in case voice is downloadable, false otherwise
      */
     public boolean needsDownload() {
+        Log.v(LOG_TAG, "typeee: " + this.type + " url: " + this.url);
         return (this.url.startsWith("network:") || this.url.startsWith("http"));
     }
 
