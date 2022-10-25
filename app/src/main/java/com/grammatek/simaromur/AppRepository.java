@@ -9,6 +9,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioFormat;
+import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.Settings;
@@ -103,6 +104,23 @@ public class AppRepository {
             e.printStackTrace();
             return "";
         }
+    }
+
+    /**
+     *
+     */
+    public boolean deleteVoiceAsync(Voice voice) {
+        if (voice == null) {
+            Log.v(LOG_TAG, "voice is NULLLLLLLLLLLLLLLLLLLLL");
+            return false;
+        }
+        Voice existingVoice = mVoiceDao.findVoiceWithId(voice.voiceId);
+        if (mCachedAppData.currentVoiceId == voice.voiceId || existingVoice == null) {
+            return false;
+        }
+
+        mDVM.deleteVoice(voice, mVoiceDao);
+        return true;
     }
 
     /**

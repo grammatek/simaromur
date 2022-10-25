@@ -188,6 +188,16 @@
         app:layout_constraintStart_toStartOf="@+id/speakable_text"
         app:layout_constraintTop_toTopOf="@+id/speakable_text" />
 
+    <Button
+        android:id="@+id/delete_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="delete"
+        app:layout_constraintBottom_toTopOf="@+id/textView3"
+        app:layout_constraintEnd_toStartOf="@+id/textViewType"
+        app:layout_constraintStart_toEndOf="@+id/textView3"
+        app:layout_constraintTop_toBottomOf="@+id/textViewGender" />
+
     <include
         android:id="@+id/llProgressBar"
         android:visibility="gone"
