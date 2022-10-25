@@ -76,6 +76,12 @@
         <item name="android:layout_marginTop">8dp</item>
     </style>
 
+    <style name="progress_bar_as_storage" parent="Widget.AppCompat.ProgressBar.Horizontal">
+        <item name="android:radius">8dp</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:scaleY">5</item>
+    </style>
+
     <style name="button_style" parent="android:style/Widget.Material.Button">
         <!-- Customize your theme here. -->
         <item name="android:buttonStyle">@style/Widget.MaterialComponents.Button.OutlinedButton</item>

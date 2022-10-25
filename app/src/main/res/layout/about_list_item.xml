@@ -24,10 +24,12 @@
             android:layout_marginStart="25dp"
             android:layout_marginTop="8dp"
             android:textSize="16sp"
+            android:text="hello"
             android:textColor="@color/white" />
 
         <TextView
             android:id="@+id/info_text"
+            android:text="bye"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="25dp"
