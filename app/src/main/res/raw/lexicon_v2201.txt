@@ -2519,6 +2519,7 @@ barón
 barónsstíg
 barþjónn
 base
+basecamp
 based
 basel
 bashar
@@ -3804,6 +3805,7 @@ borðtennis
 borðtennissambandsins
 borðum
 borðuðu
+bose
 bosnía
 bosníu
 boss
@@ -6008,6 +6010,7 @@ dollandi
 dollanna
 dollar
 dollara
+dollaramerki
 dollarana
 dollarann
 dollaranna
@@ -13716,6 +13719,7 @@ gonna
 good
 goodbye
 goodison
+goodreades
 google
 google
 goran
@@ -13796,6 +13800,7 @@ graham
 grallari
 gramm
 gramma
+grammarly
 grammatek
 grammophon
 grammófón
@@ -22901,7 +22906,6 @@ kýpur
 kýr
 kýrnar
 kýs
-l
 l
 labb
 labba
@@ -39738,6 +39742,7 @@ talinn
 talist
 talið
 talk
+talkback
 talking
 talks
 talksport
