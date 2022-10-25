@@ -63,9 +63,9 @@
     <string name="female">Female</string>
     <string name="icon_description">Please press an icon</string>
     <string name="type_local">Device Voice</string>
-    <string name="type_local_downloaded">Downloadable</string>
+    <string name="type_local_downloaded">Download</string>
     <string name="type_network">Network Voice</string>
-    <string name="do_download">Download voice</string>
+    <string name="do_download">Download</string>
     <string name="enter_text">Enter text here</string>
     <string name="cache">Cache</string>
     <string name="cache_cleared">Cache cleared</string>
@@ -76,5 +76,12 @@
     <string name="downloading_voice">Downloading voice…</string>
     <string name="downloading_progress">0%</string>
     <string name="unzipping_voice">Setting up voice…</string>
-    <string name="download_failed">Something went wrong, please try again.</string>
+    <string name="sth_failed_try_again">Something went wrong, please try again.</string>
+    <string name="more">More</string>
+    <string name="uninstall">Uninstall voice</string>
+    <string name="voice_more_title">Choose</string>
+    <string name="voice_is_newest">Latest version already installed</string>
+    <string name="voice_deletion_title">Delete voice</string>
+    <string name="voice_deletion_q">Really delete voice?</string>
+    <string name="voice_deletion_not_possible">You cannot delete the voice you are currently using, please select a different voice and try again</string>
 </resources>

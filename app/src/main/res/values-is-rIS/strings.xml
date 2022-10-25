@@ -76,5 +76,12 @@
     <string name="downloading_voice">Sæki rödd…</string>
     <string name="downloading_progress">0%</string>
     <string name="unzipping_voice">Uppsetning á rödd…</string>
-    <string name="download_failed">Það fór eitthvað úrskeiðis, vinsamlegast reyndu aftur.</string>
+    <string name="sth_failed_try_again">Það fór eitthvað úrskeiðis, vinsamlegast reyndu aftur.</string>
+    <string name="more">Meira</string>
+    <string name="uninstall">Eyða rödd</string>
+    <string name="voice_more_title">Velja</string>
+    <string name="voice_is_newest">Nýjasta útgáfa nú þegar uppsett</string>
+    <string name="voice_deletion_title">Eyða rödd</string>
+    <string name="voice_deletion_q">Virkilega eyða rödd?</string>
+    <string name="voice_deletion_not_possible">Þú getur ekki eytt röddinni sem er valin, vinsamlegast veldu aðra rödd og reyndu aftur</string>
 </resources>
