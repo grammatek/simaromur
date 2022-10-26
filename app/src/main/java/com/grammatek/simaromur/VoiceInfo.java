@@ -116,9 +116,6 @@ public class VoiceInfo extends AppCompatActivity {
         TextView genderTextView = findViewById(R.id.textViewGender);
         TextView typeTextView = findViewById(R.id.textViewType);
         TextView speakableTextView = mUserText;
-        ViewModelProvider.Factory factory =
-                (ViewModelProvider.Factory) ViewModelProvider.AndroidViewModelFactory.getInstance(App.getApplication());
-        mVoiceViewModel = new ViewModelProvider(this, factory).get(VoiceViewModel.class);
 
         // setup buttons / spinner
         Button playButton = findViewById(R.id.speak_button);
@@ -126,6 +123,7 @@ public class VoiceInfo extends AppCompatActivity {
         Button downloadButton = findViewById(R.id.download_button);
         downloadButton.setEnabled(false);
         downloadButton.setVisibility(View.GONE);
+        Button uninstallButton = findViewById(R.id.delete_button);
 
         ProgressBar pg = findViewById(R.id.progressBarPlay);
         pg.setVisibility(View.INVISIBLE);
@@ -168,6 +166,8 @@ public class VoiceInfo extends AppCompatActivity {
                 downloadButton.setText(getResources().getString(R.string.do_download));
                 downloadButton.setEnabled(true);
                 downloadButton.setVisibility(View.VISIBLE);
+                uninstallButton.setEnabled(false);
+                uninstallButton.setVisibility(View.GONE);
             } else {
                 Log.v(LOG_TAG, "updateUi: voice is on device");
                 mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_action_download);
@@ -180,6 +180,8 @@ public class VoiceInfo extends AppCompatActivity {
                 }
                 speakableTextView.setVisibility(View.VISIBLE);
                 playButton.setVisibility(View.VISIBLE);
+                uninstallButton.setEnabled(true);
+                uninstallButton.setVisibility(View.VISIBLE);
             }
             setTitle("Símarómur / " + getResources().getString(R.string.simaromur_voice_manager)
                     + " / " + mVoice.name);
@@ -333,8 +335,6 @@ public class VoiceInfo extends AppCompatActivity {
             b.setCancelable(true);
             b.create().show();
         }
-
-        updateUi();
 
 //        Button speakButton = findViewById(R.id.speak_button);
 //        speakButton.setVisibility(View.GONE);

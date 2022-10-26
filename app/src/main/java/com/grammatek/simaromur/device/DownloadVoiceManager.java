@@ -7,8 +7,6 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.grammatek.simaromur.App;
-import com.grammatek.simaromur.AppRepository;
-import com.grammatek.simaromur.VoiceViewModel;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
@@ -377,13 +375,11 @@ public class DownloadVoiceManager {
 
                 Voice dbVoice = voiceInfo.convertToDbVoice();
                 if (dbVoice != null) {
-                    voiceDao.updateVoices(dbVoice);
+                    Voice leVoice = voiceDao.findVoiceWithId(voice.voiceId);
+                    leVoice.url = "network:grammatek/simaromur_voices:0.1 release";
+                    voiceDao.updateVoices(leVoice);
                 }
 
-                if (mAsyncThread.isShutdown()) {
-                    Log.v(LOG_TAG, "voice deletion cancelled");
-//                    return;
-                }
             }
 
             @Override
