@@ -1,7 +1,7 @@
 package com.grammatek.simaromur;
 
 import android.annotation.SuppressLint;
-import android.app.ProgressDialog;
+import android.app.AlertDialog;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -12,7 +12,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -25,6 +24,9 @@ import com.grammatek.simaromur.network.ConnectionCheck;
 
 import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_ID;
 
+import java.util.Locale;
+import java.util.Objects;
+
 /**
  * This class displays an info screen for a voice.
  */
@@ -36,7 +38,8 @@ public class VoiceInfo extends AppCompatActivity {
     private com.grammatek.simaromur.db.Voice mVoice;
     private VoiceViewModel mVoiceViewModel;
     private ImageView mNetworkAvailabilityIcon;
-    private ProgressDialog mProgressDialog;
+    private ProgressBar mProgressBar;
+    private TextView mProgressBarPercentage;
 
     @SuppressLint("SourceLockedOrientationActivity")
     @Override
@@ -44,6 +47,8 @@ public class VoiceInfo extends AppCompatActivity {
         Log.v(LOG_TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_voice_info);
+        mProgressBar = findViewById(R.id.progressBar);
+        mProgressBarPercentage = findViewById(R.id.pbPercentage);
 
         final Bundle extras = getIntent().getExtras();
         if (extras != null) {
@@ -180,6 +185,7 @@ public class VoiceInfo extends AppCompatActivity {
         Log.v(LOG_TAG, "onDestroy:");
         super.onDestroy();
         mVoiceViewModel.stopSpeaking(mVoice);
+        App.getAppRepository().cancelDownloadVoice();
     }
 
     @Override
@@ -207,34 +213,53 @@ public class VoiceInfo extends AppCompatActivity {
         }
     }
 
-    /**
-     * Toggles the "Download button to show a horizontal progress bar and back again in case
-     * download is finished.
-     */
     class DownloadObserver implements DownloadVoiceManager.DownloadObserver {
-        ProgressDialog mProgressDialog;
-        DownloadObserver(ProgressDialog dialog) {
-            mProgressDialog = dialog;
+        ProgressBar mProgressBar;
+        DownloadObserver(ProgressBar progressBar) {
+            mProgressBar = progressBar;
+            mProgressBar.setProgress(0);
+            mProgressBarPercentage.setText("0%");
         }
 
         @Override
         public void hasFinished(boolean success) {
-            runOnUiThread(VoiceInfo.this::toggleDownloadButton);
-            mProgressDialog.dismiss();
+
+            // hide from the UI whether the download is a success or not.
+            findViewById(R.id.ccProgressBar).setVisibility(View.GONE);
+            if (!success) {
+                mProgressBar.setProgress(0);
+                mProgressBarPercentage.setText("0%");
+                findViewById(R.id.llProgressBar).setVisibility(View.GONE);
+            }
         }
         @Override
         public void updateProgress(int progress) {
-            runOnUiThread(() -> {
-                mProgressDialog.setProgress(progress);
-            });
+                runOnUiThread(() -> {
+                    mProgressBar.setProgress(progress);
+                    String progress_in_percentage = progress + "%";
+                    mProgressBarPercentage.setText(progress_in_percentage);
+                });
+                if (progress == 100) {
+                    Log.d(LOG_TAG, "Finished downloading file.. unzipping..");
+                    runOnUiThread(() -> {
+                        // swap view to indeterminate progress bar to allow the voice to unzip peacefully
+                        findViewById(R.id.llProgressBar).setVisibility(View.GONE);
+                        findViewById(R.id.ccProgressBar).setVisibility(View.VISIBLE);
+                    });
+            }
         }
         @Override
         public void hasError(String error) {
-            runOnUiThread(() -> {
-                Toast.makeText(VoiceInfo.this, error, Toast.LENGTH_LONG).show();
-                toggleDownloadButton();
-                mProgressDialog.dismiss();
-            });
+            // Tell user something went wrong unless it's from him cancelling the download.
+            if (!error.matches("(?i).*cancel.*")) {
+                runOnUiThread(() -> {
+                    findViewById(R.id.llProgressBar).setVisibility(View.GONE);
+                    AlertDialog.Builder b = new AlertDialog.Builder(VoiceInfo.this);
+                    b.setMessage(R.string.download_failed);
+                    b.setCancelable(true);
+                    b.create().show();
+                });
+            }
         }
     }
 
@@ -295,20 +320,17 @@ public class VoiceInfo extends AppCompatActivity {
     public void onDownloadClicked(View v) {
         Log.v(LOG_TAG, "onDownloadClicked");
         toggleDownloadButton();
-        // TODO: deprecated API ...
-        mProgressDialog = new ProgressDialog(this);
-        mProgressDialog.setMax(100);
-        mProgressDialog.setMessage(getResources().getString(R.string.do_download));
-        mProgressDialog.setTitle(mVoice.name);
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        mProgressDialog.show();
-        mProgressDialog.setCancelable(true);
-        mProgressDialog.setOnCancelListener(dialog -> {
+
+        findViewById(R.id.llProgressBar).setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.VISIBLE);
+        Button cancelButton = findViewById(R.id.cancel_button);
+        cancelButton.setOnClickListener(view -> {
             Log.v(LOG_TAG, "onDownloadClicked: download cancelled");
             App.getAppRepository().cancelDownloadVoice();
-            toggleDownloadButton();
+            findViewById(R.id.download_button).setVisibility(View.VISIBLE);
+            findViewById(R.id.llProgressBar).setVisibility(View.GONE);
         });
-        App.getAppRepository().downloadVoiceAsync(mVoice, new DownloadObserver(mProgressDialog));
+        App.getAppRepository().downloadVoiceAsync(mVoice, new DownloadObserver(mProgressBar));
     }
 
     /**
@@ -328,21 +350,23 @@ public class VoiceInfo extends AppCompatActivity {
     }
 
     /**
-     * Toggles Speak button to spinning if it was visible before, or the spinning wheel to the
-     * play button back again otherwise.
+     * Toggles the download button off if it was visible, if it's invisible and the voice is
+     * downloaded the button text is made visible again and it's text changed to "play"
      */
     private void toggleDownloadButton() {
+        Log.d(LOG_TAG, "toggling");
         Button button = findViewById(R.id.download_button);
         if (button.getVisibility() == View.VISIBLE) {
-            button.setVisibility(View.INVISIBLE);
-        } else {
-
-            if (! mVoice.needsDownload()) {
-                // voice download finished, so we can start playing
-                button.setVisibility(View.VISIBLE);
-                button.setText(R.string.speak_voice_title);
-                mUserText.setVisibility(View.VISIBLE);
+            if(ConnectionCheck.isNetworkConnected()) {
+                button.setVisibility(View.INVISIBLE);
+            } else {
+                App.getAppRepository().showTtsBackendWarningDialog(this);
             }
+        } else if (! mVoice.needsDownload()) {
+            // voice download finished, so we can start playing
+            button.setVisibility(View.VISIBLE);
+            button.setText(R.string.speak_voice_title);
+            mUserText.setVisibility(View.VISIBLE);
         }
     }
 }

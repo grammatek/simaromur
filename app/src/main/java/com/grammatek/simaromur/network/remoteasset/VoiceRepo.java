@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import com.grammatek.simaromur.App;
 
 import org.kohsuke.github.GHAsset;
+import org.kohsuke.github.GHException;
 import org.kohsuke.github.GHRateLimit;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
@@ -277,7 +278,7 @@ public class VoiceRepo {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | GHException e) {
             e.printStackTrace();
         }
         return null;

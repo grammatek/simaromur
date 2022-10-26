@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class provides a simple way to run a task in a background thread and
@@ -54,6 +55,16 @@ public abstract class AsyncThread {
 
     public void shutdown() {
         executors.shutdown();
+        boolean terminated = false;
+        try {
+            // try to gracefully shutdown the executor
+            terminated = executors.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (!terminated) {
+            executors.shutdownNow();
+        }
     }
 
     public boolean isShutdown() {
