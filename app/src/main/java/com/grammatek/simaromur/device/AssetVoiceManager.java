@@ -31,10 +31,8 @@ import java.util.List;
 public class AssetVoiceManager {
     private final static String LOG_TAG = "Simarómur_Java_" + AssetVoiceManager.class.getSimpleName();
 
-    GsonBuilder builder;
-    Gson gson;
-    DeviceVoices assetVoices;
-    AssetManager assetManager;
+    final private DeviceVoices assetVoices;
+    final private AssetManager assetManager;
 
     /**
      * Constructor. Parses voice description from assets and validates it. Afterwards, voice meta data and
@@ -45,8 +43,8 @@ public class AssetVoiceManager {
     public AssetVoiceManager(final Context context) throws IOException {
         assetManager = context.getAssets();
         // parse and validate given JSON string
-        builder = new GsonBuilder();
-        gson = builder.create();
+        GsonBuilder builder = new GsonBuilder();
+        Gson gson = builder.create();
         String voiceDescriptionJson = new String(FileUtils.readFileFromAssets(assetManager,
                 "voices/voice-info.json"), StandardCharsets.UTF_8);
         assetVoices = gson.fromJson(voiceDescriptionJson, DeviceVoices.class);

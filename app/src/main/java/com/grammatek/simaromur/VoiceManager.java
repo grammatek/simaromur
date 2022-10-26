@@ -19,8 +19,6 @@ public class VoiceManager extends AppCompatActivity {
     private final static String LOG_TAG = "Simaromur_" + VoiceManager.class.getSimpleName();
     public static final String EXTRA_DATA_VOICE_ID = "voice_model_id";
 
-    private VoiceViewModel mVoiceViewModel;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.v(LOG_TAG, "onCreate");
@@ -35,12 +33,12 @@ public class VoiceManager extends AppCompatActivity {
         // Get a new or existing ViewModel from the ViewModelProvider.
         ViewModelProvider.Factory factory =
                 (ViewModelProvider.Factory) ViewModelProvider.AndroidViewModelFactory.getInstance(App.getApplication());
-        mVoiceViewModel = new ViewModelProvider(this, factory).get(VoiceViewModel.class);
+        VoiceViewModel voiceViewModel = new ViewModelProvider(this, factory).get(VoiceViewModel.class);
 
         // Add an observer on the LiveData returned by getAllVoices.
         // The onChanged() method fires when the observed data changes and the activity is
         // in the foreground.
-        mVoiceViewModel.getAllVoices().observe(this, voices -> {
+        voiceViewModel.getAllVoices().observe(this, voices -> {
             Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
             // Update cached voices
             adapter.setVoices(voices);

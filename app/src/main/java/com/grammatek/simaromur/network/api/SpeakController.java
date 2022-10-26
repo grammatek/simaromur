@@ -166,10 +166,12 @@ public class SpeakController implements Callback<ResponseBody> {
                 mAudioObserver.error(e.getMessage(), ttsRequest);
             }
         } else {
-            String errMsg;
+            String errMsg = null;
             try {
-                errMsg = response.errorBody().string();
-                Log.e(LOG_TAG, "API Error: " + errMsg);
+                if (response.errorBody() != null) {
+                    errMsg = response.errorBody().string();
+                    Log.e(LOG_TAG, "API Error: " + errMsg);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 errMsg = e.getMessage();

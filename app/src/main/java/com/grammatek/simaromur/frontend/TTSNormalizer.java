@@ -104,7 +104,7 @@ public class TTSNormalizer {
         String nextTag;
         String lastToken = "";
         StringBuilder sb = new StringBuilder();
-        String linksPattern = NormalizationDictionaries.links.get(NormalizationDictionaries.LINK_PTRN_ALL);
+        final String linksPattern = NormalizationDictionaries.links.get(NormalizationDictionaries.LINK_PTRN_ALL);
 
         // we always look at the next tag, hence only iterate up to length-2
         for (int i = 0; i < tags.length - 1; i++) {
@@ -117,13 +117,14 @@ public class TTSNormalizer {
             else if (token.matches(NumberHelper.LETTERS_PTRN) && token.length() > 1) {
                 token = processLettersPattern(token);
             }
-            else if (token.matches(linksPattern) || token.matches(".+@.+"))
-                token = normalizeURL(token);
-
-            else if (token.length() > 1 && token.charAt(0) == token.charAt(1))
-                token = insertSpaces(token);
-            else if (token.matches(NormalizationDictionaries.NOT_LETTER))
-                token = normalizeDigits(token);
+            else if (linksPattern != null) {
+                if (token.matches(linksPattern) || token.matches(".+@.+"))
+                    token = normalizeURL(token);
+                else if (token.length() > 1 && token.charAt(0) == token.charAt(1))
+                    token = insertSpaces(token);
+                else if (token.matches(NormalizationDictionaries.NOT_LETTER))
+                    token = normalizeDigits(token);
+            }
 
             sb.append(token.trim()).append(" ");
             lastToken = tokens[i + 1];
@@ -146,7 +147,10 @@ public class TTSNormalizer {
         Matcher matcher = pattern.matcher(text);
         String replaced = text;
         while (matcher.find()) {
-            replaced = matcher.replaceAll(dict.get(regex));
+            final String regexS = dict.get(regex);
+            if (regexS != null) {
+                replaced = matcher.replaceAll(regexS);
+            }
         }
         return replaced;
     }
@@ -186,6 +190,7 @@ public class TTSNormalizer {
      * Insert space between all characters in 'token'
      */
     private String insertSpaces(String token) {
+        // insert space after each character, we really mean "." here, not "\\."
         return token.replaceAll(".", "$0 ").trim();
     }
 
@@ -336,7 +341,7 @@ public class TTSNormalizer {
 
     @NonNull
     private String processTokenWithDots(String token) {
-        String normalized = "";
+        StringBuilder normalized = new StringBuilder();
         String[] arr = token.split("\\.");
         String prefix = arr[0];
         // only keep the first part if it is not an 'http' or a 'www' prefix
@@ -348,21 +353,21 @@ public class TTSNormalizer {
         }
         // process each element between dots, insert " punktur " (" dot ") between
         // elements
-        String tokenRepr = "";
+        String tokenRepr;
         for (int i = 0; i < arr.length; i++) {
-            String tok = "";
+            String tok;
             if (i == 0) {
                 tok = prefix;
             }
             else
                 tok = arr[i];
             tokenRepr = processElement(tok);
-            if (normalized.isEmpty())
-                normalized += tokenRepr;
+            if (normalized.length() == 0)
+                normalized.append(tokenRepr);
             else
-                normalized += " punktur " + tokenRepr;
+                normalized.append(" punktur ").append(tokenRepr);
         }
-        return normalized;
+        return normalized.toString();
     }
 
     /*
@@ -371,20 +376,20 @@ public class TTSNormalizer {
      * '@' is replaced with ' hjá ' (Icelandic for "at")
      */
     private String processElement(String token) {
-        String processed = "";
+        StringBuilder processed = new StringBuilder();
         String[] arr = token.split("@");
         if (arr.length > 1) {
             for (String s : arr) {
                 String processedElem = processURLElement(s);
-                if (processed.isEmpty())
-                    processed += processedElem;
+                if (processed.length() == 0)
+                    processed.append(processedElem);
                 else
-                    processed += " hjá " + processedElem;
+                    processed.append(" hjá ").append(processedElem);
             }
         }
         else
-            processed = processURLElement(token);
-        return processed;
+            processed = new StringBuilder(processURLElement(token));
+        return processed.toString();
     }
 
     /*
@@ -429,14 +434,14 @@ public class TTSNormalizer {
      * and concatenate the '/' again afterwards.
      */
     private String convert2Ice(String token) {
-        String converted = "";
+        StringBuilder converted = new StringBuilder();
         String[] arr = token.split("/");
         for (String s : arr) {
-            converted += NormalizationDictionaries.urlElements.getOrDefault(s, s);
+            converted.append(NormalizationDictionaries.urlElements.getOrDefault(s, s));
             if (arr.length > 1)
-                converted += "/";
+                converted.append("/");
         }
-        return converted;
+        return converted.toString();
     }
 
     private String normalizeDigitOrdinal(String token) {
@@ -454,7 +459,10 @@ public class TTSNormalizer {
     private String normalizeDigits(String token) {
         token = token.replaceAll(" ", "<sil> ");
         for (String digit : NumberHelper.DIGIT_NUMBERS.keySet()) {
-            token = token.replaceAll(digit, NumberHelper.DIGIT_NUMBERS.get(digit));
+            final String replacement = NumberHelper.DIGIT_NUMBERS.get(digit);
+            if (replacement != null) {
+                token = token.replaceAll(digit, replacement);
+            }
         }
         return token;
     }
@@ -478,7 +486,7 @@ public class TTSNormalizer {
      * Returns a string combined of the values, e.g.: "nítján hundruð áttatíu og þrjú"
      */
     private String fillDict(String token, String tag, List<CategoryTuple> tuples, Map<String, Map<String, String>> typeDict, String[] columns) {
-        String result = "";
+        StringBuilder result = new StringBuilder();
 
         for (int i = 0; i < tuples.size(); i++) {
             if (token.matches(".*" + tuples.get(i).getNumberPattern() + ".*") && tag.matches(".*" + tuples.get(i).getRule())) {
@@ -492,9 +500,9 @@ public class TTSNormalizer {
             }
         }
         for (String s : columns)
-            result += typeDict.get(token).get(s);
+            result.append(typeDict.get(token).get(s));
 
-        return result;
+        return result.toString();
     }
 
 }

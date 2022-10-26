@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.grammatek.simaromur.db.Voice;
@@ -17,7 +18,7 @@ public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.Voic
     private List<Voice> mVoices; // Cached copy of voices
     private static ClickListener clickListener;
 
-    class VoiceViewHolder extends RecyclerView.ViewHolder {
+    static class VoiceViewHolder extends RecyclerView.ViewHolder {
         private final TextView voiceNameItemView;
         private final TextView voiceTypeItemView;
 
@@ -25,19 +26,15 @@ public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.Voic
             super(itemView);
             voiceNameItemView = itemView.findViewById(R.id.textViewLeft);
             voiceTypeItemView = itemView.findViewById(R.id.textViewRight);
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    clickListener.onItemClick(view, getAdapterPosition());
-                }
-            });
+            itemView.setOnClickListener(view -> clickListener.onItemClick(view, getAdapterPosition()));
         }
     }
 
     VoiceListAdapter(Context context) { mInflater = LayoutInflater.from(context); }
 
+    @NonNull
     @Override
-    public VoiceViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public VoiceViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = mInflater.inflate(R.layout.voice_manager_item, parent, false);
         return new VoiceViewHolder(itemView);
     }

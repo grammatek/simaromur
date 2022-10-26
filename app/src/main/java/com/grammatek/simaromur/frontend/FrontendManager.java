@@ -19,12 +19,9 @@ public class FrontendManager {
     private NormalizationManager mNormalizationManager;
     private Pronunciation mPronunciation;
 
-    private final Context mContext;
-
     public FrontendManager(Context context) {
         initializeNormalizationManager(context);
         initializePronunciation(context);
-        this.mContext = context;
     }
 
     /**

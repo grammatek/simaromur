@@ -547,8 +547,7 @@ public class DownloadVoiceManager {
             return null;
         }
         Log.v(LOG_TAG, "md5sum: " + md5sum);
-        boolean md5sumOk = false;
-        md5sumOk = compareMd5Sum(voiceInfo, md5sum);
+        boolean md5sumOk = compareMd5Sum(voiceInfo, md5sum);
         if (!md5sumOk) {
             Log.e(LOG_TAG, "MD5sum does not match any of the voice files");
             return null;

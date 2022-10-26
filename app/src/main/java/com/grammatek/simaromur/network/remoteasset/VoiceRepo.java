@@ -36,11 +36,8 @@ import okio.Okio;
 public class VoiceRepo {
     private final static String LOG_TAG = "Simaromur_" + VoiceRepo.class.getSimpleName();
     private final String mAssetRepoUrl;
-    private final GitHub mGithub;
     private final GHRepository mRepo;
     private final OkHttpClient mHttpClient = new OkHttpClient();
-    // mind off: with underscore, we also have a voice-info.json in the assets folder with a minus (!)
-    private final String VOICE_INFO_FILE = "voice_info.json";
 
     // This exception is thrown when we have exceed our rate limit at GitHub
     public static class LimitExceededException extends Exception {
@@ -62,18 +59,19 @@ public class VoiceRepo {
         mAssetRepoUrl = assetRepoUrl;
         // your personal access token is required to avoid rate limiting (60 requests per hour)
         final String oAuthToken = App.getAppRepository().getAssetConfigValueFor("github_auth0_token");
+        GitHub gh;
         if (oAuthToken.isEmpty()) {
-            mGithub = GitHub.connectAnonymously();
+            gh = GitHub.connectAnonymously();
         } else {
             // this sets the rate limit to 5000 requests per hour
-            mGithub = GitHub.connectUsingOAuth(oAuthToken);
+            gh = GitHub.connectUsingOAuth(oAuthToken);
         }
-        GHRateLimit rateLimit = mGithub.getRateLimit();
+        GHRateLimit rateLimit = gh.getRateLimit();
         Log.v(LOG_TAG, "GitHub rate limit: remaining " + rateLimit.getRemaining() + " accesses, reset at " + rateLimit.getResetDate());
         if (rateLimit.getRemaining() == 0) {
             throw(new LimitExceededException("Github rate limit exceeded!"));
         }
-        mRepo = mGithub.getRepository(mAssetRepoUrl);
+        mRepo = gh.getRepository(mAssetRepoUrl);
     }
 
     /**
@@ -158,6 +156,8 @@ public class VoiceRepo {
      * @return The list of available assets for given release.
      */
     public ReleaseInfo getReleaseInfo(String releaseName) {
+        // mind off: with underscore, we also have a voice-info.json in the assets folder with a minus (!)
+        String VOICE_INFO_FILE = "voice_info.json";
         String assetUrl = getUrlForAsset(releaseName, VOICE_INFO_FILE);
         if (assetUrl == null) {
             Log.e(LOG_TAG, "Release " + releaseName + " not found in Github repo " + mAssetRepoUrl);
@@ -235,10 +235,8 @@ public class VoiceRepo {
                 }
                 try (ResponseBody body = response.body()) {
                     long bytesExpected = -1;
-                    if (body != null) {
-                        bytesExpected = body.contentLength();
-                        observer.start(bytesExpected);
-                    }
+                    bytesExpected = body.contentLength();
+                    observer.start(bytesExpected);
                     Log.v(LOG_TAG, "Downloading " + assetUrl + " with size " + bytesExpected);
                     BufferedSource source = body.source();
                     int count;

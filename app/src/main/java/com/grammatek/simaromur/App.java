@@ -9,7 +9,6 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.perf.FirebasePerformance;
-import com.grammatek.simaromur.frontend.NormalizationManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
 import java.io.File;

@@ -23,7 +23,6 @@ public class Pronunciation {
     private NativeG2P mG2P;
     private Map<String, PronDictEntry> mPronDict;
     private final Map<String, Map<String, Map<String, String>>> mAlphabets;
-    private final String mSilToken = "<sil>";
 
     public Pronunciation(Context context) {
         this.mContext = context;
@@ -32,14 +31,16 @@ public class Pronunciation {
     }
 
     public String transcribe(String text) {
+        final String silToken = "<sil>";
         initializeG2P();    // lazy initialize to break dependencies
         String[] tokens = text.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String tok : tokens) {
+
             if (mPronDict.containsKey(tok)) {
                 sb.append(mPronDict.get(tok).getTranscript().trim()).append(" ");
             }
-            else if (tok.equals(mSilToken)){
+            else if (tok.equals(silToken)){
                 sb.append(SymbolsLvLIs.SymbolShortPause).append(" ");
             }
             else {
@@ -131,7 +132,7 @@ public class Pronunciation {
         final List<String> headers = Arrays.asList(fileContent.get(0).split("\t"));
         for (String header : headers) {
             int ind = headers.indexOf(header);
-            alphabets.put(header, new HashMap());
+            alphabets.put(header, new HashMap<>());
             for (int i = 1; i < fileContent.size(); i++) {
                 List<String> symbols = Arrays.asList(fileContent.get(i).split("\t"));
                 String keySymbol = symbols.get(ind);

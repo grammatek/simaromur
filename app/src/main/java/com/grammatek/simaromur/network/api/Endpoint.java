@@ -1,12 +1,8 @@
 package com.grammatek.simaromur.network.api;
 
-import static com.grammatek.simaromur.utils.FileUtils.getAssetConfigProperty;
-
-import com.grammatek.simaromur.App;
 import com.grammatek.simaromur.network.api.pojo.SpeakRequest;
 import com.grammatek.simaromur.network.api.pojo.VoiceResponse;
 
-import java.io.IOException;
 import java.util.List;
 
 import okhttp3.ResponseBody;

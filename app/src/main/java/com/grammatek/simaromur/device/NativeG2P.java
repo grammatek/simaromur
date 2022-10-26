@@ -56,8 +56,8 @@ public class NativeG2P {
     }
 
     private long mNativeData;       // keep this here!
-    private static native final boolean nativeClassInit();
-    private native final boolean nativeCreate(String path);
-    private native final boolean nativeDestroy();
+    private static native boolean nativeClassInit();
+    private native boolean nativeCreate(String path);
+    private native boolean nativeDestroy();
     private native String nativeProcess(String text);
 }

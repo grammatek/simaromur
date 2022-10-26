@@ -19,7 +19,7 @@ public class Sonic {
     private static final int SINC_TABLE_SIZE = 601;
 
     // Lookup table for windowed sinc function of SINC_FILTER_POINTS points.
-    private static final short sincTable[] = {
+    private static final short[] sincTable = {
         0, 0, 0, 0, 0, 0, 0, -1, -1, -2, -2, -3, -4, -6, -7, -9, -10, -12, -14,
         -17, -19, -21, -24, -26, -29, -32, -34, -37, -40, -42, -44, -47, -48, -50,
         -51, -52, -53, -53, -53, -52, -50, -48, -46, -43, -39, -34, -29, -22, -16,
@@ -70,10 +70,10 @@ public class Sonic {
         -12, -10, -9, -7, -6, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0
     };
 
-    private short inputBuffer[];
-    private short outputBuffer[];
-    private short pitchBuffer[];
-    private short downSampleBuffer[];
+    private short[] inputBuffer;
+    private short[] outputBuffer;
+    private short[] pitchBuffer;
+    private short[] downSampleBuffer;
     private float speed;
     private float volume;
     private float pitch;
@@ -106,7 +106,7 @@ public class Sonic {
     {
         newLength *= numChannels;
         short[]        newArray = new short[newLength];
-        int length = oldArray.length <= newLength? oldArray.length : newLength;
+        int length = Math.min(oldArray.length, newLength);
 
         System.arraycopy(oldArray, 0, newArray, 0, length);
         return newArray;
@@ -114,21 +114,21 @@ public class Sonic {
 
     // Move samples from one array to another.  May move samples down within an array, but not up.
     private void move(
-        short dest[],
-        int destPos,
-        short source[],
-        int sourcePos,
-        int numSamples)
+            short[] dest,
+            int destPos,
+            short[] source,
+            int sourcePos,
+            int numSamples)
     {
         System.arraycopy(source, sourcePos*numChannels, dest, destPos*numChannels, numSamples*numChannels);
     }
 
     // Scale the samples by the factor.
     private void scaleSamples(
-        short samples[],
-        int position,
-        int numSamples,
-        float volume)
+            short[] samples,
+            int position,
+            int numSamples,
+            float volume)
     {
         int fixedPointVolume = (int)(volume*4096.0f);
         int start = position*numChannels;
@@ -311,8 +311,8 @@ public class Sonic {
 
     // Add the input samples to the input buffer.
     private void addFloatSamplesToInputBuffer(
-        float samples[],
-        int numSamples)
+            float[] samples,
+            int numSamples)
     {
         if(numSamples == 0) {
             return;
@@ -327,8 +327,8 @@ public class Sonic {
 
     // Add the input samples to the input buffer.
     private void addShortSamplesToInputBuffer(
-        short samples[],
-        int numSamples)
+            short[] samples,
+            int numSamples)
     {
         if(numSamples == 0) {
             return;
@@ -340,8 +340,8 @@ public class Sonic {
 
     // Add the input samples to the input buffer.
     private void addUnsignedByteSamplesToInputBuffer(
-        byte samples[],
-        int numSamples)
+            byte[] samples,
+            int numSamples)
     {
         short sample;
 
@@ -356,8 +356,8 @@ public class Sonic {
 
     // Add the input samples to the input buffer.  They must be 16-bit little-endian encoded in a byte array.
     private void addBytesToInputBuffer(
-        byte inBuffer[],
-        int numBytes)
+            byte[] inBuffer,
+            int numBytes)
     {
             int numSamples = numBytes/(2*numChannels);
         short sample;
@@ -383,9 +383,9 @@ public class Sonic {
 
     // Just copy from the array to the output buffer
     private void copyToOutput(
-        short samples[],
-        int position,
-        int numSamples)
+            short[] samples,
+            int position,
+            int numSamples)
     {
         enlargeOutputBufferIfNeeded(numSamples);
         move(outputBuffer, numOutputSamples, samples, position, numSamples);
@@ -409,8 +409,8 @@ public class Sonic {
     // Read data out of the stream.  Sometimes no data will be available, and zero
     // is returned, which is not an error condition.
     public int readFloatFromStream(
-        float samples[],
-        int maxSamples)
+            float[] samples,
+            int maxSamples)
     {
         int numSamples = numOutputSamples;
         int remainingSamples = 0;
@@ -433,8 +433,8 @@ public class Sonic {
     // Read short data out of the stream.  Sometimes no data will be available, and zero
     // is returned, which is not an error condition.
     public int readShortFromStream(
-        short samples[],
-        int maxSamples)
+            short[] samples,
+            int maxSamples)
     {
         int numSamples = numOutputSamples;
         int remainingSamples = 0;
@@ -455,8 +455,8 @@ public class Sonic {
     // Read unsigned byte data out of the stream.  Sometimes no data will be available, and zero
     // is returned, which is not an error condition.
     public int readUnsignedByteFromStream(
-        byte samples[],
-        int maxSamples)
+            byte[] samples,
+            int maxSamples)
     {
         int numSamples = numOutputSamples;
         int remainingSamples = 0;
@@ -479,8 +479,8 @@ public class Sonic {
     // Read unsigned byte data out of the stream.  Sometimes no data will be available, and zero
     // is returned, which is not an error condition.
     public int readBytesFromStream(
-        byte outBuffer[],
-        int maxBytes)
+            byte[] outBuffer,
+            int maxBytes)
     {
             int maxSamples = maxBytes/(2*numChannels);
         int numSamples = numOutputSamples;
@@ -540,9 +540,9 @@ public class Sonic {
     // the down-sample buffer.  If numChannels is greater than one, mix the channels
     // together as we down sample.
     private void downSampleInput(
-        short samples[],
-        int position,
-        int skip)
+            short[] samples,
+            int position,
+            int skip)
     {
         int numSamples = maxRequired/skip;
         int samplesPerValue = numChannels*skip;
@@ -562,10 +562,10 @@ public class Sonic {
     // Find the best frequency match in the range, and given a sample skip multiple.
     // For now, just find the pitch of the first channel.
     private int findPitchPeriodInRange(
-        short samples[],
-        int position,
-        int minPeriod,
-        int maxPeriod)
+            short[] samples,
+            int position,
+            int minPeriod,
+            int maxPeriod)
     {
         int bestPeriod = 0, worstPeriod = 255;
         int minDiff = 1, maxDiff = 0;
@@ -611,16 +611,11 @@ public class Sonic {
                 // Got a reasonable match this period
                 return false;
             }
-            if(minDiff*2 <= prevMinDiff*3) {
-                // Mismatch is not that much greater this period
-                return false;
-            }
+            // Mismatch is not that much greater this period
+            return minDiff * 2 > prevMinDiff * 3;
         } else {
-            if(minDiff <= prevMinDiff) {
-                return false;
-            }
+            return minDiff > prevMinDiff;
         }
-        return true;
     }
 
     // Find the pitch period.  This is a critical step, and we may have to try
@@ -628,9 +623,9 @@ public class Sonic {
     // speed, we down sample by an integer factor get in the 11KHz range, and then
     // do it again with a narrower frequency range without down sampling
     private int findPitchPeriod(
-        short samples[],
-        int position,
-        boolean preferNewPeriod)
+            short[] samples,
+            int position,
+            boolean preferNewPeriod)
     {
         int period, retPeriod;
         int skip = 1;
@@ -675,14 +670,14 @@ public class Sonic {
     // Overlap two sound segments, ramp the volume of one down, while ramping the
     // other one from zero up, and add them, storing the result at the output.
     private void overlapAdd(
-        int numSamples,
-        int numChannels,
-        short out[],
-        int outPos,
-        short rampDown[],
-        int rampDownPos,
-        short rampUp[],
-        int rampUpPos)
+            int numSamples,
+            int numChannels,
+            short[] out,
+            int outPos,
+            short[] rampDown,
+            int rampDownPos,
+            short[] rampUp,
+            int rampUpPos)
     {
          for(int i = 0; i < numChannels; i++) {
             int o = outPos*numChannels + i;
@@ -700,15 +695,15 @@ public class Sonic {
     // Overlap two sound segments, ramp the volume of one down, while ramping the
     // other one from zero up, and add them, storing the result at the output.
     private void overlapAddWithSeparation(
-        int numSamples,
-        int numChannels,
-        int separation,
-        short out[],
-        int outPos,
-        short rampDown[],
-        int rampDownPos,
-        short rampUp[],
-        int rampUpPos)
+            int numSamples,
+            int numChannels,
+            int separation,
+            short[] out,
+            int outPos,
+            short[] rampDown,
+            int rampDownPos,
+            short[] rampUp,
+            int rampUpPos)
     {
         for(int i = 0; i < numChannels; i++) {
             int o = outPos*numChannels + i;
@@ -806,10 +801,10 @@ public class Sonic {
 
     // Interpolate the new output sample.
     private short interpolate(
-        short in[],
-        int inPos,  // Index to first sample which already includes channel offset.
-        int oldSampleRate,
-        int newSampleRate)
+            short[] in,
+            int inPos,  // Index to first sample which already includes channel offset.
+            int oldSampleRate,
+            int newSampleRate)
     {
         // Compute N-point sinc FIR-filter here.  Clip rather than overflow.
         int i;
@@ -851,7 +846,6 @@ public class Sonic {
         int newSampleRate = (int)(sampleRate/rate);
         int oldSampleRate = sampleRate;
         int position;
-        int N = SINC_FILTER_POINTS;
 
         // Set these values to help with the integer math
         while(newSampleRate > (1 << 14) || oldSampleRate > (1 << 14)) {
@@ -863,7 +857,7 @@ public class Sonic {
         }
         moveNewSamplesToPitchBuffer(originalNumOutputSamples);
         // Leave at least N pitch samples in the buffer
-        for(position = 0; position < numPitchSamples - N; position++) {
+        for(position = 0; position < numPitchSamples - SINC_FILTER_POINTS; position++) {
             while((oldRatePosition + 1)*newSampleRate > newRatePosition*oldSampleRate) {
                 enlargeOutputBufferIfNeeded(1);
                 for(int i = 0; i < numChannels; i++) {
@@ -877,7 +871,7 @@ public class Sonic {
             if(oldRatePosition == oldSampleRate) {
                 oldRatePosition = 0;
                 if(newRatePosition != newSampleRate) {
-                    System.out.printf("Assertion failed: newRatePosition != newSampleRate\n");
+                    System.out.print("Assertion failed: newRatePosition != newSampleRate\n");
                     assert false;
                 }
                 newRatePosition = 0;
@@ -889,10 +883,10 @@ public class Sonic {
 
     // Skip over a pitch period, and copy period/speed samples to the output
     private int skipPitchPeriod(
-        short samples[],
-        int position,
-        float speed,
-        int period)
+            short[] samples,
+            int position,
+            float speed,
+            int period)
     {
         int newSamples;
 
@@ -911,10 +905,10 @@ public class Sonic {
 
     // Insert a pitch period, and determine how much input to copy directly.
     private int insertPitchPeriod(
-        short samples[],
-        int position,
-        float speed,
-        int period)
+            short[] samples,
+            int position,
+            float speed,
+            int period)
     {
         int newSamples;
 
@@ -993,8 +987,8 @@ public class Sonic {
 
     // Write floating point data to the input buffer and process it.
     public void writeFloatToStream(
-        float samples[],
-        int numSamples)
+            float[] samples,
+            int numSamples)
     {
         addFloatSamplesToInputBuffer(samples, numSamples);
         processStreamInput();
@@ -1002,8 +996,8 @@ public class Sonic {
 
     // Write the data to the input stream, and process it.
     public void writeShortToStream(
-        short samples[],
-        int numSamples)
+            short[] samples,
+            int numSamples)
     {
         addShortSamplesToInputBuffer(samples, numSamples);
         processStreamInput();
@@ -1012,8 +1006,8 @@ public class Sonic {
     // Simple wrapper around sonicWriteFloatToStream that does the unsigned byte to short
     // conversion for you.
     public void writeUnsignedByteToStream(
-        byte samples[],
-        int numSamples)
+            byte[] samples,
+            int numSamples)
     {
         addUnsignedByteSamplesToInputBuffer(samples, numSamples);
         processStreamInput();
@@ -1021,8 +1015,8 @@ public class Sonic {
 
     // Simple wrapper around sonicWriteBytesToStream that does the byte to 16-bit LE conversion.
     public void writeBytesToStream(
-        byte inBuffer[],
-        int numBytes)
+            byte[] inBuffer,
+            int numBytes)
     {
         addBytesToInputBuffer(inBuffer, numBytes);
         processStreamInput();
@@ -1030,15 +1024,15 @@ public class Sonic {
 
     // This is a non-stream oriented interface to just change the speed of a sound sample
     public static int changeFloatSpeed(
-        float samples[],
-        int numSamples,
-        float speed,
-        float pitch,
-        float rate,
-        float volume,
-        boolean useChordPitch,
-        int sampleRate,
-        int numChannels)
+            float[] samples,
+            int numSamples,
+            float speed,
+            float pitch,
+            float rate,
+            float volume,
+            boolean useChordPitch,
+            int sampleRate,
+            int numChannels)
     {
         Sonic stream = new Sonic(sampleRate, numChannels);
 
@@ -1056,15 +1050,15 @@ public class Sonic {
 
     /* This is a non-stream oriented interface to just change the speed of a sound sample */
     public int sonicChangeShortSpeed(
-        short samples[],
-        int numSamples,
-        float speed,
-        float pitch,
-        float rate,
-        float volume,
-        boolean useChordPitch,
-        int sampleRate,
-        int numChannels)
+            short[] samples,
+            int numSamples,
+            float speed,
+            float pitch,
+            float rate,
+            float volume,
+            boolean useChordPitch,
+            int sampleRate,
+            int numChannels)
     {
         Sonic stream = new Sonic(sampleRate, numChannels);
 

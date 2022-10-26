@@ -14,7 +14,7 @@ public interface AudioObserver {
     // for the lifetime of the app, so that we can mark speech requests that are not originating
     // from the TTS service, but from a dummy TTS request, e.g. when an error occurs that cannot be
     // tracked to the appropriate cache item.
-    static final String DUMMY_CACHEITEM_UUID = UUID.randomUUID().toString();
+    String DUMMY_CACHEITEM_UUID = UUID.randomUUID().toString();
 
     /**
      * Play audio wav file. This is called e.g. when new TTS audio data arrives from network API.

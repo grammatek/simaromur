@@ -1,5 +1,6 @@
 package com.grammatek.simaromur;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -41,23 +42,19 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
             new LauncherIcon(R.drawable.custom_settings_large, R.string.tts_settings_label, TTSManager.class),
     };
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.AppTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.flitemanager);
 
-        GridView gridview = (GridView) findViewById(R.id.dashboard_grid);
+        GridView gridview = findViewById(R.id.dashboard_grid);
         gridview.setAdapter(new ImageAdapter(this));
         gridview.setOnItemClickListener(this);
 
         // Hack to disable GridView scrolling
-        gridview.setOnTouchListener(new GridView.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                return event.getAction() == MotionEvent.ACTION_MOVE;
-            }
-        });
+        gridview.setOnTouchListener((v, event) -> event.getAction() == MotionEvent.ACTION_MOVE);
 
         Intent checkIntent = new Intent();
         checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
@@ -112,9 +109,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
                 .setMessage(R.string.tts_settings)
                 .setTitle(R.string.important)
                 .setCancelable(false)
-                .setPositiveButton(R.string.doit, (dialog, id) -> {
-                    openTtsSettings();
-                })
+                .setPositiveButton(R.string.doit, (dialog, id) -> openTtsSettings())
                 .setNegativeButton(R.string.not_yet, (dialog, id) -> {
                     // nothing
                 });
@@ -152,12 +147,8 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
         AlertDialog d = new AlertDialog.Builder(this)
                 .setTitle(R.string.crashlytics_title)
                 .setMessage(s)
-                .setPositiveButton(R.string.doit, (dialog, id) -> {
-                    App.getAppRepository().doGiveCrashLyticsUserConsent(true);
-                })
-                .setNegativeButton(R.string.not_yet, (dialog, id) -> {
-                    App.getAppRepository().doGiveCrashLyticsUserConsent(false);
-                })
+                .setPositiveButton(R.string.doit, (dialog, id) -> App.getAppRepository().doGiveCrashLyticsUserConsent(true))
+                .setNegativeButton(R.string.not_yet, (dialog, id) -> App.getAppRepository().doGiveCrashLyticsUserConsent(false))
                 .setCancelable(false)
                 .create();
         d.show();

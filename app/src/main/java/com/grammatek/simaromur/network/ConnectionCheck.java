@@ -117,7 +117,7 @@ public class ConnectionCheck {
     }
 
     // And yet another
-    Runnable periodicTask = () -> {
+    final Runnable periodicTask = () -> {
         try{
             final String serverName = Endpoint.SERVER;
             Log.v(LOG_TAG, "Checking " + serverName + " availability");

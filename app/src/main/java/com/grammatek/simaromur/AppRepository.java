@@ -766,11 +766,11 @@ public class AppRepository {
     private static void updateSpeechMarks(SynthesisCallback callback, int bufSize, int offsetInBuf, int textLen, int nextChunkSize) {
         final int frameSizeInBytes = 2; // 16-bit samples
         final int markerInFrames = offsetInBuf / frameSizeInBytes;
-        int offsetInText = (int) Math.round((float) offsetInBuf / (float) bufSize * (float) textLen);
+        int offsetInText = Math.round((float) offsetInBuf / (float) bufSize * (float) textLen);
         // because we are already setting the speech mark to [0,1] in the beginning, we need to begin
         // with a minimum of 1
         offsetInText = Math.max(1, offsetInText);
-        int endInText = (int) Math.round((float) (offsetInBuf + nextChunkSize) / (float) bufSize * (float) textLen);
+        int endInText = Math.round((float) (offsetInBuf + nextChunkSize) / (float) bufSize * (float) textLen);
         Log.v(LOG_TAG, "TTSObserver: markerInFrames = " + markerInFrames + " offsetInText = " + offsetInText + " endInText = " + endInText);
         callback.rangeStart(markerInFrames, offsetInText, endInText);
     }
@@ -870,7 +870,7 @@ public class AppRepository {
     /**
      * Update DB according to network voice
      */
-    Runnable networkVoicesUpdateRunnable = new Runnable() {
+    final Runnable networkVoicesUpdateRunnable = new Runnable() {
         @Override
         public void run() {
             Date lastUpdateTime = new Date(System.currentTimeMillis() - NETWORK_VOICE_QUERY_TIME_MS);
@@ -894,7 +894,7 @@ public class AppRepository {
     /**
      * Update DB according to On-Device voices
      */
-    Runnable onDeviceVoicesUpdateRunnable = new Runnable() {
+    final Runnable onDeviceVoicesUpdateRunnable = new Runnable() {
         @Override
         public void run() {
             // fetch on-device voice lists
@@ -915,7 +915,7 @@ public class AppRepository {
     /**
      * Update the Db according to Asset voices
      */
-    Runnable assetVoiceRunnable = new Runnable() {
+    final Runnable assetVoiceRunnable = new Runnable() {
         @Override
         public void run() {
             // delete all voices

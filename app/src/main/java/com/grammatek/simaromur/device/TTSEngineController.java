@@ -74,7 +74,7 @@ public class TTSEngineController {
      */
     synchronized
     public void LoadEngine(Voice voice) throws IOException {
-        DeviceVoice devVoice = null;
+        DeviceVoice devVoice;
         switch (voice.type) {
             case Voice.TYPE_NETWORK:
                 Log.v(LOG_TAG, "LoadEngine: Voice.TYPE_NETWORK not supported");
