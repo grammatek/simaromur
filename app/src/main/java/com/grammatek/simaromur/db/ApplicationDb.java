@@ -22,7 +22,7 @@ import java.util.List;
 )
 public abstract class ApplicationDb extends RoomDatabase {
     private final static String LOG_TAG = "Simaromur_" + ApplicationDb.class.getSimpleName();
-    static final int LATEST_VERSION = 5;
+    static final int LATEST_VERSION = 7;
     private static volatile ApplicationDb INSTANCE;
 
     public abstract AppDataDao appDataDao();
@@ -58,8 +58,24 @@ public abstract class ApplicationDb extends RoomDatabase {
     static public final Migration MIGRATION_4_5 = new Migration(4, 5){  // v4 => 5
         @Override
         public void migrate(SupportSQLiteDatabase database){
-            Log.v(LOG_TAG, "MIGRATION_5_6");
+            Log.v(LOG_TAG, "MIGRATION_4_5");
             database.execSQL("DELETE FROM voice_table WHERE type = 'tiro'");
+        }
+    };
+    static public final Migration MIGRATION_5_6 = new Migration(5, 6){  // v5 => 6
+        @Override
+        public void migrate(SupportSQLiteDatabase database){
+            Log.v(LOG_TAG, "MIGRATION_5_6");
+            // create a dummy version for all empty version info
+            database.execSQL("UPDATE voice_table SET version = 'v0' WHERE version = ''");
+        }
+    };
+    static public final Migration MIGRATION_6_7 = new Migration(6, 7){  // v6 => 7
+        @Override
+        public void migrate(SupportSQLiteDatabase database){
+            Log.v(LOG_TAG, "MIGRATION_6_7");
+            // create a dummy version for all empty version info
+            database.execSQL("UPDATE voice_table SET url = 'https://api.grammatek.com/tts/v0' WHERE type = 'network'");
         }
     };
     public static ApplicationDb getDatabase(final Context context) {
@@ -69,7 +85,7 @@ public abstract class ApplicationDb extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             ApplicationDb.class, "application_db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                             // Wipes and rebuilds instead of migrating if no Migration object.
                             .fallbackToDestructiveMigration()
                             .allowMainThreadQueries()

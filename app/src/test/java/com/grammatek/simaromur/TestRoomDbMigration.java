@@ -88,18 +88,45 @@ public class TestRoomDbMigration {
 
     @Test
     public void migrationFrom4To5() throws IOException {
-        // Create the database in version 3, then migrate to 4
+        // Create the database in version 4, then migrate to 5
         SupportSQLiteDatabase db =
-                testHelper.createDatabase(TEST_DB_NAME, 3);
+                testHelper.createDatabase(TEST_DB_NAME, 4);
         db.execSQL("INSERT INTO app_data_table VALUES (1, '2', 1, '/flite/voices', 'today'," +
-                " '/sim/voices', 'today', 1)");
+                " '/sim/voices', 'today', 1, 1)");
 
         db.execSQL("INSERT INTO voice_table VALUES (1, 'Álfur', 'male', 'Alfur', 'is-IS', 'Íslenska(icelandic)'," +
                 " '', 'network', 'now', 'now', 'http://someurl', 'downloadpath', 'API1', 'nomd5sum', 0)");
         db.close();
-        testHelper.runMigrationsAndValidate(TEST_DB_NAME, 4, true, ApplicationDb.MIGRATION_3_4);
+        testHelper.runMigrationsAndValidate(TEST_DB_NAME, 5, true, ApplicationDb.MIGRATION_4_5);
     }
 
+    @Test
+    public void migrationFrom5To6() throws IOException {
+        // Create the database in version 5, then migrate to 6
+        SupportSQLiteDatabase db =
+                testHelper.createDatabase(TEST_DB_NAME, 5);
+        db.execSQL("INSERT INTO app_data_table VALUES (1, '2', 1, '/flite/voices', 'today'," +
+                " '/sim/voices', 'today', 1, 1)");
+
+        db.execSQL("INSERT INTO voice_table VALUES (1, 'Álfur', 'male', 'Alfur', 'is-IS', 'Íslenska(icelandic)'," +
+                " '', 'network', 'now', 'now', 'http://someurl', 'downloadpath', 'API1', 'nomd5sum', 0)");
+        db.close();
+        testHelper.runMigrationsAndValidate(TEST_DB_NAME, 6, true, ApplicationDb.MIGRATION_5_6);
+    }
+
+    @Test
+    public void migrationFrom6To7() throws IOException {
+        // Create the database in version 6, then migrate to 7
+        SupportSQLiteDatabase db =
+                testHelper.createDatabase(TEST_DB_NAME, 6);
+        db.execSQL("INSERT INTO app_data_table VALUES (1, '2', 1, '/flite/voices', 'today'," +
+                " '/sim/voices', 'today', 1, 1)");
+
+        db.execSQL("INSERT INTO voice_table VALUES (1, 'Álfur', 'male', 'Alfur', 'is-IS', 'Íslenska(icelandic)'," +
+                " '', 'network', 'now', 'now', 'http://someurl', 'downloadpath', 'API1', 'nomd5sum', 0)");
+        db.close();
+        testHelper.runMigrationsAndValidate(TEST_DB_NAME, 7, true, ApplicationDb.MIGRATION_6_7);
+    }
     @Test
     public void TestDBV2() throws IOException {
         // Create DB in V2
@@ -161,9 +188,39 @@ public class TestRoomDbMigration {
 
     @Test
     public void TestDBV5() throws IOException {
-        // Create DB in V4
+        // Create DB in V5
         SupportSQLiteDatabase db =
                 testHelper.createDatabase(TEST_DB_NAME, 5);
+        db.execSQL("INSERT INTO app_data_table VALUES (1, '3', 2, '/flite/voices', 'today'," +
+                " '/sim/voices', 'today', 1, 1)");
+
+        db.execSQL("UPDATE app_data_table SET privacy_info_dialog_accepted = 0, crash_lytics_user_consent_accepted = 0 WHERE appDataId = 1");
+
+        db.execSQL("INSERT INTO voice_table VALUES (1, 'Álfur', 'male', 'Alfur', 'is-IS', 'Íslenska(icelandic)'," +
+                " '', 'network', 'now', 'now', 'http://someurl', 'downloadpath', 'API1', 'nomd5sum', 0)");
+
+        db.close();
+    }
+    @Test
+    public void TestDBV6() throws IOException {
+        // Create DB in V5
+        SupportSQLiteDatabase db =
+                testHelper.createDatabase(TEST_DB_NAME, 6);
+        db.execSQL("INSERT INTO app_data_table VALUES (1, '3', 2, '/flite/voices', 'today'," +
+                " '/sim/voices', 'today', 1, 1)");
+
+        db.execSQL("UPDATE app_data_table SET privacy_info_dialog_accepted = 0, crash_lytics_user_consent_accepted = 0 WHERE appDataId = 1");
+
+        db.execSQL("INSERT INTO voice_table VALUES (1, 'Álfur', 'male', 'Alfur', 'is-IS', 'Íslenska(icelandic)'," +
+                " '', 'network', 'now', 'now', 'http://someurl', 'downloadpath', 'API1', 'nomd5sum', 0)");
+
+        db.close();
+    }
+    @Test
+    public void TestDBV7() throws IOException {
+        // Create DB in V5
+        SupportSQLiteDatabase db =
+                testHelper.createDatabase(TEST_DB_NAME, 7);
         db.execSQL("INSERT INTO app_data_table VALUES (1, '3', 2, '/flite/voices', 'today'," +
                 " '/sim/voices', 'today', 1, 1)");
 

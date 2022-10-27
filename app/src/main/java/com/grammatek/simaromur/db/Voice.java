@@ -141,6 +141,10 @@ public class Voice {
         }
         this.url = url;
         this.downloadPath = downloadPath;
+        if (version.isEmpty()) {
+            throw new AssertionError("Given voice version (" + version + ") not valid !");
+        }
+
         this.version = version;
         this.md5Sum = md5Sum;
         this.size = size;

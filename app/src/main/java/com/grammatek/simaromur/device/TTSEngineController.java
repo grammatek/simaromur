@@ -246,9 +246,8 @@ public class TTSEngineController {
 
             // retrieve audio from utterance cache, if available
             UtteranceCacheManager ucm =  App.getAppRepository().getUtteranceCache();
-            // TODO: voiceVersion parameter is not taken into account yet !
             final List<byte[]> audioBuffers =
-                    ucm.getAudioForUtterance(item.getUtterance(), mCurrentVoice.InternalName, "v1");
+                    ucm.getAudioForUtterance(item.getUtterance(), mCurrentVoice.InternalName, voice.Version);
             if (shouldStop()) {
                 Log.v(LOG_SPEAK_TASK_TAG, "run(): shouldStop(2): true");
                 return;
@@ -305,7 +304,6 @@ public class TTSEngineController {
             }
             bytes = mEngine.SpeakToPCM(phonemeEntry.getSymbols());
 
-            // TODO: voiceVersion parameter is not taken into account yet !
             SampleRate sampleRate;
             if (mEngine.GetNativeSampleRate() == 22050) {
                 sampleRate = SAMPLE_RATE_22KHZ;
@@ -315,7 +313,7 @@ public class TTSEngineController {
                 throw new IllegalStateException("Unknown sample rate: " + mEngine.GetNativeSampleRate());
             }
             final VoiceAudioDescription vad = UtteranceCacheManager.newAudioDescription(AUDIO_FMT_PCM,
-                    sampleRate, bytes.length, mCurrentVoice.InternalName, "v1");
+                    sampleRate, bytes.length, mCurrentVoice.InternalName, mCurrentVoice.Version);
             if (bytes.length == 0) {
                 Log.w(LOG_SPEAK_TASK_TAG, "synthesizeSpeech(): No audio generated ?!");
                 return null;

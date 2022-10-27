@@ -322,18 +322,17 @@ public class AppRepository {
 
     /**
      * Request to network TTS to speak given text and return Audio asynchronously.
-     *
-     * @param voiceId  the voice name identifier of the TTS API
+     *  @param voiceId  the voice name identifier of the TTS API
+     * @param version   the voice version identifier of the TTS API
      * @param item     cache item of the utterance
      * @param langCode language code, e.g. "is-IS"
      * @param finishedObserver the observer to be notified when the audio is finished. e.g. for
-     *                         stopping a UI spinner
      */
-    public void startNetworkSpeak(String voiceId, CacheItem item, String langCode,
+    public void startNetworkSpeak(String voiceId, String version, CacheItem item, String langCode,
                                   TTSAudioControl.AudioFinishedObserver finishedObserver) {
         mMediaPlayer.stop();
         TTSRequest ttsRequest = new TTSRequest(item.getUuid());
-        if (playIfAudioCacheHit(voiceId, item, finishedObserver, ttsRequest)) return;
+        if (playIfAudioCacheHit(voiceId, version, item, finishedObserver, ttsRequest)) return;
 
         final String SampleRate = "" + AudioManager.SAMPLE_RATE_MP3;
         // get normalized text from item
@@ -362,11 +361,10 @@ public class AppRepository {
      * @param ttsRequest       the TTSRequest for the current request
      * @return true in case audio speech entry has been found and playback started, false otherwise
      */
-    private boolean playIfAudioCacheHit(String voiceId, CacheItem item, TTSAudioControl.AudioFinishedObserver finishedObserver, TTSRequest ttsRequest) {
+    private boolean playIfAudioCacheHit(String voiceId, String voiceVersion, CacheItem item, TTSAudioControl.AudioFinishedObserver finishedObserver, TTSRequest ttsRequest) {
         UtteranceCacheManager ucm = App.getAppRepository().getUtteranceCache();
-        // TODO: voiceVersion parameter is not taken into account yet !
         final List<byte[]> audioBuffers =
-                ucm.getAudioForUtterance(item.getUtterance(), voiceId, "v1");
+                ucm.getAudioForUtterance(item.getUtterance(), voiceId, voiceVersion);
         byte[] data;
         if (!audioBuffers.isEmpty()) {
             data = audioBuffers.get(0);
@@ -390,12 +388,11 @@ public class AppRepository {
      * @param ttsRequest  the TTSRequest to be passed to the TTSObserver
      * @return true in case audio speech entry has been found and playback started, false otherwise
      */
-    private boolean playIfAudioCacheHit(String voiceId, CacheItem item, TTSObserver ttsObserver, TTSRequest ttsRequest) {
+    private boolean playIfAudioCacheHit(String voiceId, String voiceVersion, CacheItem item, TTSObserver ttsObserver, TTSRequest ttsRequest) {
         Log.v(LOG_TAG, "playIfAudioCacheHit()");
         UtteranceCacheManager ucm = App.getAppRepository().getUtteranceCache();
-        // TODO: voiceVersion parameter is not taken into account yet !
         final List<byte[]> audioBuffers =
-                ucm.getAudioForUtterance(item.getUtterance(), voiceId, "v1");
+                ucm.getAudioForUtterance(item.getUtterance(), voiceId, voiceVersion);
         byte[] audioData;
         if (!audioBuffers.isEmpty()) {
             audioData = audioBuffers.get(0);
@@ -429,7 +426,7 @@ public class AppRepository {
         // map given voice to voiceId
         if (voice != null) {
             final TTSObserver ttsObserver = new TTSObserver(pitch, speed, AudioManager.SAMPLE_RATE_WAV);
-            if (playIfAudioCacheHit(voice.internalName, item, ttsObserver, ttsRequest)) return;
+            if (playIfAudioCacheHit(voice.internalName, voice.version, item, ttsObserver, ttsRequest)) return;
 
             final String SampleRate = "" + AudioManager.SAMPLE_RATE_WAV;
             final String normalized = item.getUtterance().getNormalized();
@@ -464,7 +461,7 @@ public class AppRepository {
                 return;
             }
             final TTSObserver ttsObserver = new TTSObserver(pitch, speed, mTTSEngineController.getEngine().GetNativeSampleRate());
-            if (playIfAudioCacheHit(voice.internalName, item, ttsObserver, ttsRequest)) return;
+            if (playIfAudioCacheHit(voice.internalName, voice.version, item, ttsObserver, ttsRequest)) return;
             mTTSEngineController.StartSpeak(new TTSObserver(pitch, speed,
                     mTTSEngineController.getEngine().GetNativeSampleRate()), ttsRequest);
         } else {
@@ -531,6 +528,22 @@ public class AppRepository {
         }
         Log.v(LOG_TAG, "ERROR");
         return TextToSpeech.ERROR;
+    }
+
+    /**
+     * Returns the version of the given voice.
+     *
+     * @param internalVoiceName the internal name of the voice
+     * @return  the version of the voice
+     */
+    public String getVersionOfVoice(String internalVoiceName) {
+        List<Voice> voices = mVoiceDao.getAnyVoices();
+        for (final Voice voice : voices) {
+            if (voice.internalName.equals(internalVoiceName)) {
+                return voice.version;
+            }
+        }
+        return null;
     }
 
     /**

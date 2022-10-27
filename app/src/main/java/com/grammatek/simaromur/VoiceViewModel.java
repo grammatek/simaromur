@@ -66,7 +66,7 @@ public class VoiceViewModel extends AndroidViewModel {
                               TTSAudioControl.AudioFinishedObserver finishedObserver) {
         switch (voice.type) {
             case Voice.TYPE_NETWORK:
-                mRepository.startNetworkSpeak(voice.internalName, item, voice.languageCode, finishedObserver);
+                mRepository.startNetworkSpeak(voice.internalName, voice.version, item, voice.languageCode, finishedObserver);
                 break;
             case Voice.TYPE_TORCH:
             case Voice.TYPE_FLITE:  // FALLTHROUGH
