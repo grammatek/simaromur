@@ -12,6 +12,7 @@ import android.util.Log;
 import com.grammatek.simaromur.audio.AudioManager;
 import com.grammatek.simaromur.audio.AudioObserver;
 import com.grammatek.simaromur.cache.CacheItem;
+import com.grammatek.simaromur.cache.UtteranceCacheManager;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
 import java.util.ArrayList;
@@ -221,7 +222,7 @@ public class TTSService extends TextToSpeechService {
                 Log.e(LOG_TAG, "Voice type currently unsupported: " + voice.type);
                 break;
         }
-        handleProcessingResult(callback, item, ttsRequest);
+        handleProcessingResult(callback, item, ttsRequest, voice);
         Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
     }
 
@@ -229,13 +230,14 @@ public class TTSService extends TextToSpeechService {
      * Wait for the processing result and handle it.
      * @param callback  the callback to use for the result
      * @param item     the cache item to use for the result
+     * @param voice   the voice to use for the result
      */
-    private void handleProcessingResult(SynthesisCallback callback, CacheItem item, TTSRequest ttsRequest) {
+    private void handleProcessingResult(SynthesisCallback callback, CacheItem item, TTSRequest ttsRequest, com.grammatek.simaromur.db.Voice voice) {
         Log.v(LOG_TAG, "handleProcessingResult for (" + item.getUuid() + ")");
         try {
             // get the current time for caclulating the amount of time that we have waited
             long startTime = System.currentTimeMillis();
-
+            boolean isCached = item.containsVoiceAudioEntries(UtteranceCacheManager.buildVoiceKey(voice.internalName, voice.version));
             // here we wait for the response of the speak request. The result is sent via the queue
             // and then we need to feed the callback with the audio data from here
             boolean isHandled = false;
@@ -244,6 +246,12 @@ public class TTSService extends TextToSpeechService {
                 //       timeouts, some error, e.g. network timeouts are already taken care of
                 TTSProcessingResult elem = mRepository.dequeueTTSProcessingResult();
                 float rtf = estimateRTF(startTime, System.currentTimeMillis(), item, elem);
+                Log.v(LOG_TAG, "estimateRTF: rtf=" + rtf);
+                if (rtf > 500.0f && !isCached) {
+                    Log.w(LOG_TAG, "handleProcessingResult: rtf > 500.0f, something went wrong for the estimation");
+                    // don't delete the item
+                    rtf = 1.0f;
+                }
 
                 TTSRequest rcvdTtsRequest = elem.getTTSRequest();
                 Log.v(LOG_TAG, "handleProcessingResult: received result for (" + rcvdTtsRequest.serialize() + ")");
@@ -268,7 +276,7 @@ public class TTSService extends TextToSpeechService {
                                 Log.v(LOG_TAG, "rm_cache_item_after_playing: delete cache item "
                                         + rcvdTtsRequest.serialize());
                                 mRepository.getUtteranceCache().deleteCacheItem(item.getUuid());
-                            } else if (mRmCacheItemForFastVoices) {
+                            } else if (mRmCacheItemForFastVoices && !isCached) {
                                 // if the voice is fast, we can delete the cache item after playing
                                 if (rtf > 20.0f) {
                                     Log.v(LOG_TAG, "rm_cache_item_for_fast_voices: delete cache item "
@@ -324,10 +332,9 @@ public class TTSService extends TextToSpeechService {
         final int channels = 1;
 
         // calculate the real time factor
-        float durationInSecs = (float) elem.getAudio().length / (sampleRate * bytesPerSample * channels);
-        final float rtf = durationInSecs * 1000 / (stopTimeMillis - startTimeMillis);
-        Log.v(LOG_TAG, "rtf=" + rtf + " duration=" + durationInSecs + "s");
-        return  rtf;
+        float utteranceDurationInSecs = (float) elem.getAudio().length / (sampleRate * bytesPerSample * channels);
+        float measuredDurationInMsec = Math.max(stopTimeMillis - startTimeMillis, 1);
+        return utteranceDurationInSecs * 1000 / measuredDurationInMsec;
     }
 
     /**

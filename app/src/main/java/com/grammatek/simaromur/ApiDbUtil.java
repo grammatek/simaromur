@@ -74,8 +74,13 @@ public class ApiDbUtil {
         // create new voices from our list of unknown voices
         for (VoiceResponse av:newApiVoices) {
             Log.v(LOG_TAG, "Creating new voice from " + av);
+            // TODO: We have no version info yet, use v0
+            final String dummyVersion="v0" ;
+
+            Log.w(LOG_TAG, "No version info for voice " + av.VoiceId + " yet, using "
+                    + dummyVersion);
             Voice voice = new Voice(av.Name, av.VoiceId, av.Gender, av.LanguageCode, av.LanguageName,
-                    "", Voice.TYPE_NETWORK, "", "", "", "", 0);
+                    "", Voice.TYPE_NETWORK, "", "", dummyVersion, "", 0);
             Log.v(LOG_TAG, "New contents: " + voice);
             try {
                 mVoiceDao.insertVoice(voice);

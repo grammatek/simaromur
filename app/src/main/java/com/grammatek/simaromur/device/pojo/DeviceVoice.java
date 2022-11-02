@@ -53,6 +53,7 @@ public class DeviceVoice {
         this.LanguageName = languageName;
         this.Gender = gender;
         this.Type = type;
+        assert(version != null && version.length() > 0);
         this.Version = version;
         try
         {

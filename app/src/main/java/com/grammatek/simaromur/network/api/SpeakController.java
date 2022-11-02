@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import com.grammatek.simaromur.App;
 import com.grammatek.simaromur.AppRepository;
 import com.grammatek.simaromur.TTSRequest;
+import com.grammatek.simaromur.TTSService;
 import com.grammatek.simaromur.audio.AudioObserver;
 import com.grammatek.simaromur.cache.AudioFormat;
 import com.grammatek.simaromur.cache.CacheItem;
@@ -24,6 +25,7 @@ import com.grammatek.simaromur.cache.SampleRate;
 import com.grammatek.simaromur.cache.Utterance;
 import com.grammatek.simaromur.cache.UtteranceCacheManager;
 import com.grammatek.simaromur.cache.VoiceAudioDescription;
+import com.grammatek.simaromur.db.VoiceDao;
 import com.grammatek.simaromur.network.api.pojo.SpeakRequest;
 
 import org.jetbrains.annotations.NotNull;
@@ -206,15 +208,13 @@ public class SpeakController implements Callback<ResponseBody> {
                 if (utterance.getPhonemesCount() > 0) {
                     // use first phoneme entry of the cache item
                     PhonemeEntry phonemeEntry = utterance.getPhonemesList().get(0);
-                    // TODO:- voiceVersion parameter is not taken into account yet !
-                    //      - is the internal name of the voice model the same as we use here ?
-                    //          this should be consistent with the on-device voice handling
-                    String voiceName = mRequest.VoiceId;
-                    SampleRate sampleRate = getSampleRate();
-                    AudioFormat audioFormat = getAudioFormat();
+                    final String voiceName = mRequest.VoiceId;
+                    final String version = App.getAppRepository().getVersionOfVoice(voiceName);
+                    final SampleRate sampleRate = getSampleRate();
+                    final AudioFormat audioFormat = getAudioFormat();
                     final VoiceAudioDescription vad =
                             UtteranceCacheManager.newAudioDescription(audioFormat, sampleRate,
-                                    data.length, voiceName, "v1");
+                                    data.length, voiceName, version);
                     if (data.length == 0) {
                         Log.w(LOG_TAG, "synthesizeSpeech(): No audio generated ?!");
                     } else {
