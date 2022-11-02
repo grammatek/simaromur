@@ -24,9 +24,6 @@ import com.grammatek.simaromur.network.ConnectionCheck;
 
 import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_ID;
 
-import java.util.Locale;
-import java.util.Objects;
-
 /**
  * This class displays an info screen for a voice.
  */

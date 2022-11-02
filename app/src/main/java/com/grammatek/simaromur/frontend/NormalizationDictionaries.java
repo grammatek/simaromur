@@ -4,11 +4,7 @@ import org.apache.commons.collections4.OrderedMap;
 import org.apache.commons.collections4.map.ListOrderedMap;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Normalization dictionaries for abbreviations, digits and other non-standard-words.
@@ -439,18 +435,18 @@ public class NormalizationDictionaries {
     }
 
     //TODO: take care not to normalize the superscripts away when doing unicode normalization!
-    private static final Map<String, String> dimensionBefore = new HashMap<String, String>() {{
+    private static final Map<String, String> dimensionBefore = new HashMap<>() {{
         put("²", "fer");
         // put("2", "fer");
         // put("³", "rúm");
         // put("3", "rúm");
     }};
-    private static final Map<String, String> dimensionAfter = new HashMap<String, String>() {{
+    private static final Map<String, String> dimensionAfter = new HashMap<>() {{
         put("f", "fer");
         put("fer", "fer");
         // put("rúm", "rúm");
     }};
-    private static final Map<String, String> prefixMeterDimension = new HashMap<String, String>() {{
+    private static final Map<String, String> prefixMeterDimension = new HashMap<>() {{
         put("", "");
         //  put("m", "milli");
         // put("[cs]", "senti");
@@ -516,7 +512,7 @@ public class NormalizationDictionaries {
         if (!volumeDict.isEmpty())
             return volumeDict;
 
-        Map<String, String> prefixLiter = new HashMap<String, String>() {{
+        Map<String, String> prefixLiter = new HashMap<>() {{
             put("", "");
             put("d", "desi");
             put("c", "senti");
@@ -551,7 +547,7 @@ public class NormalizationDictionaries {
         timeDict.put("(1 )klst\\.?(\\W|$)", "$1 klukkustund$2");
         timeDict.put("(\\W|^)klst\\.?(\\W|$)", "$1klukkustundir$2x");
 
-        Map<String, String> prefixTime = new HashMap<String, String>() {{
+        Map<String, String> prefixTime = new HashMap<>() {{
             put("mín()?", "mínút");
             put("s(ek)?", "sekúnd");
             put("ms(ek)?", "millisekúnd");

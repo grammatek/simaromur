@@ -27,22 +27,19 @@ public abstract class AsyncThread {
 
     private void startBackground() {
         onPreExecute();
-        executors.execute(new Runnable() {
-            @Override
-            public void run() {
-                Thread.currentThread().setName(threadName);
-                Log.v(LOG_TAG, threadName + ": before doInBackground()");
-                doInBackground();
-                Log.v(LOG_TAG, threadName + ": after doInBackground()");
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.v(LOG_TAG, "UI: before onPostExecute()");
-                        onPostExecute();
-                        Log.v(LOG_TAG, "UI: after onPostExecute()");
-                    }
-                });
-            }
+        executors.execute(() -> {
+            Thread.currentThread().setName(threadName);
+            Log.v(LOG_TAG, threadName + ": before doInBackground()");
+            doInBackground();
+            Log.v(LOG_TAG, threadName + ": after doInBackground()");
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    Log.v(LOG_TAG, "UI: before onPostExecute()");
+                    onPostExecute();
+                    Log.v(LOG_TAG, "UI: after onPostExecute()");
+                }
+            });
         });
     }
 

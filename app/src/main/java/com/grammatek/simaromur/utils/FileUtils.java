@@ -347,7 +347,7 @@ public class FileUtils {
     public static List<String> readLinesFromResourceFile(Context context, int resID) {
         Resources res = context.getResources();
         List<String> fileContent = new ArrayList<>();
-        String line = "";
+        String line;
         try {
             InputStream is = res.openRawResource(resID);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));

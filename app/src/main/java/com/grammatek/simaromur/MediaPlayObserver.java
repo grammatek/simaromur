@@ -63,7 +63,7 @@ public class MediaPlayObserver implements AudioObserver {
         }
         @Override
         public boolean onError(MediaPlayer mp, int what, int extra) {
-            String whatVerbose = "";
+            String whatVerbose;
             switch(what) {
                 case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
                     whatVerbose = "Mediaplayer server died";
@@ -73,7 +73,7 @@ public class MediaPlayObserver implements AudioObserver {
                     whatVerbose = "Unknown media error";
                     break;
             }
-            String extraVerbose = "";
+            String extraVerbose;
             final int MEDIA_ERROR_SYSTEM = -2147483648;
             switch(extra) {
                 case MediaPlayer.MEDIA_ERROR_IO:

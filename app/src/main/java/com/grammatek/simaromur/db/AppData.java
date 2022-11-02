@@ -57,6 +57,7 @@ public class AppData {
     @NonNull
     public Boolean crashLyticsUserConsentGiven = false;
 
+    @NonNull
     @Override
     public String toString() {
         return "AppData{" +

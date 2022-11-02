@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DeviceVoice {
-    static private String LOG_TAG = "Simaromur_" + DeviceVoice.class.getSimpleName();
+    static private final String LOG_TAG = "Simaromur_" + DeviceVoice.class.getSimpleName();
 
     @SerializedName("name")
     public String Name;
@@ -125,7 +125,7 @@ public class DeviceVoice {
                 }
             }
         }
-        Log.v(LOG_TAG, "convertToDbVoice: " + this.toString());
+        Log.v(LOG_TAG, "convertToDbVoice: " + this);
         return new Voice(this.Name,
                 this.InternalName,
                 this.Gender,

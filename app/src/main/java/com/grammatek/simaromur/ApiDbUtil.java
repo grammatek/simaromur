@@ -15,7 +15,7 @@ public class ApiDbUtil {
     public final static String NET_VOICE_SUFFIX = " net";
 
     private final static String LOG_TAG = "Simaromur_" + ApiDbUtil.class.getSimpleName();
-    VoiceDao mVoiceDao;
+    private final VoiceDao mVoiceDao;
 
     ApiDbUtil(VoiceDao voiceDao)
     {

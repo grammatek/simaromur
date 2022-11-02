@@ -1,19 +1,13 @@
 package com.grammatek.simaromur.frontend;
 
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.util.Log;
-
-import com.grammatek.simaromur.App;
 
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,12 +39,16 @@ public class NormalizationManager {
         mTokenizer = new Tokenizer(context);
         mTTSNormalizer = new TTSNormalizer();
         mPosTagger = initPOSTagger();
+        if (mPosTagger == null) {
+            Log.e(LOG_TAG, "Failed to initialize POS tagger");
+            throw new RuntimeException("Failed to initialize POS tagger");
+        }
     }
 
     /**
      * Processes the input text according to the defined steps: unicode cleaning,
      * tokenizing, normalizing
-     * @param text
+     * @param text the input text
      * @return normalized version of 'text'
      */
     public String process(final String text) {
@@ -89,16 +87,13 @@ public class NormalizationManager {
     }
 
     private String[] tagText(final String text) {
-        String[] tags = {};
+        String[] tags = new String[0];
         String[] tokens = text.split(" ");
-        if (mPosTagger == null) {
-            //TODO: proper error handling here - what do we do if the tagger fails?
-            Log.e(LOG_TAG, "POSTagger is not initialized!");
-        }
         tags = mPosTagger.tag(tokens);
 
-        if (DEBUG)
+        if (DEBUG) {
             printProbabilities(tags, mPosTagger, tokens);
+        }
 
         return tags;
     }

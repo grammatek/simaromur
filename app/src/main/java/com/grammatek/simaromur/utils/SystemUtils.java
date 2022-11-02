@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 // Some system utilities
 public class SystemUtils {
-    private static String LOG_TAG = "Simaromur_" + SystemUtils.class.getSimpleName();
+    private static final String LOG_TAG = "Simaromur_" + SystemUtils.class.getSimpleName();
     /**
      * Returns the Android arch name
      *

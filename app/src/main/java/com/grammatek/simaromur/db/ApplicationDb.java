@@ -5,7 +5,6 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -19,8 +18,7 @@ import java.util.List;
 
 @Database(
         version = ApplicationDb.LATEST_VERSION,
-        entities = {Voice.class, AppData.class},
-        exportSchema = true
+        entities = {Voice.class, AppData.class}
 )
 public abstract class ApplicationDb extends RoomDatabase {
     private final static String LOG_TAG = "Simaromur_" + ApplicationDb.class.getSimpleName();

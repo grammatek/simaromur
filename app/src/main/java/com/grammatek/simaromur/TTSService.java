@@ -191,30 +191,35 @@ public class TTSService extends TextToSpeechService {
         mRepository.setCurrentTTSRequest(ttsRequest);
 
         // check if network voice && for network availability
-        if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_NETWORK)) {
-            if (! testForAndHandleNetworkVoiceIssues(callback, voice)) {
-                Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
-                return;
-            }
-            if (item.getUtterance().getNormalized().isEmpty()) {
-                Log.i(LOG_TAG, "onSynthesizeText: normalization failed ?");
-                playSilence(callback);
-                Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
-                return;
-            }
-            startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_WAV, true);
-            setSpeechMarksToBeginning(callback);
-            mRepository.startNetworkTTS(voice, item, ttsRequest, speechrate/100.0f,pitch/100.0f);
-        } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TORCH)) {
-            startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_TORCH, false);
-            setSpeechMarksToBeginning(callback);
-            mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate/100.0f,pitch/100.0f);
-        } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_FLITE)) {
-            startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_FLITE, false);
-            setSpeechMarksToBeginning(callback);
-            mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
-        } else {
-            Log.e(LOG_TAG, "Voice type currently unsupported: " + voice.type);
+        switch (voice.type) {
+            case com.grammatek.simaromur.db.Voice.TYPE_NETWORK:
+                if (!testForAndHandleNetworkVoiceIssues(callback, voice)) {
+                    Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
+                    return;
+                }
+                if (item.getUtterance().getNormalized().isEmpty()) {
+                    Log.i(LOG_TAG, "onSynthesizeText: normalization failed ?");
+                    playSilence(callback);
+                    Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
+                    return;
+                }
+                startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_WAV, true);
+                setSpeechMarksToBeginning(callback);
+                mRepository.startNetworkTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
+                break;
+            case com.grammatek.simaromur.db.Voice.TYPE_TORCH:
+                startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_TORCH, false);
+                setSpeechMarksToBeginning(callback);
+                mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
+                break;
+            case com.grammatek.simaromur.db.Voice.TYPE_FLITE:
+                startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_FLITE, false);
+                setSpeechMarksToBeginning(callback);
+                mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
+                break;
+            default:
+                Log.e(LOG_TAG, "Voice type currently unsupported: " + voice.type);
+                break;
         }
         handleProcessingResult(callback, item, ttsRequest);
         Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");

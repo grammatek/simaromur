@@ -104,7 +104,7 @@ public class TTSUnicodeNormalizer {
             String[] sentArr = sent.split(" ");
             for (String wrd : sentArr) {
                 if (isTag(wrd)) {
-                    sb.append(wrd + " ");
+                    sb.append(wrd).append(" ");
                     continue;
                 }
                 if (!inDictionary(wrd)) {
@@ -185,7 +185,7 @@ public class TTSUnicodeNormalizer {
     private Set<String> initLexicon(Context context) {
         Set<String> lexicon = new HashSet<>();
         Resources res = context.getResources();
-        String line = "";
+        String line;
         try {
             InputStream is = res.openRawResource(R.raw.lexicon_v2201);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
