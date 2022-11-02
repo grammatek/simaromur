@@ -70,9 +70,9 @@ public class AppRepository {
     private final ApiDbUtil mApiDbUtil;
     private final AssetVoiceManager mAVM;
     private final DownloadVoiceManager mDVM;
-    // audio cache low/high watermark: 128/256MB, @todo: make configurable
-    private static final long CacheLowWatermark = 128 * 1024 * 1024;
-    private static final long CacheHighWatermark = 2 * CacheLowWatermark;
+    // audio cache low/high watermark: 48/72MB, @todo: make configurable
+    private static final long CacheLowWatermark = 48 * 1024 * 1024;
+    private static final long CacheHighWatermark = (long) (1.5 * CacheLowWatermark);
     private final UtteranceCacheManager mUtteranceCacheManager;
     // in TTSService.onSynthesizeText() we receive items of this queue and send them from either
     // a.) TTS worker threads or b.) via TTSService.onStop()

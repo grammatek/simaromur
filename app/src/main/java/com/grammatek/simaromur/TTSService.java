@@ -1,6 +1,7 @@
 package com.grammatek.simaromur;
 
 import android.media.AudioFormat;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.SynthesisRequest;
@@ -121,6 +122,8 @@ public class TTSService extends TextToSpeechService {
         String variant = request.getVariant();
         String text = request.getCharSequenceText().toString();
         String voiceName = request.getVoiceName();
+        int callerUid = request.getCallerUid();
+        Bundle params = request.getParams();
         // we will get speechrate and pitch from the settings,
         // but in case the retrieval of the values fails, let's get the values from the request first.
         int speechrate = request.getSpeechRate();
@@ -132,8 +135,9 @@ public class TTSService extends TextToSpeechService {
             ex.printStackTrace();
         }
         Log.v(LOG_TAG, "onSynthesizeText: " + text);
-        Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/" + country + "/" + variant +
-                "), speed: " + speechrate + " pitch: " + pitch);
+        Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/" + country + "/" + variant
+                + "), callerUid: " + callerUid + " speed: " + speechrate + " pitch: " + pitch
+                + " bundle: " + params);
 
         // if cache item for text already exists: retrieve it, otherwise create a new cache
         // item and save it into cache, then test one-by-one availability of every single
