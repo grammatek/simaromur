@@ -207,7 +207,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
         if (requestCode == MY_DATA_CHECK_CODE) {
             // Create the TTS instance, this also pulls up our TTSService. Anywhere we use
             // this object, we must always check beforehand mTtsClient != null.
-            mTtsClient = new TextToSpeech(this, this,
+            mTtsClient = new TextToSpeech(getApplicationContext(), this,
                     getApplicationContext().getPackageName());
         }
     }
