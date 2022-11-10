@@ -1,5 +1,7 @@
 package com.grammatek.simaromur;
 
+import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_ID;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.pm.ActivityInfo;
@@ -14,6 +16,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.grammatek.simaromur.cache.CacheItem;
@@ -22,12 +26,13 @@ import com.grammatek.simaromur.device.DownloadVoiceManager;
 import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
-import static com.grammatek.simaromur.VoiceManager.EXTRA_DATA_VOICE_ID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class displays an info screen for a voice.
  */
-public class VoiceInfo extends AppCompatActivity {
+public class VoiceInfo extends AppCompatActivity
+        implements VoiceMoreDialogFragment.NoticeDialogListener {
     private final static String LOG_TAG = "Simaromur_" + VoiceInfo.class.getSimpleName();
 
     private long mVoiceId;
@@ -72,6 +77,7 @@ public class VoiceInfo extends AppCompatActivity {
         playButton.setOnClickListener(this::onPlayClicked);
         Button downloadButton = findViewById(R.id.download_button);
         downloadButton.setOnClickListener(this::onDownloadClicked);
+
         ProgressBar pg = findViewById(R.id.progressBarPlay);
         pg.setOnClickListener(this::onSpinnerClicked);
 
@@ -119,6 +125,15 @@ public class VoiceInfo extends AppCompatActivity {
         downloadButton.setEnabled(false);
         downloadButton.setVisibility(View.GONE);
 
+        // more options (3 dots ...)
+        CardView moreOptions = findViewById(R.id.moreOptionsBackground);
+        moreOptions.setOnClickListener(view -> {
+            // TODO: update not yet implemented
+            boolean isUpdateAvailable = false;
+            DialogFragment newFragment = new VoiceMoreDialogFragment(isUpdateAvailable);
+            newFragment.show(getSupportFragmentManager(), "update voice");
+        });
+
         ProgressBar pg = findViewById(R.id.progressBarPlay);
         pg.setVisibility(View.INVISIBLE);
         if (mVoice != null) {
@@ -134,8 +149,11 @@ public class VoiceInfo extends AppCompatActivity {
                 genderTextView.setText(getResources().getString(R.string.female));
             }
             if (mVoice.needsNetwork()) {
+                Log.v(LOG_TAG, "updateUi: voice needs network");
                 typeTextView.setText(getResources().getString(R.string.type_network));
                 speakableTextView.setText(getResources().getString(R.string.voice_test_text_network));
+                moreOptions.setVisibility(View.GONE);
+                moreOptions.setEnabled(false);
                 // change voice availability icon according to network availability and type
                 if (mVoice.needsNetwork()) {
                     if (ConnectionCheck.isNetworkConnected()) {
@@ -159,14 +177,20 @@ public class VoiceInfo extends AppCompatActivity {
                 downloadButton.setText(getResources().getString(R.string.do_download));
                 downloadButton.setEnabled(true);
                 downloadButton.setVisibility(View.VISIBLE);
+                moreOptions.setVisibility(View.GONE);
+                moreOptions.setEnabled(false);
             } else {
                 Log.v(LOG_TAG, "updateUi: voice is on device");
                 mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_action_download);
                 mNetworkAvailabilityIcon.setColorFilter(Color.GREEN);
                 typeTextView.setText(getResources().getString(R.string.type_local));
                 if (mVoice.isFast()) {
+                    moreOptions.setVisibility(View.VISIBLE);
+                    moreOptions.setEnabled(true);
                     speakableTextView.setText(getResources().getString(R.string.voice_test_text_on_device_fast));
                 } else {
+                    moreOptions.setVisibility(View.INVISIBLE);
+                    moreOptions.setEnabled(false);
                     speakableTextView.setText(getResources().getString(R.string.voice_test_text_on_device));
                 }
                 speakableTextView.setVisibility(View.VISIBLE);
@@ -199,6 +223,18 @@ public class VoiceInfo extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog, int itemId) {
+        Log.v(LOG_TAG, "onDialogPositiveClick, index:" + itemId);
+        // user touched the dialog's positive button
+        onDeleteClicked();
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+        Log.v(LOG_TAG, "onDialogNegativeClick:");
+    }
+
     /**
      * Implements an observer to toggle the "Play" button for showing a circular spinner and back
      * again in case audio playback is finished.
@@ -210,7 +246,10 @@ public class VoiceInfo extends AppCompatActivity {
         }
     }
 
-    class DownloadObserver implements DownloadVoiceManager.DownloadObserver {
+    /**
+     * Implements an observer for updating UI when voice is downloaded
+     */
+    class DownloadObserver implements DownloadVoiceManager.Observer {
         ProgressBar mProgressBar;
         DownloadObserver(ProgressBar progressBar) {
             mProgressBar = progressBar;
@@ -241,7 +280,11 @@ public class VoiceInfo extends AppCompatActivity {
                     runOnUiThread(() -> {
                         // swap view to indeterminate progress bar to allow the voice to unzip peacefully
                         findViewById(R.id.llProgressBar).setVisibility(View.GONE);
-                        findViewById(R.id.ccProgressBar).setVisibility(View.VISIBLE);
+                        // spinner needs to have its text updated, as it is used for different purposes
+                        final View mSpinner = findViewById(R.id.ccProgressBar);
+                        final TextView spinnerText = mSpinner.findViewById(R.id.pbText);
+                        spinnerText.setText(R.string.unzipping_voice);
+                        mSpinner.setVisibility(View.VISIBLE);
                     });
             }
         }
@@ -252,7 +295,48 @@ public class VoiceInfo extends AppCompatActivity {
                 runOnUiThread(() -> {
                     findViewById(R.id.llProgressBar).setVisibility(View.GONE);
                     AlertDialog.Builder b = new AlertDialog.Builder(VoiceInfo.this);
-                    b.setMessage(R.string.download_failed);
+                    b.setMessage(R.string.sth_failed_try_again);
+                    b.setCancelable(true);
+                    b.create().show();
+                });
+            }
+        }
+    }
+
+    /**
+     * Implements an observer for updating UI when voice is deleted
+     */
+    public class DeleteVoiceObserver implements DownloadVoiceManager.Observer {
+        final static String LOG_TAG = "DeleteVoiceObserver";
+        final View mSpinner = findViewById(R.id.ccProgressBar);
+        DeleteVoiceObserver() {
+            runOnUiThread(() -> {
+                final TextView spinnerText = mSpinner.findViewById(R.id.pbText);
+                spinnerText.setText(R.string.voice_deletion_title);
+            });
+        }
+
+        @Override
+        public void hasFinished(boolean success) {
+            runOnUiThread(() -> mSpinner.setVisibility(View.GONE));
+        }
+        @Override
+        public void updateProgress(int progress) {
+            Log.d(LOG_TAG, "updateProgress: " + progress);
+            if (progress == 0) {
+                Log.d(LOG_TAG, "updateProgress: show Spinner");
+                runOnUiThread(() -> mSpinner.setVisibility(View.VISIBLE));
+            }
+        }
+        @Override
+        public void hasError(String error) {
+            Log.e(LOG_TAG, "hasError: " + error);
+            // Tell user something went wrong unless it's from him cancelling the download.
+            if (!error.matches("(?i).*cancel.*")) {
+                runOnUiThread(() -> {
+                    mSpinner.setVisibility(View.GONE);
+                    AlertDialog.Builder b = new AlertDialog.Builder(VoiceInfo.this);
+                    b.setMessage(R.string.sth_failed_try_again);
                     b.setCancelable(true);
                     b.create().show();
                 });
@@ -312,6 +396,31 @@ public class VoiceInfo extends AppCompatActivity {
         mVoiceViewModel.stopSpeaking(mVoice);
         App.getAppRepository().setCurrentTTSRequest(null);
         toggleSpeakButton();
+    }
+
+    public void onDeleteClicked() {
+        Log.v(LOG_TAG, "onDeleteClicked");
+
+        AtomicBoolean doCancel = new AtomicBoolean(true);
+        AlertDialog d = new AlertDialog.Builder(this)
+                .setTitle(R.string.voice_deletion_title)
+                .setMessage(R.string.voice_deletion_q)
+                .setPositiveButton(R.string.doit, (dialog, id) -> {doCancel.set(false);
+                    if (App.getAppRepository().isCurrentVoice(mVoice)) {
+                        Log.v(LOG_TAG, "onDeleteClicked: voice cannot be deleted ");
+                        AlertDialog.Builder b = new AlertDialog.Builder(VoiceInfo.this)
+                                .setMessage(R.string.voice_deletion_not_possible)
+                                .setNegativeButton(R.string.ok, (aDialog, anId) -> doCancel.set(true))
+                                .setCancelable(true);
+                        b.create().show();
+                    } else {
+                        Log.v(LOG_TAG, "onDeleteClicked: deleting voice " + mVoice.name);
+                        App.getAppRepository().deleteVoiceAsync(mVoice, new DeleteVoiceObserver());
+                    }})
+                .setNegativeButton(R.string.not_yet, (dialog, id) -> Log.v(LOG_TAG, "onDeleteClicked: canceled"))
+                .setCancelable(false)
+                .create();
+        d.show();
     }
 
     public void onDownloadClicked(View v) {

@@ -19,6 +19,7 @@ import com.grammatek.simaromur.network.ConnectionCheck;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -486,17 +487,22 @@ public class TTSService extends TextToSpeechService {
         List<Voice> announcedVoiceList = new ArrayList<>();
 
         for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
-            int quality = Voice.QUALITY_NORMAL;
+            int quality = Voice.QUALITY_VERY_LOW;
             int latency = Voice.LATENCY_LOW;
             boolean needsNetwork = false;
             Set<String> features = new HashSet<>();
 
             if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_NETWORK)) {
                 latency = Voice.LATENCY_VERY_HIGH;
+                quality = Voice.QUALITY_HIGH;
                 features.add(TextToSpeech.Engine.KEY_FEATURE_NETWORK_RETRIES_COUNT);
                 needsNetwork = true;
             } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TORCH)) {
+                quality = Voice.QUALITY_VERY_HIGH;
                 latency = Voice.LATENCY_VERY_HIGH;
+            }
+            if (voice.needsDownload()) {
+                features.add(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED);
             }
             Voice ttsVoice = new Voice(voice.name, voice.getLocale(), quality, latency,
                     needsNetwork, features);

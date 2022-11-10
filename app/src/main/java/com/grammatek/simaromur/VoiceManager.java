@@ -40,6 +40,30 @@ public class VoiceManager extends AppCompatActivity {
         // in the foreground.
         voiceViewModel.getAllVoices().observe(this, voices -> {
             Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
+            // sort voices by their type and then their internal name
+            voices.sort((v1, v2) -> {
+                if (v1.type.equals(v2.type)) {
+                    return v1.internalName.compareTo(v2.internalName);
+                } else {
+                    // we want to have the type sorted in the order of
+                    // the following list:
+                    // 1. "flite"
+                    // 2. "torchscript"
+                    // 3. "network"
+                    if (v1.type.equals("flite")) {
+                        return -1;
+                    } else if (v2.type.equals("flite")) {
+                        return 1;
+                    } else if (v1.type.equals("torchscript")) {
+                        return -1;
+                    } else if (v2.type.equals("torchscript")) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
+            });
+
             // Update cached voices
             adapter.setVoices(voices);
         });

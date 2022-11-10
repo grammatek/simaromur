@@ -106,13 +106,38 @@ public class AppRepository {
     }
 
     /**
+     * Deletes voice model data for given voice. The voice needs to be a downloadable voice. In case
+     * The voice model data hasn't been downloaded yet or is the current voice, false is returned.
+     */
+    public boolean deleteVoiceAsync(Voice voice, VoiceInfo.DeleteVoiceObserver deleteVoiceObserver) {
+        if (voice == null) {
+            Log.v(LOG_TAG, "voice is NULL");
+            return false;
+        }
+        if (isCurrentVoice(voice)) return false;
+
+        mDVM.deleteVoice(voice, deleteVoiceObserver, mVoiceDao);
+        return true;
+    }
+
+    /**
+     * Returns true if the given voice is the currently selected voice.
+     * @param voice     voice to check
+     * @return          true if voice is currently selected
+     */
+    public boolean isCurrentVoice(Voice voice) {
+        Voice existingVoice = mVoiceDao.findVoiceWithId(voice.voiceId);
+        return mCachedAppData.currentVoiceId == voice.voiceId || existingVoice == null;
+    }
+
+    /**
      * Download given voice from voice repository asynchronously. After download is finished or
      * has failed, the given observer is called.
      *
      * @param voice             Voice to download
      * @param finishedObserver  VoiceInfo object to update
      */
-    public void downloadVoiceAsync(Voice voice, DownloadVoiceManager.DownloadObserver finishedObserver) {
+    public void downloadVoiceAsync(Voice voice, DownloadVoiceManager.Observer finishedObserver) {
         // when the download is successful, the voice is updated in the database. This happens
         // asynchonously.
         mDVM.downloadVoiceAsync(voice, finishedObserver, mVoiceDao);
@@ -571,6 +596,10 @@ public class AppRepository {
 
         for (final Voice voice : availableVoicesList) {
             if (voice.supportsIso3(language, country, variant)) {
+                if (voice.needsDownload()) {
+                    Log.v(LOG_TAG, "Voice needs download");
+                    return TextToSpeech.LANG_MISSING_DATA;
+                }
                 supportsLanguage = true;
                 if (!variant.isEmpty()) {
                     supportsVariant = true;

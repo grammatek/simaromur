@@ -61,7 +61,7 @@ public class DownloadVoiceManager {
     /**
      * Interface for an observer that is called when finished with playing audio.
      */
-    public interface DownloadObserver {
+    public interface Observer {
         /**
          * This method is called whenever a queued element is finished playing.
          */
@@ -158,6 +158,7 @@ public class DownloadVoiceManager {
         boolean rv = false;
         if (mVoiceRepo == null) {
             try {
+                Log.v(LOG_TAG, "lazyInitVoiceRepo: initializing voice repo");
                 mVoiceRepo = new VoiceRepo("grammatek/simaromur_voices");
                 rv = true;
             } catch (IOException | VoiceRepo.LimitExceededException e) {
@@ -166,6 +167,7 @@ public class DownloadVoiceManager {
                         + ": " + e.getMessage());
             }
         } else {
+            Log.v(LOG_TAG, "lazyInitVoiceRepo: already initialized");
             rv = true;
         }
         return rv;
@@ -308,16 +310,112 @@ public class DownloadVoiceManager {
     }
 
     /**
+     * Delete voice from disk and updates db. Voice needs to be a voice managed by DownloadVoiceManager.
+     * @param voice                 Voice to delete
+     * @param deleteVoiceObserver   Observer to notify when voice is deleted
+     * @param voiceDao  Dao for voice table
+     */
+    public void deleteVoice(Voice voice, com.grammatek.simaromur.VoiceInfo.DeleteVoiceObserver deleteVoiceObserver,
+                            VoiceDao voiceDao) {
+        mAsyncThread = new AsyncThread() {
+            final String anInternalName = voice.internalName;
+            boolean voiceRepoOk = false;
+
+            @Override
+            public void onPreExecute() {
+                Log.v(LOG_TAG, "UninstallVoiceAsync: starting uninstallation of " + anInternalName);
+            }
+
+            @Override
+            public void doInBackground() {
+                deleteVoiceObserver.updateProgress(0);      // show spinner
+                voiceRepoOk = lazyInitVoiceRepo();
+                if (!voiceRepoOk) {
+                    Log.e(LOG_TAG, "Voice repository not available !");
+                    deleteVoiceObserver.hasError("Voice repository not available !");
+                    deleteVoiceObserver.hasFinished(false);
+                    return;
+                }
+                DeviceVoice voiceInfo = searchVoiceInfo(anInternalName, mVoicesOnDisk);
+                if (voiceInfo == null) {
+                    final String errMsg = "deleteVoice: voiceInfo is null for voice " + anInternalName;
+                    Log.e(LOG_TAG, errMsg);
+                    deleteVoiceObserver.hasError(errMsg);
+                    deleteVoiceObserver.hasFinished(false);
+                    return;
+                }
+
+                boolean delSuccess = FileUtils.delete(voice.downloadPath);
+                if (delSuccess) {
+                    Log.v(LOG_TAG, "deleteVoice: deleted " + voice.downloadPath);
+                } else {
+                    final String errMsg = "Failed to delete " + voice.downloadPath;
+                    Log.e(LOG_TAG, "deleteVoice: " + errMsg);
+                    deleteVoiceObserver.hasError(errMsg);
+                    deleteVoiceObserver.hasFinished(false);
+                    return;
+                }
+
+                voiceInfo.Residence = "network:grammatek/simaromur_voices:0.1 release";
+                if (mVoicesOnDisk != null) {
+                    // remove voice from list of voices on disk
+                    // XXX DS: don't we have to also update the info on the file system ?
+                    //         or is this info only inside the db ?
+                    mVoicesOnDisk.Voices.remove(voiceInfo);
+                }
+
+                // update model
+                voice.url = "network:grammatek/simaromur_voices:0.1 release";
+                voiceDao.updateVoices(voice);
+
+                // notify observer
+                deleteVoiceObserver.hasFinished(true);
+            }
+
+            @Override
+            public void onPostExecute() {
+                Log.v(LOG_TAG, "voice deletion complete");
+            }
+
+            @Nullable
+            private DeviceVoice searchVoiceInfo(String internalVoiceName, DeviceVoices voicesOnDisk) {
+                // Search the VoiceInfo inside mVoicesOnServer
+                DeviceVoice voiceInfo = null;
+                if (voicesOnDisk == null || voicesOnDisk.Voices == null) {
+                    Log.e(LOG_TAG, "deleteVoice: no voices on Disk ?");
+                    return null;
+                }
+                for (DeviceVoice aVoiceInfo : voicesOnDisk.Voices) {
+                    Log.v(LOG_TAG, "" + aVoiceInfo);
+                    if (aVoiceInfo.InternalName.equals(internalVoiceName) &&
+                            aVoiceInfo.Version.equals(voice.version)) {
+                        voiceInfo = aVoiceInfo;
+                        break;
+                    }
+                }
+                if (voiceInfo == null) {
+                    Log.e(LOG_TAG, "Could not find voice info on disk for voice "
+                            + internalVoiceName);
+                    return null;
+                }
+                return voiceInfo;
+            }
+        };
+
+        mAsyncThread.execute("DeleteVoiceThread");
+    }
+
+    /**
      * Downloads a voice from the server and feed progress updates to the callback.
      *
      * @param voice        Voice to download
      * @param downloadObserver    Voice information
      * @param voiceDao    VoiceDao to update the voice information
      */
-    public void downloadVoiceAsync(Voice voice, DownloadObserver downloadObserver, VoiceDao voiceDao) {
+    public void downloadVoiceAsync(Voice voice, Observer downloadObserver, VoiceDao voiceDao) {
         mAsyncThread = new AsyncThread() {
             final String anInternalName = voice.internalName;
-            final DownloadObserver aDownloadObserver = downloadObserver;
+            final Observer aDownloadObserver = downloadObserver;
             // progress listener is set when download starts
             ProgressListener listener = null;
             boolean voiceRepoOk = false;
@@ -595,9 +693,9 @@ public class DownloadVoiceManager {
         private FileOutputStream mFs = null;
         private long mFileSize = -1;
         private long mBytesDownloaded = 0;
-        private final DownloadObserver mDownloadObserver;
+        private final Observer mDownloadObserver;
 
-        ProgressListener(String fileName, DownloadObserver finishedObserver) {
+        ProgressListener(String fileName, Observer finishedObserver) {
             mFileName = fileName;
             mDownloadObserver = finishedObserver;
         }
@@ -608,6 +706,7 @@ public class DownloadVoiceManager {
             mBytesDownloaded = 0;
             mFileSize = totalBytes;
             File aFile = new File(mFileName);
+            Log.v(LOG_TAG, "le filename: " + mFileName);
             try {
                 mFs = new FileOutputStream(aFile, false);
             } catch (FileNotFoundException e) {

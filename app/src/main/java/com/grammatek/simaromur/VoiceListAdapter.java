@@ -1,6 +1,7 @@
 package com.grammatek.simaromur;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,8 +48,10 @@ public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.Voic
             holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_network));
         } else if (current.needsDownload()) {
             holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_local_downloaded));
+            holder.voiceTypeItemView.setTextColor(Color.YELLOW);
         } else {
             holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_local));
+            holder.voiceTypeItemView.setTextColor(Color.GREEN);
         }
     }
 
