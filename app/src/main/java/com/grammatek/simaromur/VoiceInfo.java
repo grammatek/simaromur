@@ -87,7 +87,7 @@ public class VoiceInfo extends AppCompatActivity
 
         // query DB for given voice id. On completion set appropriate UI attributes
         mVoiceViewModel.getAllVoices().observe(this, voices -> {
-            Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
+            Log.v(LOG_TAG, "onCreate::mVoiceViewModel.getAllVoices().observe - voices size: " + voices.size());
             mVoice = mVoiceViewModel.getVoiceWithId(mVoiceId);
             if (mVoice != null) {
                 // update the UI according to the voice
@@ -100,15 +100,9 @@ public class VoiceInfo extends AppCompatActivity
     public void onWindowFocusChanged(boolean hasFocus) {
         Log.v(LOG_TAG, "onWindowFocusChanged:");
         super.onWindowFocusChanged(hasFocus);
-        // query DB for given voice id. On completion set appropriate UI attributes
-        mVoiceViewModel.getAllVoices().observe(this, voices -> {
-            Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
-            mVoice = mVoiceViewModel.getVoiceWithId(mVoiceId);
-            if (mVoice != null) {
-                // update the UI according to the voice
-                updateUi();
-            }
-        });
+        if (hasFocus) {
+            updateUi();
+        }
     }
 
     private void updateUi() {
@@ -160,7 +154,6 @@ public class VoiceInfo extends AppCompatActivity
                         mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
                     } else {
                         mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
-                        App.getAppRepository().showTtsBackendWarningDialog(this);
                     }
                 }
             } else if (mVoice.needsDownload()){
@@ -213,14 +206,7 @@ public class VoiceInfo extends AppCompatActivity
     public void onResume() {
         Log.v(LOG_TAG, "onResume:");
         super.onResume();
-        mVoiceViewModel.getAllVoices().observe(this, voices -> {
-            Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
-            mVoice = mVoiceViewModel.getVoiceWithId(mVoiceId);
-            if (mVoice != null) {
-                // update the UI according to the voice
-                updateUi();
-            }
-        });
+        updateUi();
     }
 
     @Override
@@ -263,9 +249,11 @@ public class VoiceInfo extends AppCompatActivity
             // hide from the UI whether the download is a success or not.
             findViewById(R.id.ccProgressBar).setVisibility(View.GONE);
             if (!success) {
-                mProgressBar.setProgress(0);
-                mProgressBarPercentage.setText("0%");
-                findViewById(R.id.llProgressBar).setVisibility(View.GONE);
+                runOnUiThread(() -> {
+                    mProgressBar.setProgress(0);
+                    mProgressBarPercentage.setText("0%");
+                    findViewById(R.id.llProgressBar).setVisibility(View.GONE);
+                });
             }
         }
         @Override
@@ -425,6 +413,12 @@ public class VoiceInfo extends AppCompatActivity
 
     public void onDownloadClicked(View v) {
         Log.v(LOG_TAG, "onDownloadClicked");
+        // check internet connectivity
+        if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {
+            mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
+            App.getAppRepository().showTtsBackendWarningDialog(this);
+            return;
+        }
         toggleDownloadButton();
 
         findViewById(R.id.llProgressBar).setVisibility(View.VISIBLE);

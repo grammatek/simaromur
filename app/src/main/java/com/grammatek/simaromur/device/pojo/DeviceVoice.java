@@ -9,6 +9,8 @@ import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.network.remoteasset.VoiceFile;
 import com.grammatek.simaromur.network.remoteasset.VoiceInfo;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -140,5 +142,35 @@ public class DeviceVoice {
                 "",         // md5sum
                 0);                  // size
         // download path, md5sum and size are set later, when the file is downloaded
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        DeviceVoice other = (DeviceVoice) obj;
+        // compare Files via constructing List difference
+        List<DeviceVoiceFile> differences  = new ArrayList<>(other.Files);
+        differences.removeAll(Files);
+        boolean filesAreEqual = differences.isEmpty() && Files.size() == other.Files.size();
+        return filesAreEqual && InternalName.equals(other.InternalName)
+                && Version.equals(other.Version) && Residence.equals(other.Residence)
+                && Release.equals(other.Release);
+    }
+
+    public int hashCode() {
+        // you pick a hard-coded, randomly chosen, non-zero, odd number
+        // ideally different for each class
+        return new HashCodeBuilder(17, 37).
+                append(InternalName).
+                append(Version).
+                append(Residence).
+                append(Release).
+                append(Files).
+                toHashCode();
     }
 }

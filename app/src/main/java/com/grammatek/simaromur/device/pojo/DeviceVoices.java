@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.annotations.SerializedName;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,6 +87,21 @@ public class DeviceVoices {
         return combinedVoices;
     }
 
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        DeviceVoices other = (DeviceVoices) obj;
+        // compare Voices via constructing List difference
+        List<DeviceVoice> differences  = new ArrayList<>(other.Voices);
+        differences.removeAll(Voices);
+        return differences.isEmpty() && Voices.size() == other.Voices.size();
+    }
+
     @NonNull
     @Override
     public String toString() {
@@ -92,5 +109,13 @@ public class DeviceVoices {
                 "description='" + Description + '\'' +
                 ", voices=[" + Voices.toString() + ']' +
                 '}';
+    }
+
+    public int hashCode() {
+        // you pick a hard-coded, randomly chosen, non-zero, odd number
+        // ideally different for each class
+        return new HashCodeBuilder(17, 29).
+                append(Voices).
+                toHashCode();
     }
 }

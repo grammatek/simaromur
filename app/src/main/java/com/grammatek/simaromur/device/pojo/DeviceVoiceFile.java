@@ -5,6 +5,8 @@ import androidx.annotation.NonNull;
 import com.google.gson.annotations.SerializedName;
 import com.grammatek.simaromur.network.remoteasset.VoiceFile;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 public class DeviceVoiceFile {
     @SerializedName("description")
     public String Description;
@@ -34,6 +36,18 @@ public class DeviceVoiceFile {
         // voiceFile.compressedFile: this is the filename of the downloaded file before decompression
     }
 
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        DeviceVoiceFile other = (DeviceVoiceFile) obj;
+        return Type.equals(other.Type) && Path.equals(other.Path) && Md5Sum.equals(other.Md5Sum) && Platform.equals(other.Platform) && PhonemeType.equals(other.PhonemeType);
+    }
+
     @NonNull
     @Override
     public String toString() {
@@ -44,5 +58,18 @@ public class DeviceVoiceFile {
                 ", PhonemeType='" + PhonemeType + '\'' +
                 ", Md5Sum='" + Md5Sum + '\'' +
                 '}';
+    }
+
+
+    public int hashCode() {
+        // you pick a hard-coded, randomly chosen, non-zero, odd number
+        // ideally different for each class
+        return new HashCodeBuilder(17, 31).
+                append(Type).
+                append(Path).
+                append(Md5Sum).
+                append(Platform).
+                append(PhonemeType).
+                toHashCode();
     }
 }

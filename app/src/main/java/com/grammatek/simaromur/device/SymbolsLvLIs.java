@@ -87,7 +87,7 @@ public class SymbolsLvLIs {
         return sampa2VecInput;
     }
 
-    // Maps given sampa to labels/id used in the model
+    // Maps given ipa to labels/id used in the model
     private static int MapIPAToInt(String sampa) {
         Integer order = -1;
         order = IPASymbolMap.get(sampa);

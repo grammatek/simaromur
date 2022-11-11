@@ -39,7 +39,7 @@ public class VoiceManager extends AppCompatActivity {
         // The onChanged() method fires when the observed data changes and the activity is
         // in the foreground.
         voiceViewModel.getAllVoices().observe(this, voices -> {
-            Log.v(LOG_TAG, "onChanged - voices size: " + voices.size());
+            Log.v(LOG_TAG, "VoiceManager::onCreate::voiceViewModel.getAllVoices().observe - voices size: " + voices.size());
             // sort voices by their type and then their internal name
             voices.sort((v1, v2) -> {
                 if (v1.type.equals(v2.type)) {
