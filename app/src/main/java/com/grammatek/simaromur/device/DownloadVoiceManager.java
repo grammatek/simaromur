@@ -22,6 +22,8 @@ import com.grammatek.simaromur.utils.Decompress;
 import com.grammatek.simaromur.utils.FileUtils;
 import com.grammatek.simaromur.utils.SystemUtils;
 
+import org.apache.commons.collections4.set.ListOrderedSet;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -29,7 +31,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import okhttp3.Call;
 
@@ -116,6 +121,28 @@ public class DownloadVoiceManager {
     }
 
     /**
+     * Deletes the voice information from disk.
+     *
+     * @param voiceInfo the voice information to delete
+     * @return true if the voice information was deleted successfully, false otherwise
+     */
+    private boolean deleteVoiceDescriptionFromDisk(DeviceVoice voiceInfo) {
+        Log.v(LOG_TAG, "deleteVoiceDescriptionFromDisk(" + voiceInfo.Name + ")");
+        boolean rv = false;
+        if (mVoicesOnDisk == null || mVoicesOnDisk.Voices == null) {
+            Log.e(LOG_TAG, "deleteVoiceDescriptionFromDisk: no voice description found");
+            return false;
+        }
+        mVoicesOnDisk.Voices.remove(voiceInfo);
+        if (cacheVoiceDescriptionToDisk(mVoiceDownloadPath + "/voice-info.json", mVoicesOnDisk)) {
+            rv = true;
+        } else {
+            Log.e(LOG_TAG, "Could not cache voice description to disk");
+        }
+        return rv;
+    }
+
+    /**
      * Reads voice descriptions from all compatible voices from server. This downloads the voice
      * release info and returns a collection of DeviceVoice objects.
      *
@@ -184,6 +211,7 @@ public class DownloadVoiceManager {
      *                      access the network.
      *
      */
+    synchronized
     public void readVoiceDescription(boolean includeServer) {
         final String voiceDescriptionDiskPath = mVoiceDownloadPath + "/voice-info.json";
         final String voiceDescriptionServerCachePath = mVoiceDownloadPath + "/voice-info-server-cache.json";
@@ -237,14 +265,20 @@ public class DownloadVoiceManager {
     }
 
     /**
-     * Caches the voice description from server to disk
+     * Caches the given voice description to disk. The list of voices is made unique before
+     * being written out.
+     * If the file already exists, it is overwritten.
      *
      * @param filePath path where the voice description is stored
      *
-     * @return true if the voice description was cached successfully
+     * @return true if the voice description was cached successfully.
+     *         If the file cannot be written, false is returned.
      */
     private boolean cacheVoiceDescriptionToDisk(String filePath, DeviceVoices voices) {
-        // cache the voice description from server
+        // make voices unique
+        Log.v(LOG_TAG, "cacheVoiceDescriptionToDisk(" + filePath + ")");
+        final Set<DeviceVoice> uniqueVoiceSet = new HashSet<>(voices.Voices);
+        voices.Voices = new ArrayList<>(uniqueVoiceSet);
         Gson voiceDescriptionGson = new GsonBuilder().create();
         String voiceDescriptionJson = voiceDescriptionGson.toJson(voices);
         return FileUtils.writeFileToStorage(filePath,
@@ -257,6 +291,7 @@ public class DownloadVoiceManager {
      * @return  Voice information about all device voices, whether these are on disk or not yet
      *          downloaded or null if no voice information is available
      */
+    synchronized
     public DeviceVoices getVoiceList() {
         // combine voice information from disk and repository
         if (mVoicesOnDisk != null && mVoicesOnServer != null) {
@@ -274,6 +309,7 @@ public class DownloadVoiceManager {
      *
      * @return  Device voices as list of Db voices
      */
+    synchronized
     public List<Voice> getVoiceDbList() {
         List<Voice> voices = new ArrayList<>();
         for (DeviceVoice aDevVoice : getVoiceList().Voices) {
@@ -300,6 +336,7 @@ public class DownloadVoiceManager {
      *
      * @return  Voice information about specified voice
      */
+    synchronized
     public DeviceVoice getInfoForVoice(String internalName) throws IOException {
         for (DeviceVoice voice:getVoiceList().Voices) {
             if (voice.InternalName.equals(internalName)) {
@@ -315,8 +352,10 @@ public class DownloadVoiceManager {
      * @param deleteVoiceObserver   Observer to notify when voice is deleted
      * @param voiceDao  Dao for voice table
      */
+    synchronized
     public void deleteVoice(Voice voice, com.grammatek.simaromur.VoiceInfo.DeleteVoiceObserver deleteVoiceObserver,
                             VoiceDao voiceDao) {
+        Log.v(LOG_TAG, "deleteVoice(" + voice.internalName + ") ...");
         mAsyncThread = new AsyncThread() {
             final String anInternalName = voice.internalName;
             boolean voiceRepoOk = false;
@@ -345,6 +384,21 @@ public class DownloadVoiceManager {
                     return;
                 }
 
+                // remove voice from list of voices on disk
+                if (!deleteVoiceDescriptionFromDisk(voiceInfo)) {
+                    final String errMsg = "deleteVoice: could not delete voice description from disk for voice " + anInternalName;
+                    Log.e(LOG_TAG, errMsg);
+                    deleteVoiceObserver.hasError(errMsg);
+                    deleteVoiceObserver.hasFinished(false);
+                    return;
+                }
+
+                // update model
+                // TODO: use the voice info from the cached server voice description
+                //       but here we just mark the url as not downloaded locally
+                voice.url = "network:grammatek/simaromur_voices:0.1 release";
+                voiceDao.updateVoices(voice);
+
                 boolean delSuccess = FileUtils.delete(voice.downloadPath);
                 if (delSuccess) {
                     Log.v(LOG_TAG, "deleteVoice: deleted " + voice.downloadPath);
@@ -355,18 +409,6 @@ public class DownloadVoiceManager {
                     deleteVoiceObserver.hasFinished(false);
                     return;
                 }
-
-                voiceInfo.Residence = "network:grammatek/simaromur_voices:0.1 release";
-                if (mVoicesOnDisk != null) {
-                    // remove voice from list of voices on disk
-                    // XXX DS: don't we have to also update the info on the file system ?
-                    //         or is this info only inside the db ?
-                    mVoicesOnDisk.Voices.remove(voiceInfo);
-                }
-
-                // update model
-                voice.url = "network:grammatek/simaromur_voices:0.1 release";
-                voiceDao.updateVoices(voice);
 
                 // notify observer
                 deleteVoiceObserver.hasFinished(true);
@@ -436,22 +478,37 @@ public class DownloadVoiceManager {
                 Log.v(LOG_TAG, "downloadVoiceAsync: downloading voice " + anInternalName);
                 voiceRepoOk = lazyInitVoiceRepo();
                 if (!voiceRepoOk) {
-                    Log.e(LOG_TAG, "Voice repository not available !");
+                    final String msg = "Voice repository not available !";
+                    Log.e(LOG_TAG, msg);
+                    aDownloadObserver.hasError(msg);
+                    aDownloadObserver.hasFinished(false);
                     return;
                 }
                 if (mVoicesOnServer == null) {
-                    Log.e(LOG_TAG, "Server Voice description not available !");
+                    final String msg = "Server Voice description not available !";
+                    Log.e(LOG_TAG, msg);
+                    aDownloadObserver.hasError(msg);
+                    aDownloadObserver.hasFinished(false);
                     return;
                 }
 
                 DeviceVoice voiceInfo = searchVoiceInfo(anInternalName, mVoicesOnServer);
-                if (voiceInfo == null) return;
+                if (voiceInfo == null) {
+                    final String msg = "Voice description not available inside server voice description ?!";
+                    Log.e(LOG_TAG, msg);
+                    aDownloadObserver.hasError(msg);
+                    aDownloadObserver.hasFinished(false);
+                    return;
+                }
 
                 // get the voice file download url
                 String voiceUrl = mVoiceRepo.getDownloadUrlForVoice(sReleaseName,
                         anInternalName, SystemUtils.androidArchName());
                 if (voiceUrl == null) {
-                    Log.e(LOG_TAG, "downloadVoiceAsync: no download url for voice " + anInternalName);
+                    final String msg = "downloadVoiceAsync: no download url for voice " + anInternalName;
+                    Log.e(LOG_TAG, msg);
+                    aDownloadObserver.hasError(msg);
+                    aDownloadObserver.hasFinished(false);
                     return;
                 }
 
@@ -466,20 +523,27 @@ public class DownloadVoiceManager {
                 // start download
                 listener = new ProgressListener(fileName, aDownloadObserver);
                 if (mAsyncThread.isShutdown()) {
-                    Log.v(LOG_TAG, "downloadVoiceAsync: download of " + anInternalName + " cancelled");
+                    final String msg = "downloadVoiceAsync: download of " + anInternalName + " cancelled";
+                    Log.v(LOG_TAG, msg);
+                    aDownloadObserver.hasFinished(true);
                     return;
                 }
                 mCallDownloadVoice = mVoiceRepo.downloadVoiceFileAsync(sReleaseName, baseNameCompressedFile,
                         new ProgressObserver(listener, 1024*1024));
                 if (mCallDownloadVoice == null) {
-                    Log.e(LOG_TAG, "downloadVoiceAsync: download of " + anInternalName + " failed");
+                    final String msg = "downloadVoiceAsync: download of " + anInternalName + " failed";
+                    Log.e(LOG_TAG, msg);
+                    aDownloadObserver.hasError(msg);
+                    aDownloadObserver.hasFinished(false);
                     return;
                 }
                 // 10 Minutes timeout, this should suffice even for slow internet connections
                 if (!waitForCompletion(10*60)) {
-                        Log.e(LOG_TAG, "Download of voice file " + fileName + " failed");
-                        downloadedFiles.cleanup();
-                        return;
+                    final String msg = "Download of voice file " + fileName + " failed";
+                    Log.w(LOG_TAG, msg);
+                    downloadedFiles.cleanup();
+                    aDownloadObserver.hasFinished(false);
+                    return;
                 }
 
                 // download successful, extract voice files
@@ -493,11 +557,18 @@ public class DownloadVoiceManager {
 
                 CleanupStack decompressedFiles = new CleanupStack(decompress.getDestinationPathEntries());
                 if (mAsyncThread.isShutdown()) {
-                    Log.v(LOG_TAG, "unzipping: cancelled");
+                    final String msg = "unzipping: cancelled";
+                    Log.v(LOG_TAG, msg);
+                    downloadedFiles.cleanup();
+                    aDownloadObserver.hasFinished(true);
                     return;
                 }
                 if (!decompress.unzip()) {
-                    Log.e(LOG_TAG, "Could not unzip voice file " + fileName);
+                    final String msg = "Could not unzip voice file " + fileName;
+                    Log.e(LOG_TAG, msg);
+                    downloadedFiles.cleanup();
+                    aDownloadObserver.hasError(msg);
+                    aDownloadObserver.hasFinished(false);
                 } else {
                     if (mAsyncThread.isShutdown()) {
                         Log.v(LOG_TAG, "md5 sum checking cancelled");
@@ -511,17 +582,7 @@ public class DownloadVoiceManager {
                         // update voice information
                         Log.v(LOG_TAG, "Updating voice information");
                         voiceInfo.Residence = "disk";
-                        if (mVoicesOnDisk != null) {
-                            // append the new voice to the list of voices on disk
-                            mVoicesOnDisk.Voices.add(voiceInfo);
-                        } else {
-                            mVoicesOnDisk = new DeviceVoices("Voices of release "
-                                    + sReleaseName, new ArrayList<>(List.of(voiceInfo)));
-                        }
-                        // save the voice information to disk
-                        if (!cacheVoiceDescriptionToDisk(mVoiceDownloadPath + "/voice-info.json", mVoicesOnDisk)) {
-                            Log.e(LOG_TAG, "Could not cache voice description to disk");
-                        } else {
+                        if (persistVoiceDescription(voiceInfo)) {
                             // update the voice information in the database
                             Voice dbVoice = voiceInfo.convertToDbVoice();
                             if (dbVoice != null) {
@@ -537,9 +598,6 @@ public class DownloadVoiceManager {
                                     Log.v(LOG_TAG, "Inserting voice information in database: " + dbVoice);
                                     voiceDao.insertVoice(dbVoice);
                                 }
-                                // TODO we need to update also the voice information in the
-                                //  VoiceInfo object on disk
-
                                 if (mAsyncThread.isShutdown()) {
                                     Log.v(LOG_TAG, "voice registration cancelled");
                                     return;
@@ -548,6 +606,8 @@ public class DownloadVoiceManager {
                             } else {
                                 Log.e(LOG_TAG, "Could not convert voice info to DB voice");
                             }
+                        } else {
+                            Log.e(LOG_TAG, "Could not persist voice info");
                         }
                     } finally {
                         if (!downloadOk) {
@@ -558,12 +618,65 @@ public class DownloadVoiceManager {
                 }
             }
 
+            /**
+             * Saves the voice information to disk.
+             * This method is a no-op in case it's already present.
+             *
+             * @param voiceInfo the voice information to save
+             * @return true if the voice information was saved successfully, false otherwise
+             */
+            private boolean persistVoiceDescription(DeviceVoice voiceInfo) {
+                boolean rv = false;
+                if (mVoicesOnDisk == null) {
+                    // lazy init the voice info on disk
+                    mVoicesOnDisk = new DeviceVoices("On-device voices"
+                            , new ArrayList<>(List.of(voiceInfo)));
+                }
+
+                // Check if the voice is already in the list
+                if (!isVoiceInfoAlreadyCached(voiceInfo)) {
+                    // append the new voice to the list of voices on disk
+                    mVoicesOnDisk.Voices.add(voiceInfo);
+                }
+                if (cacheVoiceDescriptionToDisk(mVoiceDownloadPath + "/voice-info.json", mVoicesOnDisk)) {
+                    rv = true;
+                } else {
+                    Log.e(LOG_TAG, "Could not cache voice description to disk");
+                }
+                return rv;
+            }
+
+            /**
+             * Check if the voice is already in the list of voices on disk
+             *
+             * @param voiceInfo the voice to check
+             *
+             * @return true if the voice is already in the list, false otherwise
+             */
+            private boolean isVoiceInfoAlreadyCached(DeviceVoice voiceInfo) {
+                boolean found = false;
+                for (DeviceVoice aVoiceInfo : mVoicesOnDisk.Voices) {
+                    if (aVoiceInfo.InternalName.equals(anInternalName) &&
+                            aVoiceInfo.Version.equals(voiceInfo.Version)) {
+                        found = true;
+                        break;
+                    }
+                }
+                return found;
+            }
+
+            /**
+             * Search given internal voice name in given device voice list
+             *
+             * @param internalVoiceName the internal voice name to search for
+             * @param devVoices the list of device voices
+             * @return  the device voice or null if not found
+             */
             @Nullable
-            private DeviceVoice searchVoiceInfo(String internalVoiceName, DeviceVoices voicesOnServer) {
-                // Search the VoiceInfo inside mVoicesOnServer
+            private DeviceVoice searchVoiceInfo(String internalVoiceName, DeviceVoices devVoices) {
                 DeviceVoice voiceInfo = null;
                 Log.v(LOG_TAG, "downloadVoiceAsync: checking given voice in mVoicesOnServer");
-                for (DeviceVoice aVoiceInfo : voicesOnServer.Voices) {
+                for (DeviceVoice aVoiceInfo : devVoices.Voices) {
                     Log.v(LOG_TAG, "" + aVoiceInfo);
                     if (aVoiceInfo.InternalName.equals(internalVoiceName) &&
                             aVoiceInfo.Version.equals(voice.version)) {
@@ -572,7 +685,7 @@ public class DownloadVoiceManager {
                     }
                 }
                 if (voiceInfo == null) {
-                    Log.e(LOG_TAG, "Could not find voice info in repository for voice "
+                    Log.e(LOG_TAG, "Could not find voice info in given repository for voice "
                             + internalVoiceName);
                     return null;
                 }
@@ -581,8 +694,6 @@ public class DownloadVoiceManager {
 
             /**
              * Wait for the download to complete
-             *
-             * TODO: set a timeout
              */
             private boolean waitForCompletion(int timeoutInSecs) {
                 // measure current time and loop until timeout reached
@@ -694,6 +805,7 @@ public class DownloadVoiceManager {
         private long mFileSize = -1;
         private long mBytesDownloaded = 0;
         private final Observer mDownloadObserver;
+        private int mProgressPercent = 0;
 
         ProgressListener(String fileName, Observer finishedObserver) {
             mFileName = fileName;
@@ -702,24 +814,31 @@ public class DownloadVoiceManager {
 
         @Override
         public void onStarted(long totalBytes) {
-            Log.v(LOG_TAG, "onStarted: downloading " + totalBytes + " ...");
+            Log.v(LOG_TAG, "onStarted: downloading " + mFileName + "(" + totalBytes + " bytes) ...");
             mBytesDownloaded = 0;
+            mProgressPercent = 0;
             mFileSize = totalBytes;
             File aFile = new File(mFileName);
-            Log.v(LOG_TAG, "le filename: " + mFileName);
             try {
                 mFs = new FileOutputStream(aFile, false);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }
-            Log.v(LOG_TAG, "onStarted: downloading overall" + mFileSize + " bytes ...");
+            Log.v(LOG_TAG, "onStarted: downloading overall " + mFileSize + " bytes ...");
         }
 
         @Override
         public boolean onProgress(byte[] buffer, long numBytes) {
             mBytesDownloaded += numBytes;
-            Log.v(LOG_TAG, "onProgress: " + mBytesDownloaded + " of " + mFileSize + " downloaded");
+            int percent = (int) (100 * mBytesDownloaded / mFileSize);
+            if (percent % 10 == 0) {
+                if (mProgressPercent != percent) {
+                    Log.v(LOG_TAG, "onProgress: " + mBytesDownloaded + " of " + mFileSize + " downloaded");
+                    Log.v(LOG_TAG, "onProgress: " + percent + "%");
+                    mProgressPercent = percent;
+                }
+            }
 
             if (mBytesDownloaded > mFileSize) {
                 Log.e(LOG_TAG,"onProgress: " + mBytesDownloaded + " > " + mFileSize + " !");
@@ -727,8 +846,6 @@ public class DownloadVoiceManager {
             }
             try {
                 mFs.write(buffer, 0, (int) numBytes);
-                int percent = (int) (100 * mBytesDownloaded / mFileSize);
-                Log.v(LOG_TAG, "onProgress: " + percent + "%");
                 mDownloadObserver.updateProgress(percent);
             } catch (IOException e) {
                 e.printStackTrace();
