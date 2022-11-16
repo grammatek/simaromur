@@ -259,6 +259,15 @@ public class AppRepository {
     }
 
     /**
+     * Triggers an update of the server voice description asynchronously. The update is triggered
+     * immediately.
+     */
+    public void triggerServerVoiceUpdate() {
+        Log.v(LOG_TAG, "triggerServerVoiceUpdate()");
+        mScheduler.schedule(onDeviceVoicesUpdateRunnable, 0, TimeUnit.SECONDS);
+    }
+
+    /**
      * Returns the utterance cache manager
      *
      * @return instance of the utterance cache manager
