@@ -58,7 +58,7 @@
             android:configChanges="orientation"
             android:parentActivityName=".TTSManager"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.speech.tts.engine.INSTALL_TTS_DATA" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -66,13 +66,13 @@
         </activity>
         <activity
             android:name=".VoiceInfo"
-            android:theme="@style/Theme.AppCompat.Light"
+            android:theme="@style/AppTheme"
             android:parentActivityName=".VoiceManager"
             />
         <activity
             android:name=".CheckSimVoices"
             android:exported="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.speech.tts.engine.CHECK_TTS_DATA" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -81,7 +81,7 @@
         <activity
             android:name=".GetSampleText"
             android:exported="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.speech.tts.engine.GET_SAMPLE_TEXT" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -89,7 +89,7 @@
         </activity>
         <activity
             android:name=".InfoViewer"
-            android:theme="@style/Theme.AppCompat.Light"
+            android:theme="@style/AppTheme"
             android:parentActivityName=".TTSManager"
         />
 
