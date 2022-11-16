@@ -213,6 +213,7 @@ public class DownloadVoiceManager {
      */
     synchronized
     public void readVoiceDescription(boolean includeServer) {
+        Log.v(LOG_TAG, "readVoiceDescription(" + includeServer + ")");
         final String voiceDescriptionDiskPath = mVoiceDownloadPath + "/voice-info.json";
         final String voiceDescriptionServerCachePath = mVoiceDownloadPath + "/voice-info-server-cache.json";
         try {
@@ -229,6 +230,8 @@ public class DownloadVoiceManager {
                 } else {
                     Log.e(LOG_TAG, "Could not read voice description from server!");
                 }
+            } else if (!includeServer && voicesOnServer == null) {
+                App.getAppRepository().triggerServerVoiceUpdate();
             } else {
                 mVoicesOnServer = voicesOnServer;
             }
