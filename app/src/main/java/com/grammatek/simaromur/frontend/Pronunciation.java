@@ -60,9 +60,9 @@ public class Pronunciation {
         // If we run into more special handling with different voice types and versions,
         // we might want to think of another approach to this
         if (text.trim().length() == 1 && voiceType.equals(FLITE) && voiceVersion.equals("0.2"))
-            return transcribeChar(text);
+            return transcribeChar(text.trim());
         else
-            transcript = transcribeString(text);
+            transcript = transcribeString(text.trim());
 
         transcript = processPauses(transcript, voiceType);
 
