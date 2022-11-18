@@ -8,6 +8,8 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <!-- Active thumb color & Active track color(30% transparency) -->
+        <item name="colorControlActivated">@android:color/holo_green_light</item>
     </style>
     <style name="AppTheme.Launcher">
         <item name="android:windowBackground">@drawable/launch_screen</item>
@@ -80,31 +82,6 @@
         <item name="android:radius">8dp</item>
         <item name="cornerRadius">8dp</item>
         <item name="android:scaleY">5</item>
-    </style>
-
-    <style name="button_style" parent="android:style/Widget.Material.Button">
-        <!-- Customize your theme here. -->
-        <item name="android:buttonStyle">@style/Widget.MaterialComponents.Button.OutlinedButton</item>
-        <item name="android:theme">@style/Theme.MaterialComponents</item>
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">@drawable/transparent_bg_bordered_button</item>
-        <item name="android:textAppearance">@android:style/TextAppearance.Large</item>
-        <item name="android:layout_marginTop">16dp</item>
-        <item name="android:textColor">@color/colorTextPrimary</item>
-    </style>
-
-    <style name="cancel_download_style" parent="android:style/Widget.Material.Button">
-        <!-- Customize your theme here. -->
-        <item name="android:buttonStyle">@style/Widget.MaterialComponents.Button.OutlinedButton</item>
-        <item name="android:theme">@style/Theme.MaterialComponents</item>
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">@drawable/transparent_bg_bordered_button</item>
-        <item name="android:backgroundTint">@color/white</item>
-        <item name="android:textAppearance">@android:style/TextAppearance.Large</item>
-        <item name="android:layout_marginTop">16dp</item>
-        <item name="android:textColor">@color/white</item>
     </style>
 
 </resources>

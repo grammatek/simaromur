@@ -140,6 +140,7 @@
             android:layout_gravity="center|top"
             android:layout_marginHorizontal="5dp"
             android:layout_marginBottom="3dp"
+            android:contentDescription="@string/voice_more_title"
             android:rotation="90"
             android:src="@drawable/more_vert_48px"
             app:tint="@color/white" />
@@ -191,12 +192,16 @@
 
     <Button
         android:id="@+id/speak_button"
-        style="@style/button_style"
+        style="?attr/materialButtonOutlinedStyle"
+        app:strokeColor="@color/white"
+        app:strokeWidth="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="16dp"
         android:text="@string/speak_voice_title"
+        android:textAppearance="@android:style/TextAppearance.Large"
+        android:textColor="@color/colorTextPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -204,7 +209,7 @@
 
     <ProgressBar
         android:id="@+id/progressBarPlay"
-        style="?android:attr/progressBarStyleLarge"
+        style="@style/progress_bar_as_storage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
@@ -218,10 +223,14 @@
 
     <Button
         android:id="@+id/download_button"
-        style="@style/button_style"
+        style="?attr/materialButtonOutlinedStyle"
+        app:strokeColor="@color/white"
+        app:strokeWidth="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/do_download"
+        android:textAppearance="@android:style/TextAppearance.Large"
+        android:textColor="@color/colorTextPrimary"
         app:layout_constraintBottom_toBottomOf="@+id/speakable_text"
         app:layout_constraintEnd_toEndOf="@+id/speakable_text"
         app:layout_constraintStart_toStartOf="@+id/speakable_text"

@@ -48,10 +48,12 @@ public class VoiceListAdapter extends RecyclerView.Adapter<VoiceListAdapter.Voic
             holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_network));
         } else if (current.needsDownload()) {
             holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_local_downloaded));
-            holder.voiceTypeItemView.setTextColor(Color.YELLOW);
+            holder.voiceTypeItemView.setTextColor(App.getContext().getResources()
+                    .getColor(android.R.color.holo_orange_light, null));
         } else {
             holder.voiceTypeItemView.setText(App.getContext().getResources().getString(R.string.type_local));
-            holder.voiceTypeItemView.setTextColor(Color.GREEN);
+            holder.voiceTypeItemView.setTextColor(App.getContext().getResources()
+                    .getColor(android.R.color.holo_green_light, null));
         }
     }
 

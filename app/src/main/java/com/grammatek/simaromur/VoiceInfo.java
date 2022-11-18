@@ -165,7 +165,8 @@ public class VoiceInfo extends AppCompatActivity
                 playButton.setVisibility(View.INVISIBLE);
                 // change color of textViewType
                 mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_action_download);
-                mNetworkAvailabilityIcon.setColorFilter(Color.YELLOW);
+                mNetworkAvailabilityIcon.setColorFilter(App.getContext().getResources()
+                        .getColor(android.R.color.holo_orange_light, null));
                 // set download button
                 downloadButton.setText(getResources().getString(R.string.do_download));
                 downloadButton.setEnabled(true);
@@ -175,7 +176,7 @@ public class VoiceInfo extends AppCompatActivity
             } else {
                 Log.v(LOG_TAG, "updateUi: voice is on device");
                 mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_action_download);
-                mNetworkAvailabilityIcon.setColorFilter(Color.GREEN);
+                mNetworkAvailabilityIcon.setColorFilter(getResources().getColor(android.R.color.holo_green_light, null));
                 typeTextView.setText(getResources().getString(R.string.type_local));
                 if (mVoice.isFast()) {
                     moreOptions.setVisibility(View.VISIBLE);

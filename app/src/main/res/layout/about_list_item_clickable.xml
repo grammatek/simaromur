@@ -11,7 +11,7 @@
         android:layout_marginStart="10dp"
         android:layout_marginTop="6dp"
         android:layout_marginEnd="10dp"
-        app:cardBackgroundColor="@color/cardview_dark_background"
+        app:cardBackgroundColor="@color/colorPrimaryDark"
         app:cardCornerRadius="10dp"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintEnd_toEndOf="parent"

@@ -11,7 +11,7 @@
         android:layout_marginEnd="10dp"
         android:layout_marginStart="10dp"
         android:layout_marginTop="6dp"
-        app:cardBackgroundColor="@color/cardview_dark_background"
+        app:cardBackgroundColor="@color/colorPrimaryDark"
         app:cardCornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -23,30 +23,29 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="25dp"
             android:layout_marginTop="8dp"
-            android:textSize="16sp"
-            android:text="Cache"
-            android:textColor="@color/white" />
+            android:text="@string/cache"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/info_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:layout_marginStart="80dp"
             android:layout_marginTop="32dp"
-            android:textSize="14sp"
-            android:layout_gravity="center_horizontal"
-            android:text="256 MB"
-            android:textColor="@color/white" />
+            android:text="@string/cache_size_mb"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
 
         <ImageView
             android:id="@+id/trash_bin"
-            android:contentDescription="@string/open_in_new"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginEnd="22dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:layout_gravity="end|center"
-            android:src="@android:drawable/ic_menu_delete"
-            />
+            android:layout_marginEnd="22dp"
+            android:contentDescription="@string/open_in_new"
+            android:src="@drawable/ic_baseline_delete_forever_24" />
 
         <ProgressBar
             android:id="@+id/cache_storage_bar"
@@ -56,8 +55,9 @@
             android:layout_marginStart="25dp"
             android:layout_marginTop="35dp"
             android:max="100"
-            android:progress="50" >
-        </ProgressBar>
+            android:progress="50"
+            android:progressBackgroundTint="@color/colorPrimaryLight"
+            android:progressTint="@android:color/holo_green_light"></ProgressBar>
 
         <TextView
             android:id="@+id/progress_bar_percentage"
@@ -65,7 +65,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="117.5dp"
             android:layout_marginTop="32dp"
-            android:text="50%"
+            android:text="@string/cache_progress_percent"
             android:textColor="@color/white" />
 
 

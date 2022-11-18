@@ -11,7 +11,7 @@
         android:layout_marginEnd="10dp"
         android:layout_marginStart="10dp"
         android:layout_marginTop="6dp"
-        app:cardBackgroundColor="@color/cardview_dark_background"
+        app:cardBackgroundColor="@color/colorPrimaryDark"
         app:cardCornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -27,11 +27,11 @@
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/switch_improve_simaromur"
             android:layout_width="120dp"
-            android:layout_height="30dp"
-            android:layout_marginEnd="14dp"
-            android:textColor="@color/white"
+            android:layout_height="48dp"
             android:layout_gravity="end|center"
-            android:buttonTint="@color/white" />
+            android:layout_marginEnd="14dp"
+            android:buttonTint="@color/white"
+            android:textColor="@color/white" />
 
     </androidx.cardview.widget.CardView>
 
