@@ -44,23 +44,22 @@ public class FrontendManager {
      */
     public String process(String text) {
         final String normalized = mNormalizationManager.process(text);
-        return transcribe(normalized);
+        return transcribe(normalized, "", "");
     }
 
-    public String transcribe(String text) {
+    public String transcribe(String text, String voiceType, String voiceVersion) {
         Log.v(LOG_TAG, "transcribe() called");
         final String sp = " " + SymbolsLvLIs.SymbolShortPause + " ";
         final String multiPausePattern = "(§sp ?){2,}";
         final String beginEndPausePattern = "^§sp|§sp$";
 
-        String transcribedText = mPronunciation.transcribe(text);
+        String transcribedText = mPronunciation.transcribe(text, voiceType, voiceVersion);
 
         // replace special characters
         transcribedText = transcribedText.replaceAll("\\.", sp);
         transcribedText = transcribedText.replaceAll(",", sp);
         transcribedText = transcribedText.replaceAll("\\s{2,}", " ");
         transcribedText = transcribedText.replaceAll(multiPausePattern, "§sp ").trim();
-        transcribedText = transcribedText.replaceAll(beginEndPausePattern, "");
 
         Log.i(LOG_TAG, text + " => (" + transcribedText + ")");
         return transcribedText;

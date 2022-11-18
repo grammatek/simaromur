@@ -355,12 +355,6 @@ public class VoiceInfo extends AppCompatActivity
             return;
         }
 
-        // execute frontend, generate new TTS request
-        CacheItem item = appRepo.getUtteranceCache().addUtterance(text);
-        item = appRepo.executeFrontendAndSaveIntoCache(text, item);
-        TTSRequest ttsRequest = new TTSRequest(item.getUuid());
-        appRepo.setCurrentTTSRequest(ttsRequest);
-
         if (mVoice.type.equals(Voice.TYPE_NETWORK)) {
             if (!(ConnectionCheck.isNetworkConnected() && ConnectionCheck.isTTSServiceReachable())) {
                 mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_unavailable_solid);
@@ -374,6 +368,13 @@ public class VoiceInfo extends AppCompatActivity
         } else {
             toggleSpeakButton();
         }
+
+        // execute frontend, generate new TTS request
+        CacheItem item = appRepo.getUtteranceCache().addUtterance(text);
+        item = appRepo.executeFrontendAndSaveIntoCache(text, item, mVoice);
+        TTSRequest ttsRequest = new TTSRequest(item.getUuid());
+        appRepo.setCurrentTTSRequest(ttsRequest);
+
         Log.v(LOG_TAG, "Text to speak: " + item.getUtterance().getNormalized());
         mVoiceViewModel.startSpeaking(mVoice, item, 1.0f, 1.0f, new AudioToggleObserver());
     }
