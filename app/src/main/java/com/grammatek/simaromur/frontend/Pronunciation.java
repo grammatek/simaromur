@@ -54,19 +54,22 @@ public class Pronunciation {
         return transcribe(text, "", "");
     }
 
-    public String transcribe(String text, String voiceType, String voiceVersion) {
+    public String transcribe(String text, final String voiceType, final String voiceVersion) {
         initializeG2P();    // lazy initialize to break dependencies
         String transcript = "";
+        text = text.trim();
+
         // If we run into more special handling with different voice types and versions,
-        // we might want to think of another approach to this
-        if (text.trim().length() == 1 && voiceType.equals(FLITE) && voiceVersion.equals("0.2"))
-            return transcribeChar(text.trim());
+        // we might want to think of another approach to this.
+        // For FLITE and v02 check if 'text' is contained in the custom_char_transcripts map
+        // and return the respective custom transcript if true.
+        if (voiceType.equals(FLITE) && voiceVersion.equals("0.2") &&
+                CUSTOM_CHAR_TRANSCRIPTS.containsKey(text))
+            return CUSTOM_CHAR_TRANSCRIPTS.get(text);
         else
-            transcript = transcribeString(text.trim());
+            transcript = transcribeString(text);
 
-        transcript = processPauses(transcript, voiceType);
-
-        return transcript;
+        return processPauses(transcript, voiceType);
     }
 
     /**
@@ -130,14 +133,6 @@ public class Pronunciation {
             }
         }
         return sb.toString().trim();
-    }
-
-    @NonNull
-    private String transcribeChar(String text) {
-        if (CUSTOM_CHAR_TRANSCRIPTS.containsKey(text))
-            return CUSTOM_CHAR_TRANSCRIPTS.get(text);
-        else
-            return transcribeString(text);
     }
 
     // only Flite voices need pause symbols at the beginning and end of a transcript
