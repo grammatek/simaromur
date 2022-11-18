@@ -943,11 +943,15 @@ public class AppRepository {
     };
 
     /**
-     * Update DB according to On-Device voices
+     * Update DB according to On-Device voices. This polls regularly the voice list from the
+     * server and updates the DB accordingly. A voice is considered to be "new" if it is not
+     * present in the DB yet or not anymore after deletion.
+     *
      */
     final Runnable onDeviceVoicesUpdateRunnable = new Runnable() {
         @Override
         public void run() {
+            Log.v(LOG_TAG, "onDeviceVoicesUpdateRunnable()");
             // fetch on-device voice lists
             mDVM.readVoiceDescription(true);
 
@@ -955,9 +959,11 @@ public class AppRepository {
             final List<Voice> onDeviceVoices = mDVM.getVoiceDbList();
             for (Voice voice : onDeviceVoices) {
                 // check if voice is already in DB
-                if (mVoiceDao.findVoice(voice.name, voice.internalName, voice.languageCode, voice.languageName, voice.variant) == null) {
+                if (mVoiceDao.findVoice(voice.name, voice.internalName, voice.languageCode, voice.languageName, voice.variant, voice.version) == null) {
                     Log.w(LOG_TAG, "onDeviceVoiceRunnable Add on device voice " + voice.name);
                     mVoiceDao.insertVoices(voice);
+                } else {
+                    Log.w(LOG_TAG, "onDeviceVoicesUpdateRunnable Voice " + voice.name + " already in DB");
                 }
             }
         }

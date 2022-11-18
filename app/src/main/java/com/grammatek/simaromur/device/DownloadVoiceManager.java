@@ -22,8 +22,6 @@ import com.grammatek.simaromur.utils.Decompress;
 import com.grammatek.simaromur.utils.FileUtils;
 import com.grammatek.simaromur.utils.SystemUtils;
 
-import org.apache.commons.collections4.set.ListOrderedSet;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -34,7 +32,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import okhttp3.Call;
 
@@ -51,7 +48,11 @@ import okhttp3.Call;
  */
 public class DownloadVoiceManager {
     private static final String LOG_TAG = "Simarómur_Java_" + DownloadVoiceManager.class.getSimpleName();
-    private static final String sReleaseName = "0.1 release";
+    private final String mVoiceDescriptionServerCachePath;
+    // TODO: this is hardcoded for now, but should be dynamic in the future, when we implement
+    //       the update mechanism
+    private static final String sReleaseName = "0.2 test release";
+    //private static final String sReleaseName = "0.1 release";
     private static final String sVoiceInternalName = "Alfur_flite";
     // All device voices available on disk
     private DeviceVoices mVoicesOnDisk;
@@ -85,6 +86,7 @@ public class DownloadVoiceManager {
         if (!FileUtils.mkdir(mVoiceDownloadPath)) {
             throw new IOException("Could not create voice download directory " + mVoiceDownloadPath);
         }
+        mVoiceDescriptionServerCachePath = mVoiceDownloadPath + "/voice-info-server-cache.json";
     }
 
     /**
@@ -139,6 +141,23 @@ public class DownloadVoiceManager {
         } else {
             Log.e(LOG_TAG, "Could not cache voice description to disk");
         }
+        return rv;
+    }
+
+    /**
+     * Deletes the cached server voice description from disk.
+     *
+     * @return true if the cached server voice description was deleted successfully, false otherwise.
+     */
+    private boolean deleteCachedServerVoiceDescriptionFromDisk() {
+        Log.v(LOG_TAG, "deleteCachedServerVoiceDescriptionFromDisk()");
+        boolean rv = false;
+        if (FileUtils.delete(mVoiceDescriptionServerCachePath)) {
+            rv = true;
+        } else {
+            Log.e(LOG_TAG, "Could not delete cached voice server description from disk");
+        }
+        mVoicesOnServer = null;
         return rv;
     }
 
@@ -215,22 +234,23 @@ public class DownloadVoiceManager {
     public void readVoiceDescription(boolean includeServer) {
         Log.v(LOG_TAG, "readVoiceDescription(" + includeServer + ")");
         final String voiceDescriptionDiskPath = mVoiceDownloadPath + "/voice-info.json";
-        final String voiceDescriptionServerCachePath = mVoiceDownloadPath + "/voice-info-server-cache.json";
+
         try {
             mVoicesOnDisk = readVoiceDescriptionFromDisk(voiceDescriptionDiskPath);
 
-            DeviceVoices voicesOnServer = readVoiceServerCacheIfNotExpired(voiceDescriptionServerCachePath, 60);
+            DeviceVoices voicesOnServer = readVoiceServerCacheIfNotExpired(mVoiceDescriptionServerCachePath, 60);
             if (voicesOnServer == null && includeServer) {
                 voicesOnServer = readVoiceDescriptionFromServer();
                 if (voicesOnServer != null) {
                     mVoicesOnServer = voicesOnServer;
-                    if (! cacheVoiceDescriptionToDisk(voiceDescriptionServerCachePath, mVoicesOnServer)) {
+                    if (! cacheVoiceDescriptionToDisk(mVoiceDescriptionServerCachePath, mVoicesOnServer)) {
                         Log.e(LOG_TAG, "Could not cache server voice description!");
                     }
                 } else {
                     Log.e(LOG_TAG, "Could not read voice description from server!");
                 }
             } else if (!includeServer && voicesOnServer == null) {
+                // indirect recursion: we need to update the voice description from the server
                 App.getAppRepository().triggerServerVoiceUpdate();
             } else {
                 mVoicesOnServer = voicesOnServer;
@@ -262,6 +282,15 @@ public class DownloadVoiceManager {
             } else {
                 Log.v(LOG_TAG, "readVoiceDescription: server voice description cache is still valid, using it");
                 voiceInfo = readVoiceDescriptionFromDisk(voiceDescriptionServerCachePath);
+                // iterate over all voices from voiceInfo and test the release name against the
+                // current release name. If it does not match, we need to update the voice
+                for (DeviceVoice voice : voiceInfo.Voices) {
+                    if (!voice.Release.equals(sReleaseName)) {
+                        Log.v(LOG_TAG, "readVoiceDescription: server voice description cache is outdated, updating");
+                        voiceInfo = null;
+                        break;
+                    }
+                }
             }
         }
         return voiceInfo;
@@ -326,6 +355,7 @@ public class DownloadVoiceManager {
             aDevVoice.Files = files;
             Voice aVoice = aDevVoice.convertToDbVoice();
             if (aVoice != null) {
+                Log.v(LOG_TAG, "getVoiceDbList: adding device voice " + aVoice.name + " " + aVoice.version);
                 voices.add(aVoice);
             }
         }
@@ -395,12 +425,14 @@ public class DownloadVoiceManager {
                     deleteVoiceObserver.hasFinished(false);
                     return;
                 }
-
-                // update model
-                // TODO: use the voice info from the cached server voice description
-                //       but here we just mark the url as not downloaded locally
-                voice.url = "network:grammatek/simaromur_voices:0.1 release";
-                voiceDao.updateVoices(voice);
+                // this causes an update of related meta data
+                if (!deleteCachedServerVoiceDescriptionFromDisk()) {
+                    final String errMsg = "deleteVoice: could not delete voice server description from disk";
+                    Log.e(LOG_TAG, errMsg);
+                    deleteVoiceObserver.hasError(errMsg);
+                    deleteVoiceObserver.hasFinished(false);
+                    return;
+                }
 
                 boolean delSuccess = FileUtils.delete(voice.downloadPath);
                 if (delSuccess) {
@@ -412,7 +444,7 @@ public class DownloadVoiceManager {
                     deleteVoiceObserver.hasFinished(false);
                     return;
                 }
-
+                voiceDao.deleteVoices(voice);
                 // notify observer
                 deleteVoiceObserver.hasFinished(true);
             }
@@ -592,7 +624,7 @@ public class DownloadVoiceManager {
                                 dbVoice.downloadPath = decompressedFileName;
                                 dbVoice.md5Sum = md5sum;
                                 dbVoice.size = decompress.getLastFileSize();
-                                Voice existingVoice = voiceDao.findVoice(dbVoice.name, dbVoice.internalName, dbVoice.languageCode, dbVoice.languageName, dbVoice.variant);
+                                Voice existingVoice = voiceDao.findVoice(dbVoice.name, dbVoice.internalName, dbVoice.languageCode, dbVoice.languageName, dbVoice.variant, voice.version);
                                 if (existingVoice != null) {
                                     dbVoice.voiceId = existingVoice.voiceId;
                                     Log.v(LOG_TAG, "Updating voice information in database: " + dbVoice);
