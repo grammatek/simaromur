@@ -44,14 +44,13 @@ public class FrontendManager {
      */
     public String process(String text) {
         final String normalized = mNormalizationManager.process(text);
-        return transcribe(normalized, "", "");
+        return transcribe(normalized, "ignoreType", "ignoreVersion");
     }
 
     public String transcribe(String text, String voiceType, String voiceVersion) {
         Log.v(LOG_TAG, "transcribe() called");
         final String sp = " " + SymbolsLvLIs.SymbolShortPause + " ";
         final String multiPausePattern = "(§sp ?){2,}";
-        final String beginEndPausePattern = "^§sp|§sp$";
 
         String transcribedText = mPronunciation.transcribe(text, voiceType, voiceVersion);
 
