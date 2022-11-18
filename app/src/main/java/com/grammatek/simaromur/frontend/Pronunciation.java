@@ -3,6 +3,8 @@ package com.grammatek.simaromur.frontend;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.grammatek.simaromur.utils.FileUtils;
 import com.grammatek.simaromur.device.NativeG2P;
 import com.grammatek.simaromur.R;
@@ -24,6 +26,24 @@ public class Pronunciation {
     private Map<String, PronDictEntry> mPronDict;
     private final Map<String, Map<String, Map<String, String>>> mAlphabets;
 
+    private final static String FLITE = "flite";
+    private final String beginEndPausePattern = "^§sp|§sp$";
+
+    // Letters that need custom transcription when spoken in isolation (like when using the
+    // keyboard). This means partly different transcription of the letter than normal/correct
+    // and partly leaving out pause symbols at beginning and/or end.
+    // TODO: these mappings are valid for Álfur Flite v0.2, needs revision when voice is
+    // updated!
+    private static final Map<String, String> CUSTOM_CHAR_TRANSCRIPTS = new HashMap<>();
+    static {
+        CUSTOM_CHAR_TRANSCRIPTS.put("a", "a: a:");
+        CUSTOM_CHAR_TRANSCRIPTS.put("b", "p j E: " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("i", "I: " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("j", SymbolsLvLIs.SymbolShortPause + " i: O: T " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("o", SymbolsLvLIs.SymbolShortPause + " O: v " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("ó", "ou: " + SymbolsLvLIs.SymbolShortPause);
+    }
+
     public Pronunciation(Context context) {
         this.mContext = context;
         initializePronDict();
@@ -31,23 +51,22 @@ public class Pronunciation {
     }
 
     public String transcribe(String text) {
-        final String silToken = "<sil>";
-        initializeG2P();    // lazy initialize to break dependencies
-        String[] tokens = text.split(" ");
-        StringBuilder sb = new StringBuilder();
-        for (String tok : tokens) {
+        return transcribe(text, "", "");
+    }
 
-            if (mPronDict.containsKey(tok)) {
-                sb.append(mPronDict.get(tok).getTranscript().trim()).append(" ");
-            }
-            else if (tok.equals(silToken)){
-                sb.append(SymbolsLvLIs.SymbolShortPause).append(" ");
-            }
-            else {
-                sb.append(mG2P.process(tok).trim()).append(" ");
-            }
-        }
-        return sb.toString().trim();
+    public String transcribe(String text, String voiceType, String voiceVersion) {
+        initializeG2P();    // lazy initialize to break dependencies
+        String transcript = "";
+        // If we run into more special handling with different voice types and versions,
+        // we might want to think of another approach to this
+        if (text.trim().length() == 1 && voiceType.equals(FLITE) && voiceVersion.equals("0.2"))
+            return transcribeChar(text);
+        else
+            transcript = transcribeString(text);
+
+        transcript = processPauses(transcript, voiceType);
+
+        return transcript;
     }
 
     /**
@@ -92,6 +111,63 @@ public class Pronunciation {
             }
         }
         return converted.toString().trim();
+    }
+
+    @NonNull
+    private String transcribeString(String text) {
+        final String silToken = "<sil>";
+        String[] tokens = text.split(" ");
+        StringBuilder sb = new StringBuilder();
+        for (String tok : tokens) {
+            if (mPronDict.containsKey(tok)) {
+                sb.append(mPronDict.get(tok).getTranscript().trim()).append(" ");
+            }
+            else if (tok.equals(silToken)){
+                sb.append(SymbolsLvLIs.SymbolShortPause).append(" ");
+            }
+            else {
+                sb.append(mG2P.process(tok).trim()).append(" ");
+            }
+        }
+        return sb.toString().trim();
+    }
+
+    @NonNull
+    private String transcribeChar(String text) {
+        if (CUSTOM_CHAR_TRANSCRIPTS.containsKey(text))
+            return CUSTOM_CHAR_TRANSCRIPTS.get(text);
+        else
+            return transcribeString(text);
+    }
+
+    // only Flite voices need pause symbols at the beginning and end of a transcript
+    private String processPauses(String transcript, String voiceType) {
+        if (voiceType.equals(FLITE))
+            transcript = ensurePauses(transcript);
+        else
+            transcript = transcript.replaceAll(beginEndPausePattern, "");
+
+        return finalReplacements(transcript);
+    }
+
+    // ensure that each transcript starts and ends with a pause symbol
+    private String ensurePauses(String transcript) {
+        if (!transcript.startsWith(SymbolsLvLIs.SymbolShortPause))
+            transcript = SymbolsLvLIs.SymbolShortPause + " " + transcript;
+        if (!transcript.endsWith(SymbolsLvLIs.SymbolShortPause))
+            transcript += " " + SymbolsLvLIs.SymbolShortPause;
+        return transcript;
+    }
+
+    private String finalReplacements(String transcript) {
+        final String sp = " " + SymbolsLvLIs.SymbolShortPause + " ";
+        final String multiPausePattern = "(§sp ?){2,}";
+        // replace special characters
+        transcript = transcript.replaceAll("\\.", sp);
+        transcript = transcript.replaceAll(",", sp);
+        transcript = transcript.replaceAll("\\s{2,}", " ");
+        transcript = transcript.replaceAll(multiPausePattern, "§sp ").trim();
+        return transcript;
     }
 
     private List<String> getValidAlphabets() {

@@ -140,12 +140,6 @@ public class TTSService extends TextToSpeechService {
                 + "), callerUid: " + callerUid + " speed: " + speechrate + " pitch: " + pitch
                 + " bundle: " + params);
 
-        // if cache item for text already exists: retrieve it, otherwise create a new cache
-        // item and save it into cache, then test one-by-one availability of every single
-        // requested utterance component and eventually add the missing pieces
-        CacheItem item = mRepository.getUtteranceCache().addUtterance(text);
-        item = mRepository.executeFrontendAndSaveIntoCache(text, item);
-
         String loadedVoiceName = mRepository.getLoadedVoiceName();
         if (loadedVoiceName.equals("")) {
             // This happens the first time the service comes up
@@ -186,6 +180,11 @@ public class TTSService extends TextToSpeechService {
             mShouldPlayNetworkError = true;
             return;
         }
+        // if cache item for text already exists: retrieve it, otherwise create a new cache
+        // item and save it into cache, then test one-by-one availability of every single
+        // requested utterance component and eventually add the missing pieces
+        CacheItem item = mRepository.getUtteranceCache().addUtterance(text);
+        item = mRepository.executeFrontendAndSaveIntoCache(text, item, voice);
         if ((item.getUtterance().getPhonemesCount() == 0) ||
                 item.getUtterance().getPhonemesList().get(0).getSymbols().isEmpty()) {
             Log.w(LOG_TAG, "onSynthesizeText: No phonemes to speak");

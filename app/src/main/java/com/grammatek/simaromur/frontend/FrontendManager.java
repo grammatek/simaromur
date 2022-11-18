@@ -16,6 +16,9 @@ import com.grammatek.simaromur.device.SymbolsLvLIs;
 public class FrontendManager {
     private final static String LOG_TAG = "Flite_Java_" + FrontendManager.class.getSimpleName();
 
+    private final static String IGNORE_TYPE = "ignoreType";
+    private final static String IGNORE_VERSION = "ignoreVersion";
+
     private NormalizationManager mNormalizationManager;
     private Pronunciation mPronunciation;
 
@@ -44,23 +47,13 @@ public class FrontendManager {
      */
     public String process(String text) {
         final String normalized = mNormalizationManager.process(text);
-        return transcribe(normalized);
+        return transcribe(normalized, IGNORE_TYPE, IGNORE_VERSION);
     }
 
-    public String transcribe(String text) {
+    public String transcribe(String text, String voiceType, String voiceVersion) {
         Log.v(LOG_TAG, "transcribe() called");
-        final String sp = " " + SymbolsLvLIs.SymbolShortPause + " ";
-        final String multiPausePattern = "(§sp ?){2,}";
-        final String beginEndPausePattern = "^§sp|§sp$";
 
-        String transcribedText = mPronunciation.transcribe(text);
-
-        // replace special characters
-        transcribedText = transcribedText.replaceAll("\\.", sp);
-        transcribedText = transcribedText.replaceAll(",", sp);
-        transcribedText = transcribedText.replaceAll("\\s{2,}", " ");
-        transcribedText = transcribedText.replaceAll(multiPausePattern, "§sp ").trim();
-        transcribedText = transcribedText.replaceAll(beginEndPausePattern, "");
+        String transcribedText = mPronunciation.transcribe(text, voiceType, voiceVersion);
 
         Log.i(LOG_TAG, text + " => (" + transcribedText + ")");
         return transcribedText;
