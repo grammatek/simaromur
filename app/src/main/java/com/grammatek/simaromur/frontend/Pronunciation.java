@@ -143,9 +143,11 @@ public class Pronunciation {
     // only Flite voices need pause symbols at the beginning and end of a transcript
     private String processPauses(String transcript, String voiceType) {
         if (voiceType.equals(FLITE))
-            return ensurePauses(transcript);
+            transcript = ensurePauses(transcript);
         else
-            return transcript.replaceAll(beginEndPausePattern, "");
+            transcript = transcript.replaceAll(beginEndPausePattern, "");
+
+        return finalReplacements(transcript);
     }
 
     // ensure that each transcript starts and ends with a pause symbol
@@ -154,6 +156,17 @@ public class Pronunciation {
             transcript = SymbolsLvLIs.SymbolShortPause + " " + transcript;
         if (!transcript.endsWith(SymbolsLvLIs.SymbolShortPause))
             transcript += " " + SymbolsLvLIs.SymbolShortPause;
+        return transcript;
+    }
+
+    private String finalReplacements(String transcript) {
+        final String sp = " " + SymbolsLvLIs.SymbolShortPause + " ";
+        final String multiPausePattern = "(§sp ?){2,}";
+        // replace special characters
+        transcript = transcript.replaceAll("\\.", sp);
+        transcript = transcript.replaceAll(",", sp);
+        transcript = transcript.replaceAll("\\s{2,}", " ");
+        transcript = transcript.replaceAll(multiPausePattern, "§sp ").trim();
         return transcript;
     }
 
