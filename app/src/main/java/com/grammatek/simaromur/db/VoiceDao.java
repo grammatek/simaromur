@@ -40,9 +40,10 @@ public interface VoiceDao {
     List<Voice> findVoiceWithName(String name);
 
     @Query("SELECT * FROM voice_table WHERE name IS :name AND internal_name IS :internalName" +
-            " AND language_code IS :languageCode AND language_name IS :languageName AND variant IS :variant")
+            " AND language_code IS :languageCode AND language_name IS :languageName" +
+            " AND variant IS :variant AND version IS :version")
     Voice findVoice(String name, String internalName, String languageCode, String languageName,
-                    String variant);
+                    String variant, String version);
 
     @Query("SELECT * FROM voice_table WHERE type LIKE 'network' ")
     List<Voice> findNetworkVoices();

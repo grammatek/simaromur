@@ -307,7 +307,11 @@ public class VoiceInfo extends AppCompatActivity
 
         @Override
         public void hasFinished(boolean success) {
-            runOnUiThread(() -> mSpinner.setVisibility(View.GONE));
+            runOnUiThread(() -> {
+                mSpinner.setVisibility(View.GONE);
+                App.getAppRepository().triggerServerVoiceUpdate();
+                finish();
+            });
         }
         @Override
         public void updateProgress(int progress) {
