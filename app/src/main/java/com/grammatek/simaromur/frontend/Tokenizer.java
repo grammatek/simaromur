@@ -134,7 +134,7 @@ public class Tokenizer {
     // 'token' might end with " .", delete the space, because we are dealing with an
     // abbreviation or digits, that should not contain a space before the "."
     private void appendToken(StringBuilder sb, String token) {
-        token = token.replace(" ", "");
+        token = token.replace(" .", ".");
         sb.append(token).append(" ");
     }
 

@@ -28,11 +28,12 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Link in bio \uD83D\uDC85\uD83C\uDFFC";
+        String input = "(32. mín)";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("link in bio .",
+
+        assertEquals(", þrítugustu og aðra mínúta , .",
                 processed);
     }
 
@@ -78,6 +79,11 @@ public class NormalizationManagerTest {
         digits.put(" 10.000.000", "tíu milljónir .");
         digits.put("876.000", "átta hundruð sjötíu og sex þúsund .");
         digits.put("2.350.000", "tvær milljónir þrjú hundruð og fimmtíu þúsund .");
+        // POS-tagger tags 'mínúta' as accusative, hence the wrong case for 32.
+        // should be 'þrítugasta og önnur' (accusative is 'mínútu')
+        digits.put("(32. mín)", ", þrítugustu og aðra mínúta , .");
+        digits.put("(37. mín)", ", þrítugustu og sjöundu mínúta , .");
+        digits.put("(24. mín)", ", tuttugustu og fjórðu mínúta , .");
         return digits;
     }
 
@@ -132,6 +138,7 @@ public class NormalizationManagerTest {
         sent.put("2", "tveir .");
         sent.put("2023", "tvö þúsund tuttugu og þrjú .");
         sent.put("\uE9104. ágúst 2022 06:42", "fjórða ágúst tvö þúsund tuttugu og tvö núll sex fjörutíu og tvö .");
+        sent.put("Link in bio \uD83D\uDC85\uD83C\uDFFC", "link in bio .");
         return sent;
     }
 

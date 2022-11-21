@@ -48,10 +48,10 @@ public class Pronunciation {
     }
     private static final Map<String, String> CUSTOM_TRANSCRIPTS = new HashMap<>();
     static {
-        CUSTOM_TRANSCRIPTS.put("komma", "k_h O m m a ");
         CUSTOM_TRANSCRIPTS.put("merki", "m E r_0 r_0 c I ");
         CUSTOM_TRANSCRIPTS.put("hægri", "h a ai G r I ");
         CUSTOM_TRANSCRIPTS.put("hæ", "h aii ai ");
+        CUSTOM_TRANSCRIPTS.put("ég", "i j E: x ");
     }
 
     public Pronunciation(Context context) {
@@ -149,6 +149,10 @@ public class Pronunciation {
             // correct transcription does not sound right
             if (isFlitev02 && transcr.matches(".*m E r_0 c I"))
                 transcr = transcr.replaceAll("m E r_0 c I", "m E r_0 r_0 c I");
+            // Very strange flaw for words ending with "sins", like "leiksins", "tímaritsins", etc.
+            // a very bright "s I n EE s" instead of "s I n s". Fix that with this hack
+            if (isFlitev02 && transcr.matches(".+s I n s"))
+                transcr = transcr.replaceAll("s I n s", "s I n n s");
 
             sb.append(transcr).append(" ");
         }
