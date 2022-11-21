@@ -28,12 +28,21 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "-";
+        String input = "1.800.000 kr ";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("bandstrik .",
+        assertEquals("ein milljón og átta hundruð þúsund krónur .",
                 processed);
+    }
+
+    @Test
+    public void processDigitsTest() {
+        NormalizationManager manager = new NormalizationManager(context);
+        for (String sent : getDigits().keySet()) {
+            String processed = manager.process(sent);
+            assertEquals(getDigits().get(sent), processed);
+        }
     }
 
     @Test
@@ -61,6 +70,15 @@ public class NormalizationManagerTest {
             String processed = manager.process(sent);
             assertEquals(getTestSentences().get(sent), processed);
         }
+    }
+
+    private Map<String, String> getDigits() {
+        Map<String, String> digits = new HashMap<>();
+        digits.put("1.800.000", "ein milljón og átta hundruð þúsund .");
+        digits.put(" 10.000.000", "tíu milljónir .");
+        digits.put("876.000", "átta hundruð sjötíu og sex þúsund .");
+        digits.put("2.350.000", "tvær milljónir þrjú hundruð og fimmtíu þúsund .");
+        return digits;
     }
 
     private Map<String, String> getSymbols() {

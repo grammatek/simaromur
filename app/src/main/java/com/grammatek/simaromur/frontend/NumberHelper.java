@@ -14,6 +14,9 @@ import java.util.Map;
 
 public class NumberHelper {
 
+    public static final String HUNDRED_MILLIONS = "hundred millions";
+    public static final String TEN_MILLIONS = "ten millions";
+    public static final String MILLIONS = "millions";
     public static final String HUNDRED_THOUSANDS = "hundred thousands";
     public static final String TEN_THOUSANDS = "ten thousands";
     public static final String THOUSANDS = "thousands";

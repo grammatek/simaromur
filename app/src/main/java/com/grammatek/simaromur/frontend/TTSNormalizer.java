@@ -234,6 +234,13 @@ public class TTSNormalizer {
         if (numberToken.matches("\\d") && (nextTag.isEmpty() || nextTag.equals("p"))) {
             normalized = NumberHelper.DIGIT_NUMBERS.get(numberToken);
         }
+        else if (numberToken.matches(NumberHelper.CARDINAL_BIG_PTRN)) {
+            Map<String, Map<String, String>> cardinalMillionsDict = makeDict(numberToken, NumberHelper.INT_COLS_BIG);
+            List<CategoryTuple> mergedTupleList = Stream.of(CardinalMillionTuples.getTuples(), CardinalBigTuples.getTuples())
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+            normalized = fillDict(numberToken, nextTag, mergedTupleList, cardinalMillionsDict, NumberHelper.INT_COLS_BIG);
+        }
         //1.234. or 1. or 12. or 123.
         else if (numberToken.matches(NumberHelper.ORDINAL_THOUSAND_PTRN)) {
             Map<String, Map<String, String>> ordinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND); // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
