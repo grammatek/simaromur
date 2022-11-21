@@ -28,11 +28,11 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "1.800.000 kr ";
+        String input = "Link in bio \uD83D\uDC85\uD83C\uDFFC";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("ein milljón og átta hundruð þúsund krónur .",
+        assertEquals("link in bio .",
                 processed);
     }
 
@@ -131,6 +131,7 @@ public class NormalizationManagerTest {
         sent.put("/", "skástrik .");
         sent.put("2", "tveir .");
         sent.put("2023", "tvö þúsund tuttugu og þrjú .");
+        sent.put("\uE9104. ágúst 2022 06:42", "fjórða ágúst tvö þúsund tuttugu og tvö núll sex fjörutíu og tvö .");
         return sent;
     }
 

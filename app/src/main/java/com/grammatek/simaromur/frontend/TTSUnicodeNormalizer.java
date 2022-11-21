@@ -118,10 +118,17 @@ public class TTSUnicodeNormalizer {
                     for (int i = 0; i < wrd.length(); i++) {
                         // is it an Icelandic character?
                         if (!CHAR_SET.contains(Character.toLowerCase(wrd.charAt(i)))) {
+                            int codePoint = wrd.codePointAt(i);
+                            String charValue = String.valueOf(Character.toChars(codePoint));
                             String repl = getIceAlphaReplacement(wrd.charAt(i));
                             // we found a replacement for the non-Icelandic character
                             if (!repl.isEmpty())
                                 wrd = wrd.replace(Character.toString(wrd.charAt(i)), repl);
+                            else if (charValue.length() > 1) {
+                                // probably a 16-bit unicode like an emoji, delete all of it
+                                wrd = "";
+                                break;
+                            }
                             // sounds odd if parenthesis are ignored and don't cause the tts voice
                             // to pause a little, try a comma
                             // TODO: we might need a more general approach to this, i.e. which
