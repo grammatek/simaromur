@@ -36,12 +36,15 @@ public class Pronunciation {
     // updated!
     private static final Map<String, String> CUSTOM_CHAR_TRANSCRIPTS = new HashMap<>();
     static {
-        CUSTOM_CHAR_TRANSCRIPTS.put("a", "a: a:");
-        CUSTOM_CHAR_TRANSCRIPTS.put("b", "p j E: " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("c", "s j E: ");
+        CUSTOM_CHAR_TRANSCRIPTS.put("e", SymbolsLvLIs.SymbolShortPause + " E: E: " + SymbolsLvLIs.SymbolShortPause);
         CUSTOM_CHAR_TRANSCRIPTS.put("i", "I: " + SymbolsLvLIs.SymbolShortPause);
         CUSTOM_CHAR_TRANSCRIPTS.put("j", SymbolsLvLIs.SymbolShortPause + " i: O: T " + SymbolsLvLIs.SymbolShortPause);
-        CUSTOM_CHAR_TRANSCRIPTS.put("o", SymbolsLvLIs.SymbolShortPause + " O: v " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("o", "O: O ");
         CUSTOM_CHAR_TRANSCRIPTS.put("ó", "ou: " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("s", SymbolsLvLIs.SymbolShortPause + " E s s " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("u", "Y: " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("z", "s E: a t a " + SymbolsLvLIs.SymbolShortPause);
     }
 
     public Pronunciation(Context context) {
@@ -58,7 +61,7 @@ public class Pronunciation {
         initializeG2P();    // lazy initialize to break dependencies
         String transcript = "";
         text = text.trim();
-
+        Log.v(LOG_TAG, "voice version => " + voiceVersion);
         // If we run into more special handling with different voice types and versions,
         // we might want to think of another approach to this.
         // For FLITE and v02 check if 'text' is contained in the custom_char_transcripts map
@@ -123,13 +126,13 @@ public class Pronunciation {
         StringBuilder sb = new StringBuilder();
         for (String tok : tokens) {
             if (mPronDict.containsKey(tok)) {
-                sb.append(mPronDict.get(tok).getTranscript().trim()).append(" ");
+                sb.append(mPronDict.get(tok).getTranscript().trim()).append(" ");//.append(SymbolsLvLIs.SymbolShortPause).append(" ");
             }
             else if (tok.equals(silToken)){
                 sb.append(SymbolsLvLIs.SymbolShortPause).append(" ");
             }
             else {
-                sb.append(mG2P.process(tok).trim()).append(" ");
+                sb.append(mG2P.process(tok).trim()).append(" ");//.append(SymbolsLvLIs.SymbolShortPause).append(" ");
             }
         }
         return sb.toString().trim();
