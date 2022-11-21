@@ -28,12 +28,21 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Mynd / elg@vf.is";
+        String input = "-";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("mynd skástrik elg hjá v f punktur is .",
+        assertEquals("bandstrik .",
                 processed);
+    }
+
+    @Test
+    public void processSymbolsTest() {
+        NormalizationManager manager = new NormalizationManager(context);
+        for (String sent : getSymbols().keySet()) {
+            String processed = manager.process(sent);
+            assertEquals(getSymbols().get(sent), processed);
+        }
     }
 
     @Test
@@ -54,6 +63,37 @@ public class NormalizationManagerTest {
         }
     }
 
+    private Map<String, String> getSymbols() {
+        Map<String, String> symbols = new HashMap<>();
+        symbols.put("+", "plús .");
+        symbols.put("=", "jafnt og merki .");
+        symbols.put("/", "skástrik .");
+        symbols.put("_", "undirstrik .");
+        symbols.put("<", "minna en merki .");
+        symbols.put("[", "vinstri hornklofi .");
+        symbols.put("]", "hægri hornklofi .");
+        symbols.put("!", "upphrópunarmerki");
+        symbols.put("@", "att merki .");
+        symbols.put("#", "myllumerki .");
+        symbols.put("$", "dollaramerki .");
+        symbols.put("^", "innskotsmerki .");
+        symbols.put("&", "og merki .");
+        symbols.put("*", "stjarna .");
+        symbols.put("(", "vinstri svigi .");
+        symbols.put(")", "hægri svigi .");
+        symbols.put("-", "bandstrik .");
+        symbols.put("'", "úrfellingarmerki .");
+        symbols.put("\"", "gæsalappir .");
+        symbols.put(":", "tvípunktur");
+        symbols.put(";", "semíkomma");
+        symbols.put(",", "komma .");
+        symbols.put("?", "spurningamerki");
+        symbols.put("÷", "deilingar merki .");
+        symbols.put("×", "margföldunar merki .");
+
+        return symbols;
+    }
+
     private Map<String, String> getNewTestSentences() {
         Map<String, String> sent = new HashMap<>();
         sent.put("https://www.mbl.is/frettir/", "m b l punktur is skástrik fréttir .");
@@ -68,6 +108,11 @@ public class NormalizationManagerTest {
         sent.put("Mörk Ómars á EM:", "mörk ómars á em .");
         sent.put("til áramóta 2021/2022", "til áramóta tvö þúsund tuttugu og eitt <sil> tvö þúsund tuttugu og tvö .");
         sent.put("© grammatek", "höfundarréttur grammatek .");
+        sent.put("+", "plús .");
+        sent.put(",", "komma .");
+        sent.put("/", "skástrik .");
+        sent.put("2", "tveir .");
+        sent.put("2023", "tvö þúsund tuttugu og þrjú .");
         return sent;
     }
 

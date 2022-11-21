@@ -107,7 +107,14 @@ public class TTSUnicodeNormalizer {
                     sb.append(wrd).append(" ");
                     continue;
                 }
-                if (!inDictionary(wrd)) {
+                if (sentArr.length == 1 || sentArr.length == 2) {
+                    // If we have a "sentence" consisting of one symbol that hasn't been
+                    // normalized yet, we take care of that here.
+                    // Example: "( ." becomes: "vinstri svigi ."
+                    if (UnicodeMaps.SymbolsMap.containsKey(wrd))
+                        wrd = UnicodeMaps.SymbolsMap.get(wrd);
+                }
+                if (!inDictionary(wrd) && !wrd.contains(" ")) {
                     for (int i = 0; i < wrd.length(); i++) {
                         // is it an Icelandic character?
                         if (!CHAR_SET.contains(Character.toLowerCase(wrd.charAt(i)))) {
@@ -139,7 +146,11 @@ public class TTSUnicodeNormalizer {
                 if (!wrd.isEmpty())
                     sb.append(" ");
             }
-            normalizedSentences.add(sb.toString().trim().toLowerCase());
+            // a comma without context should be transcribed as 'komma'
+            if (sb.toString().trim().equals(", ."))
+                normalizedSentences.add("komma .");
+            else
+                normalizedSentences.add(sb.toString().trim().toLowerCase());
         }
         return normalizedSentences;
     }

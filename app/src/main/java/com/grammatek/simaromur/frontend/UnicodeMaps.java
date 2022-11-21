@@ -240,6 +240,8 @@ public class UnicodeMaps {
         otherSubstMap.put('\u017c', "s"); // latin small letter z with dot above
         otherSubstMap.put('\u0219', "s"); // latin small letter s with comma below
         otherSubstMap.put('\u2032', "fet"); // prime -> add a sign for normalizer, that an inflection might be needed? fet, feta, ...
+        otherSubstMap.put('\u00D7', "margföldunar merki"); // the x multiplication symbol
+        otherSubstMap.put('\u00F7', "deilingar merki"); // the ÷ division symbol
     }
 
     public static Set<Character> CharactersOutOfRange2Keep = new HashSet<>();
@@ -258,4 +260,31 @@ public class UnicodeMaps {
     public static Character CombiningDotAbove = '\u0307'; // ̇
     public static Character CombiningDiaeresis = '\u0308'; // ¨ as in ä, ü, ...
     // etc. upto u0362 all kinds of "combining" characters
+
+    public static Map<String, String> SymbolsMap = new HashMap<>();
+    static {
+        SymbolsMap.put("+", "plús");
+        SymbolsMap.put("=", "jafnt og merki");
+        SymbolsMap.put("/", "skástrik");
+        SymbolsMap.put("_", "undirstrik");
+        SymbolsMap.put("<", "minna en merki");
+        SymbolsMap.put("[", "vinstri hornklofi");
+        SymbolsMap.put("]", "hægri hornklofi");
+        SymbolsMap.put("!", "upphrópunarmerki");
+        SymbolsMap.put("@", "att merki");
+        SymbolsMap.put("#", "myllumerki");
+        SymbolsMap.put("$", "dollaramerki");
+        SymbolsMap.put("^", "innskotsmerki");
+        SymbolsMap.put("&", "og merki");
+        SymbolsMap.put("*", "stjarna");
+        SymbolsMap.put("(", "vinstri svigi");
+        SymbolsMap.put(")", "hægri svigi");
+        SymbolsMap.put("-", "bandstrik");
+        SymbolsMap.put("'", "úrfellingarmerki");
+        SymbolsMap.put("\"", "gæsalappir");
+        SymbolsMap.put(":", "tvípunktur");
+        SymbolsMap.put(";", "semíkomma");
+        SymbolsMap.put(",", "komma");
+        SymbolsMap.put("?", "spurningamerki");
+    }
 }

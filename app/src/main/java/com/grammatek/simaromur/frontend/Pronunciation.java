@@ -46,6 +46,13 @@ public class Pronunciation {
         CUSTOM_CHAR_TRANSCRIPTS.put("u", "Y: " + SymbolsLvLIs.SymbolShortPause);
         CUSTOM_CHAR_TRANSCRIPTS.put("z", "s E: a t a " + SymbolsLvLIs.SymbolShortPause);
     }
+    private static final Map<String, String> CUSTOM_TRANSCRIPTS = new HashMap<>();
+    static {
+        CUSTOM_TRANSCRIPTS.put("komma", "k_h O m m a ");
+        CUSTOM_TRANSCRIPTS.put("merki", "m E r_0 r_0 c I ");
+        CUSTOM_TRANSCRIPTS.put("hægri", "h a ai G r I ");
+        CUSTOM_TRANSCRIPTS.put("hæ", "h aii ai ");
+    }
 
     public Pronunciation(Context context) {
         this.mContext = context;
@@ -70,7 +77,8 @@ public class Pronunciation {
                 CUSTOM_CHAR_TRANSCRIPTS.containsKey(text))
             return CUSTOM_CHAR_TRANSCRIPTS.get(text);
         else
-            transcript = transcribeString(text);
+            transcript = transcribeString(text, voiceType.equals(FLITE) &&
+                    voiceVersion.equals("0.2"));
 
         return processPauses(transcript, voiceType);
     }
@@ -120,20 +128,29 @@ public class Pronunciation {
     }
 
     @NonNull
-    private String transcribeString(String text) {
+    private String transcribeString(String text, boolean isFlitev02) {
         final String silToken = "<sil>";
         String[] tokens = text.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String tok : tokens) {
-            if (mPronDict.containsKey(tok)) {
-                sb.append(mPronDict.get(tok).getTranscript().trim()).append(" ");//.append(SymbolsLvLIs.SymbolShortPause).append(" ");
+            String transcr = "";
+            if (isFlitev02 && CUSTOM_TRANSCRIPTS.containsKey(tok))
+                transcr = CUSTOM_TRANSCRIPTS.get(tok);
+            else if (mPronDict.containsKey(tok)) {
+                transcr = mPronDict.get(tok).getTranscript().trim();
             }
             else if (tok.equals(silToken)){
-                sb.append(SymbolsLvLIs.SymbolShortPause).append(" ");
+                transcr = SymbolsLvLIs.SymbolShortPause;
             }
             else {
-                sb.append(mG2P.process(tok).trim()).append(" ");//.append(SymbolsLvLIs.SymbolShortPause).append(" ");
+                transcr = mG2P.process(tok).trim();
             }
+            // for tokens like 'myllumerki', 'dollarmerki', 'spurningarmerki', etc.
+            // correct transcription does not sound right
+            if (isFlitev02 && transcr.matches(".*m E r_0 c I"))
+                transcr = transcr.replaceAll("m E r_0 c I", "m E r_0 r_0 c I");
+
+            sb.append(transcr).append(" ");
         }
         return sb.toString().trim();
     }

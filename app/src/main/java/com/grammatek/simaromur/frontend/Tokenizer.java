@@ -16,12 +16,14 @@ import java.util.Set;
  * d. collect sentences in a list to return
  */
 public class Tokenizer {
+    public static final String EOS_SYMBOLS = "[.:?!;]";
+
     private final Set<String> mAbbreviations;
     private final Set<String> mAbbreviationsNonending;
 
     private final String mAlphabetic = "[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ]+";
     private final String mUpperCase = "[A-ZÁÉÍÓÚÝÐÞÆÖ]";
-    private final String mEOSSymbol = "[.:?!;]";
+
 
     public Tokenizer(Context context) {
         Abbreviations abbr = new Abbreviations(context);
@@ -82,15 +84,13 @@ public class Tokenizer {
         // collect the last tokens into a sentence and return
         if (!sb.toString().trim().isEmpty()) {
             String lastSentence = sb.toString().trim();
-            if (!lastSentence.matches(".*" + mAlphabetic + ".*|.*\\d+.*")) {
+            if (!lastSentence.matches(".*" + mAlphabetic + ".*|.*\\d+.*") && !sentences.isEmpty()) {
                 // we don't want to add a sentence only consisting of symbols, do we?
                 // rather add to last sentence, was probably a mistake to finish that one
-                if (!sentences.isEmpty()) {
-                    String sent = sentences.get(sentences.size() - 1);
-                    sent = sent + " " + lastSentence;
-                    sentences.set(sentences.size() - 1, sent);
-                }
-            } else if (!Character.toString(lastSentence.charAt(lastSentence.length() - 1)).matches(mEOSSymbol))
+                String sent = sentences.get(sentences.size() - 1);
+                sent = sent + " " + lastSentence;
+                sentences.set(sentences.size() - 1, sent);
+            } else if (!Character.toString(lastSentence.charAt(lastSentence.length() - 1)).matches(EOS_SYMBOLS))
                 sentences.add(sb.toString().trim() + " .");
             else
                 sentences.add(sb.toString().trim());
