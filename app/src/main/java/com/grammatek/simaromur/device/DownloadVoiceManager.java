@@ -51,8 +51,7 @@ public class DownloadVoiceManager {
     private final String mVoiceDescriptionServerCachePath;
     // TODO: this is hardcoded for now, but should be dynamic in the future, when we implement
     //       the update mechanism
-    private static final String sReleaseName = "0.2 test release";
-    //private static final String sReleaseName = "0.1 release";
+    private static final String sReleaseName = "0.2 release";
     private static final String sVoiceInternalName = "Alfur_flite";
     // All device voices available on disk
     private DeviceVoices mVoicesOnDisk;

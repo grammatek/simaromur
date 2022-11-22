@@ -45,7 +45,8 @@ public class UnicodeMaps {
         deleteCharsMap.put('\u200e', ""); // left-to-right mark
         // deleteCharsMap.put('\u2019', ""); // right single quotation mark -> why delete? moved to otherSubstMap
         deleteCharsMap.put('\ufeff', ""); // zero width no-break space
-        deleteCharsMap.put('\ue910', "");
+        deleteCharsMap.put('\ue910', ""); // private use area
+        deleteCharsMap.put('\ue951', ""); // private use area (e.g. clock symbol in Visir.is before date & time)
     }
 
     public static Map<Character, String> insertSpaceMap = new HashMap<>();

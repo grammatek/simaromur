@@ -112,8 +112,21 @@ public class TTSEngineController {
     }
 
     /**
+     * Unload the current TTS engine and free all resources.
+     */
+    synchronized
+    public void UnloadEngine() {
+        Log.v(LOG_TAG, "UnloadEngine()");
+        if (mEngine != null) {
+            mCurrentVoice = null;
+            mEngine = null;
+        }
+    }
+
+    /**
      * Start to speak given text with given voice.
      */
+    synchronized
     public SpeakTask StartSpeak(CacheItem item, float speed, float pitch, int sampleRate,
                            TTSAudioControl.AudioFinishedObserver observer, TTSRequest ttsRequest) {
         if (mEngine == null || mCurrentVoice == null) {
@@ -136,6 +149,7 @@ public class TTSEngineController {
      * Start to speak given text with given voice and use given callback for applying the synthesized
      * output.
      */
+    synchronized
     public void StartSpeak(TTSObserver observer, TTSRequest ttsRequest) {
         if (mEngine == null || mCurrentVoice == null) {
             String errorMsg = "No TTS engine loaded !";
@@ -155,6 +169,7 @@ public class TTSEngineController {
     /**
      * Stop speaking. Ignored in case currently no speak execution is done.
      */
+    synchronized
     public void StopSpeak(TTSEngineController.SpeakTask speakTask) {
         mTTSAudioControl16khz.stop();
         mTTSAudioControl22khz.stop();

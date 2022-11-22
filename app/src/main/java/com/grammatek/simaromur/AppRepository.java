@@ -117,6 +117,7 @@ public class AppRepository {
         if (isCurrentVoice(voice)) return false;
 
         mDVM.deleteVoice(voice, deleteVoiceObserver, mVoiceDao);
+        mTTSEngineController.UnloadEngine();
         return true;
     }
 
@@ -255,6 +256,7 @@ public class AppRepository {
      * @throws InterruptedException if the thread is interrupted
      */
     public TTSProcessingResult dequeueTTSProcessingResult() throws InterruptedException {
+        Log.v(LOG_TAG, "dequeueTTSProcessingResult()");
         return mTTSProcessingResultQueue.take();
     }
 
