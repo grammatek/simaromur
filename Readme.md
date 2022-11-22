@@ -84,15 +84,17 @@ You can contribute to this project by forking it, creating a branch and opening 
 
 ## License
 
-All new code is Copyright © 2021-2022 Grammatek ehf and licensed under the [Apache License](LICENSE).
+All code is Copyright © 2021-2022 Grammatek ehf. Code developed until and including version v1.2.1 is
+licensed under the [Apache License](LICENSE-APACHE2). The license for code developed after release of version
+v1.2.1 is [GNU General Public License v3.0](LICENSE-GPL3).
 
 ## Acknowledgements
 We use the 3rdparty libraries [Sonic](https://github.com/waywardgeek/sonic) for audio speed and pitch manipulation.
-Sonic is Copyright 2010, 2011 by Bill Cox and is licensed under the [Apache License](LICENSE). Símarómur uses
+Sonic is Copyright 2010, 2011 by Bill Cox and is licensed under the [Apache License](LICENSE-APACHE2). Símarómur uses
 adapted versions of [Thrax](https://www.openfst.org/twiki/bin/view/GRM/Thrax) and
-[OpenFST](https://www.openfst.org/twiki/bin/view/FST/WebHome) for G2P. These are also licensed under the [Apache License](LICENSE).
-Furthermore, we use OpenNLP for tokenization and sentence splitting. OpenNLP is licensed under the [Apache License](LICENSE).
+[OpenFST](https://www.openfst.org/twiki/bin/view/FST/WebHome) for G2P. These are also licensed under the [Apache License](LICENSE-APACHE2).
+Furthermore, we use OpenNLP for tokenization and sentence splitting. OpenNLP is licensed under the [Apache License](LICENSE-APACHE2).
 
-This software is developed under the auspices of the Icelandic Government 5-Year Language Technology Program, described
+Until version `v1.2.1`, this software has been developed under the auspices of the Icelandic Government 5-Year Language Technology Program, described
 [here](https://www.stjornarradid.is/lisalib/getfile.aspx?itemid=56f6368e-54f0-11e7-941a-005056bc530c) and
 [here](https://clarin.is/media/uploads/mlt-en.pdf) (English).
