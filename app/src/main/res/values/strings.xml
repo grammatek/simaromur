@@ -25,7 +25,7 @@
     <string name="info_other">Other</string>
     <string name="wiki_github">Instructions</string>
     <string name="info_about_device_title">Device Information</string>
-    <string name="info_copyright_url">https://github.com/grammatek/simaromur/blob/master/LICENSE</string>
+    <string name="info_copyright_url">https://github.com/grammatek/simaromur/blob/master/LICENSE-GPL3</string>
     <string name="open_in_new">Open in new</string>
     <string name="voice_lang_title">Language</string>
     <string name="is_IS">Icelandic</string>
