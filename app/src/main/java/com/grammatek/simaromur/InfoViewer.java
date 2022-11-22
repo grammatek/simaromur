@@ -217,31 +217,41 @@ public class InfoViewer extends AppCompatActivity {
         private View getCacheCardView(LayoutInflater inflater, ViewGroup parent) {
             UtteranceCacheManager mCacheManager = App.getAppRepository().getUtteranceCache();
 
-            View cView1 = inflater.inflate(R.layout.about_list_item_cache, parent, false);
-            TextView title = cView1.findViewById(R.id.info_title);
+            View cardView = inflater.inflate(R.layout.about_list_item_cache, parent, false);
+            TextView title = cardView.findViewById(R.id.info_title);
             title.setText(R.string.cache);
 
-            ImageView button = cView1.findViewById(R.id.trash_bin);
+            ImageView button = cardView.findViewById(R.id.trash_bin);
             button.setOnClickListener(it -> {
                 mCacheManager.clearCache();
                 if (context != null) {
+                    updateVoiceCacheProgressBar(cardView, 0);
                     Toast.makeText(context, R.string.cache_cleared, Toast.LENGTH_LONG).show();
                 }
             });
 
             double cacheUsed = mCacheManager.getAudioFileSize() / (1024.0 * 1024.0);
             double cacheMax = mCacheManager.getCacheSizeHighWatermark() / (1024.0 * 1024.0);
-            TextView text = cView1.findViewById(R.id.info_text);
+            TextView text = cardView.findViewById(R.id.info_text);
             text.setText(context.getString(R.string.cache_size_mb, (int) cacheMax));
 
             int progress_percentage = (int) ((cacheUsed / cacheMax) * 100);
-            TextView progress = cView1.findViewById(R.id.progress_bar_percentage);
-            progress.setText(context.getString(R.string.cache_progress_percent, progress_percentage));
+            updateVoiceCacheProgressBar(cardView, progress_percentage);
 
-            ProgressBar progressBar = cView1.findViewById(R.id.cache_storage_bar);
-            progressBar.setProgress(progress_percentage);
+            return cardView;
+        }
 
-            return cView1;
+        /**
+         * Updates the progress bar of the voice cache card
+         *
+         * @param view  the view of the card
+         * @param x     the progress percentage
+         */
+        private void updateVoiceCacheProgressBar(View view, int x) {
+            TextView progress = view.findViewById(R.id.progress_bar_percentage);
+            progress.setText(context.getString(R.string.cache_progress_percent, x));
+            ProgressBar progressBar = view.findViewById(R.id.cache_storage_bar);
+            progressBar.setProgress(x);
         }
 
         private View getTitleView(LayoutInflater inflater, ViewGroup parent, int position) {
