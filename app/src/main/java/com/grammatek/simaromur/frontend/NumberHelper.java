@@ -14,6 +14,9 @@ import java.util.Map;
 
 public class NumberHelper {
 
+    public static final String HUNDRED_MILLIONS = "hundred millions";
+    public static final String TEN_MILLIONS = "ten millions";
+    public static final String MILLIONS = "millions";
     public static final String HUNDRED_THOUSANDS = "hundred thousands";
     public static final String TEN_THOUSANDS = "ten thousands";
     public static final String THOUSANDS = "thousands";
@@ -99,13 +102,14 @@ public class NumberHelper {
         DIGIT_NUMBERS.put("9", " níu");
         //TODO: not sure about this, without context difficult to say if it should be "sil" or not
         // DIGIT_NUMBERS.put("\\-", " <sil>");
-        DIGIT_NUMBERS.put("\\-", "");
+        // deal with this at a later stage, don't want to delete it too early
+        //DIGIT_NUMBERS.put("\\-", "");
         DIGIT_NUMBERS.put("\\+", " plús");
         //TODO: if we have more sentences being normalized, this replaces end-of-sentence dot as well. We don't want that
         // DIGIT_NUMBERS.put("\\.", " punktur");
         DIGIT_NUMBERS.put(":", " tvípunktur");
         //TODO: converts normal sentence commas, ask what this is supposed to do
-        // DIGIT_NUMBERS.put(",", " komma");
+        //DIGIT_NUMBERS.put(",", " komma");
         DIGIT_NUMBERS.put("\\/", " skástrik");
     }
 

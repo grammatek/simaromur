@@ -71,7 +71,17 @@ public class NormalizationManager {
             String[] tags = tagText(preNormalized);
             // preNormalized is tokenized as string, so we know splitting on whitespace will give
             // us the correct tokens according to the tokenizer
-            normalized.add(mTTSNormalizer.postNormalize(preNormalized.split(" "), tags));
+            String postNormalized = mTTSNormalizer.postNormalize(preNormalized.split(" "), tags);
+            // Some very basic phrasing for longer sentences
+            // TODO: improve!
+            if (tags.length >= 10) {
+                postNormalized = postNormalized.replace(" og ", " <sil> og ");
+                postNormalized = postNormalized.replace(" en ", " <sil> en ");
+                postNormalized = postNormalized.replace(" þegar ", " <sil> þegar ");
+                postNormalized = postNormalized.replace(" sem ", " <sil> sem ");
+                postNormalized = postNormalized.replace(" ef ", " <sil> ef ");
+            }
+            normalized.add(postNormalized);
         }
 
         return normalized;

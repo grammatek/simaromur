@@ -28,12 +28,31 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Mynd / elg@vf.is";
+        String input = "(32. mín)";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
-        assertEquals("mynd skástrik elg hjá v f punktur is .",
+
+        assertEquals(", þrítugustu og aðra mínúta , .",
                 processed);
+    }
+
+    @Test
+    public void processDigitsTest() {
+        NormalizationManager manager = new NormalizationManager(context);
+        for (String sent : getDigits().keySet()) {
+            String processed = manager.process(sent);
+            assertEquals(getDigits().get(sent), processed);
+        }
+    }
+
+    @Test
+    public void processSymbolsTest() {
+        NormalizationManager manager = new NormalizationManager(context);
+        for (String sent : getSymbols().keySet()) {
+            String processed = manager.process(sent);
+            assertEquals(getSymbols().get(sent), processed);
+        }
     }
 
     @Test
@@ -54,6 +73,51 @@ public class NormalizationManagerTest {
         }
     }
 
+    private Map<String, String> getDigits() {
+        Map<String, String> digits = new HashMap<>();
+        digits.put("1.800.000", "ein milljón og átta hundruð þúsund .");
+        digits.put(" 10.000.000", "tíu milljónir .");
+        digits.put("876.000", "átta hundruð sjötíu og sex þúsund .");
+        digits.put("2.350.000", "tvær milljónir þrjú hundruð og fimmtíu þúsund .");
+        // POS-tagger tags 'mínúta' as accusative, hence the wrong case for 32.
+        // should be 'þrítugasta og önnur' (accusative is 'mínútu')
+        digits.put("(32. mín)", ", þrítugustu og aðra mínúta , .");
+        digits.put("(37. mín)", ", þrítugustu og sjöundu mínúta , .");
+        digits.put("(24. mín)", ", tuttugustu og fjórðu mínúta , .");
+        return digits;
+    }
+
+    private Map<String, String> getSymbols() {
+        Map<String, String> symbols = new HashMap<>();
+        symbols.put("+", "plús .");
+        symbols.put("=", "jafnt og merki .");
+        symbols.put("/", "skástrik .");
+        symbols.put("_", "undirstrik .");
+        symbols.put("<", "minna en merki .");
+        symbols.put("[", "vinstri hornklofi .");
+        symbols.put("]", "hægri hornklofi .");
+        symbols.put("!", "upphrópunarmerki");
+        symbols.put("@", "att merki .");
+        symbols.put("#", "myllumerki .");
+        symbols.put("$", "dollaramerki .");
+        symbols.put("^", "innskotsmerki .");
+        symbols.put("&", "og merki .");
+        symbols.put("*", "stjarna .");
+        symbols.put("(", "vinstri svigi .");
+        symbols.put(")", "hægri svigi .");
+        symbols.put("-", "bandstrik .");
+        symbols.put("'", "úrfellingarmerki .");
+        symbols.put("\"", "gæsalappir .");
+        symbols.put(":", "tvípunktur");
+        symbols.put(";", "semíkomma");
+        symbols.put(",", "komma .");
+        symbols.put("?", "spurningamerki");
+        symbols.put("÷", "deilingar merki .");
+        symbols.put("×", "margföldunar merki .");
+
+        return symbols;
+    }
+
     private Map<String, String> getNewTestSentences() {
         Map<String, String> sent = new HashMap<>();
         sent.put("https://www.mbl.is/frettir/", "m b l punktur is skástrik fréttir .");
@@ -68,6 +132,13 @@ public class NormalizationManagerTest {
         sent.put("Mörk Ómars á EM:", "mörk ómars á em .");
         sent.put("til áramóta 2021/2022", "til áramóta tvö þúsund tuttugu og eitt <sil> tvö þúsund tuttugu og tvö .");
         sent.put("© grammatek", "höfundarréttur grammatek .");
+        sent.put("+", "plús .");
+        sent.put(",", "komma .");
+        sent.put("/", "skástrik .");
+        sent.put("2", "tveir .");
+        sent.put("2023", "tvö þúsund tuttugu og þrjú .");
+        sent.put("\uE9104. ágúst 2022 06:42", "fjórða ágúst tvö þúsund tuttugu og tvö núll sex fjörutíu og tvö .");
+        sent.put("Link in bio \uD83D\uDC85\uD83C\uDFFC", "link in bio .");
         return sent;
     }
 

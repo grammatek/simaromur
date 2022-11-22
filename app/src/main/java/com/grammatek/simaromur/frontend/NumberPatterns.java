@@ -190,7 +190,7 @@ public class NumberPatterns {
 
     // milljónir ..
     // {2.034.435} tvær milljónir þrjátíu og fjögur þúsund fjögur hundruð þrjátíu og fimm
-    public static final String MILLN_PTRN_AFTER = "\\.((000\\.000)|([1-9](?!00\\.000)\\d{2}\\.\\d{3})|(0[1-9](?!0\\.000)\\d\\.\\d{3})|(00[1-9]\\.(?!0{3})\\d{3})|(0{3}\\.0[2-9][1-9]))";
+    public static final String MILLION_PTRN_AFTER = "\\.((000\\.000)|([1-9](?!00\\.000)\\d{2}\\.\\d{3})|(0[1-9](?!0\\.000)\\d\\.\\d{3})|(00[1-9]\\.(?!0{3})\\d{3})|(0{3}\\.0[2-9][1-9]))";
     public static final String HNDRD_AND_MILLION = "([01][1-9]|[2-9]0)(\\.\\d{3}){2}";
     public static final String HNDRD_MILLION = "([2-9][1-9])(\\.\\d{3}){2}";
 

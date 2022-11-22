@@ -1,5 +1,7 @@
 package com.grammatek.simaromur.frontend;
 
+import android.media.session.MediaSession;
+
 import androidx.annotation.NonNull;
 
 import java.util.*;
@@ -129,6 +131,8 @@ public class TTSNormalizer {
             sb.append(token.trim()).append(" ");
             lastToken = tokens[i + 1];
         }
+        if (tokens.length == 1 && tokens[0].matches(Tokenizer.EOS_SYMBOLS))
+            lastToken = tokens[0];
         sb.append(lastToken); //what if this is a digit or something that needs normalizing?
         String result = sb.toString();
         return result.replaceAll("\\s+", " ");
@@ -225,8 +229,20 @@ public class TTSNormalizer {
      */
     private String normalizeNumber(String numberToken, String nextTag) {
         String normalized = numberToken;
+        // default for one digit numbers masc and not neutr as in original Regina
+        // 1, 2, 3, 4
+        if (numberToken.matches("\\d") && (nextTag.isEmpty() || nextTag.equals("p"))) {
+            normalized = NumberHelper.DIGIT_NUMBERS.get(numberToken);
+        }
+        else if (numberToken.matches(NumberHelper.CARDINAL_BIG_PTRN)) {
+            Map<String, Map<String, String>> cardinalMillionsDict = makeDict(numberToken, NumberHelper.INT_COLS_BIG);
+            List<CategoryTuple> mergedTupleList = Stream.of(CardinalMillionTuples.getTuples(), CardinalBigTuples.getTuples())
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+            normalized = fillDict(numberToken, nextTag, mergedTupleList, cardinalMillionsDict, NumberHelper.INT_COLS_BIG);
+        }
         //1.234. or 1. or 12. or 123.
-        if (numberToken.matches(NumberHelper.ORDINAL_THOUSAND_PTRN)) {
+        else if (numberToken.matches(NumberHelper.ORDINAL_THOUSAND_PTRN)) {
             Map<String, Map<String, String>> ordinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND); // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
             List<CategoryTuple> mergedTupleList = Stream.of(OrdinalOnesTuples.getTuples(), OrdinalThousandTuples.getTuples(),
                     CardinalThousandTuples.getTuples())

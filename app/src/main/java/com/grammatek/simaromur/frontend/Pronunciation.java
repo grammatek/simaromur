@@ -36,12 +36,22 @@ public class Pronunciation {
     // updated!
     private static final Map<String, String> CUSTOM_CHAR_TRANSCRIPTS = new HashMap<>();
     static {
-        CUSTOM_CHAR_TRANSCRIPTS.put("a", "a: a:");
-        CUSTOM_CHAR_TRANSCRIPTS.put("b", "p j E: " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("c", "s j E: ");
+        CUSTOM_CHAR_TRANSCRIPTS.put("e", SymbolsLvLIs.SymbolShortPause + " E: E: " + SymbolsLvLIs.SymbolShortPause);
         CUSTOM_CHAR_TRANSCRIPTS.put("i", "I: " + SymbolsLvLIs.SymbolShortPause);
         CUSTOM_CHAR_TRANSCRIPTS.put("j", SymbolsLvLIs.SymbolShortPause + " i: O: T " + SymbolsLvLIs.SymbolShortPause);
-        CUSTOM_CHAR_TRANSCRIPTS.put("o", SymbolsLvLIs.SymbolShortPause + " O: v " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("o", "O: O ");
         CUSTOM_CHAR_TRANSCRIPTS.put("ó", "ou: " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("s", SymbolsLvLIs.SymbolShortPause + " E s s " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("u", "Y: " + SymbolsLvLIs.SymbolShortPause);
+        CUSTOM_CHAR_TRANSCRIPTS.put("z", "s E: a t a " + SymbolsLvLIs.SymbolShortPause);
+    }
+    private static final Map<String, String> CUSTOM_TRANSCRIPTS = new HashMap<>();
+    static {
+        CUSTOM_TRANSCRIPTS.put("merki", "m E r_0 r_0 c I ");
+        CUSTOM_TRANSCRIPTS.put("hægri", "h a ai G r I ");
+        CUSTOM_TRANSCRIPTS.put("hæ", "h aii ai ");
+        CUSTOM_TRANSCRIPTS.put("ég", "i j E: x ");
     }
 
     public Pronunciation(Context context) {
@@ -54,19 +64,23 @@ public class Pronunciation {
         return transcribe(text, "", "");
     }
 
-    public String transcribe(String text, String voiceType, String voiceVersion) {
+    public String transcribe(String text, final String voiceType, final String voiceVersion) {
         initializeG2P();    // lazy initialize to break dependencies
         String transcript = "";
+        text = text.trim();
+        Log.v(LOG_TAG, "voice version => " + voiceVersion);
         // If we run into more special handling with different voice types and versions,
-        // we might want to think of another approach to this
-        if (text.trim().length() == 1 && voiceType.equals(FLITE) && voiceVersion.equals("0.2"))
-            return transcribeChar(text);
+        // we might want to think of another approach to this.
+        // For FLITE and v02 check if 'text' is contained in the custom_char_transcripts map
+        // and return the respective custom transcript if true.
+        if (voiceType.equals(FLITE) && voiceVersion.equals("0.2") &&
+                CUSTOM_CHAR_TRANSCRIPTS.containsKey(text))
+            return CUSTOM_CHAR_TRANSCRIPTS.get(text);
         else
-            transcript = transcribeString(text);
+            transcript = transcribeString(text, voiceType.equals(FLITE) &&
+                    voiceVersion.equals("0.2"));
 
-        transcript = processPauses(transcript, voiceType);
-
-        return transcript;
+        return processPauses(transcript, voiceType);
     }
 
     /**
@@ -114,30 +128,35 @@ public class Pronunciation {
     }
 
     @NonNull
-    private String transcribeString(String text) {
+    private String transcribeString(String text, boolean isFlitev02) {
         final String silToken = "<sil>";
         String[] tokens = text.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String tok : tokens) {
-            if (mPronDict.containsKey(tok)) {
-                sb.append(mPronDict.get(tok).getTranscript().trim()).append(" ");
+            String transcr = "";
+            if (isFlitev02 && CUSTOM_TRANSCRIPTS.containsKey(tok))
+                transcr = CUSTOM_TRANSCRIPTS.get(tok);
+            else if (mPronDict.containsKey(tok)) {
+                transcr = mPronDict.get(tok).getTranscript().trim();
             }
             else if (tok.equals(silToken)){
-                sb.append(SymbolsLvLIs.SymbolShortPause).append(" ");
+                transcr = SymbolsLvLIs.SymbolShortPause;
             }
             else {
-                sb.append(mG2P.process(tok).trim()).append(" ");
+                transcr = mG2P.process(tok).trim();
             }
+            // for tokens like 'myllumerki', 'dollarmerki', 'spurningarmerki', etc.
+            // correct transcription does not sound right
+            if (isFlitev02 && transcr.matches(".*m E r_0 c I"))
+                transcr = transcr.replaceAll("m E r_0 c I", "m E r_0 r_0 c I");
+            // Very strange flaw for words ending with "sins", like "leiksins", "tímaritsins", etc.
+            // a very bright "s I n EE s" instead of "s I n s". Fix that with this hack
+            if (isFlitev02 && transcr.matches(".+s I n s"))
+                transcr = transcr.replaceAll("s I n s", "s I n n s");
+
+            sb.append(transcr).append(" ");
         }
         return sb.toString().trim();
-    }
-
-    @NonNull
-    private String transcribeChar(String text) {
-        if (CUSTOM_CHAR_TRANSCRIPTS.containsKey(text))
-            return CUSTOM_CHAR_TRANSCRIPTS.get(text);
-        else
-            return transcribeString(text);
     }
 
     // only Flite voices need pause symbols at the beginning and end of a transcript

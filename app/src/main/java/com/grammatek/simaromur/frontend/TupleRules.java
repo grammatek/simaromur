@@ -37,7 +37,7 @@ public class TupleRules {
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.EINNAR, " einnar", "1"));
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.EITT, " eitt", "1"));
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.EINU, " einu", "1"));
-        ONES_ZIP.add(new ExpansionTuple(NumberPatterns.NO_NOUN, " einn", "1"));
+        ONES_ZIP.add(new ExpansionTuple(NumberPatterns.NO_NOUN, " eitt", "1"));
 
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.TVEIR, " tveir", "2"));
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.TVO, " tvo", "2"));
@@ -45,7 +45,7 @@ public class TupleRules {
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.TVEGGJA, " tveggja", "2"));
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.TVAER, " tvær", "2"));
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.TVOE, " tvö", "2"));
-        ONES_ZIP.add(new ExpansionTuple(NumberPatterns.NO_NOUN, " tveir", "2"));
+        ONES_ZIP.add(new ExpansionTuple(NumberPatterns.NO_NOUN, " tvö", "2"));
 
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.THRIR, " þrír", "3"));
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.THRJAR, " þrjár", "3"));
@@ -53,7 +53,7 @@ public class TupleRules {
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.THREMUR, " þremur", "3"));
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.THRIGGJA, " þriggja", "3"));
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.THRJU, " þrjú", "3"));
-        ONES_ZIP.add(new ExpansionTuple(NumberPatterns.NO_NOUN, " þrír", "3"));
+        ONES_ZIP.add(new ExpansionTuple(NumberPatterns.NO_NOUN, " þrjú", "3"));
 
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.FJORIR, " fjórir", "4"));
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.FJORA, " fjóra", "4"));
@@ -61,7 +61,7 @@ public class TupleRules {
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.FJOGURRA, " fjögurra", "4"));
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.FJORAR, " fjórar", "4"));
         ONES_ZIP.add(new ExpansionTuple(NumberPatterns.FJOGUR, " fjögur", "4"));
-        ONES_ZIP.add(new ExpansionTuple(NumberPatterns.NO_NOUN, " fjórir", "4"));
+        ONES_ZIP.add(new ExpansionTuple(NumberPatterns.NO_NOUN, " fjögur", "4"));
 
         ONES_ZIP.add(new ExpansionTuple(ANYTHING, " fimm", "5"));
         ONES_ZIP.add(new ExpansionTuple(ANYTHING, " sex", "6"));

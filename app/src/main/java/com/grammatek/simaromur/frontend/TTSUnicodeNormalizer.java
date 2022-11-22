@@ -107,14 +107,28 @@ public class TTSUnicodeNormalizer {
                     sb.append(wrd).append(" ");
                     continue;
                 }
-                if (!inDictionary(wrd)) {
+                if (sentArr.length == 1 || sentArr.length == 2) {
+                    // If we have a "sentence" consisting of one symbol that hasn't been
+                    // normalized yet, we take care of that here.
+                    // Example: "( ." becomes: "vinstri svigi ."
+                    if (UnicodeMaps.SymbolsMap.containsKey(wrd))
+                        wrd = UnicodeMaps.SymbolsMap.get(wrd);
+                }
+                if (!inDictionary(wrd) && !wrd.contains(" ")) {
                     for (int i = 0; i < wrd.length(); i++) {
                         // is it an Icelandic character?
                         if (!CHAR_SET.contains(Character.toLowerCase(wrd.charAt(i)))) {
+                            int codePoint = wrd.codePointAt(i);
+                            String charValue = String.valueOf(Character.toChars(codePoint));
                             String repl = getIceAlphaReplacement(wrd.charAt(i));
                             // we found a replacement for the non-Icelandic character
                             if (!repl.isEmpty())
                                 wrd = wrd.replace(Character.toString(wrd.charAt(i)), repl);
+                            else if (charValue.length() > 1) {
+                                // probably a 16-bit unicode like an emoji, delete all of it
+                                wrd = "";
+                                break;
+                            }
                             // sounds odd if parenthesis are ignored and don't cause the tts voice
                             // to pause a little, try a comma
                             // TODO: we might need a more general approach to this, i.e. which
@@ -139,7 +153,11 @@ public class TTSUnicodeNormalizer {
                 if (!wrd.isEmpty())
                     sb.append(" ");
             }
-            normalizedSentences.add(sb.toString().trim().toLowerCase());
+            // a comma without context should be transcribed as 'komma'
+            if (sb.toString().trim().equals(", ."))
+                normalizedSentences.add("komma .");
+            else
+                normalizedSentences.add(sb.toString().trim().toLowerCase());
         }
         return normalizedSentences;
     }
