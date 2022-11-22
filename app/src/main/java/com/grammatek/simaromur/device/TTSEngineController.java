@@ -111,6 +111,14 @@ public class TTSEngineController {
         }
     }
 
+    public void UnloadEngine() {
+        Log.v(LOG_TAG, "UnloadEngine()");
+        if (mEngine != null) {
+            mCurrentVoice = null;
+            mEngine = null;
+        }
+    }
+
     /**
      * Start to speak given text with given voice.
      */
