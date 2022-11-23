@@ -18,22 +18,26 @@ public class EmailFeedback extends Activity {
 
     protected void sendEmail() {
         Log.v(LOG_TAG, "Send email");
-        String recipientEmail = "info@grammatek.com";
-        String subject = getString(R.string.email_subject);
-        String msg = getString(R.string.email_message);
+        final String recipientEmail = "info@grammatek.com";
+        final String subject = getString(R.string.email_subject);
+        final String msg = getString(R.string.email_message);
         Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-        emailIntent.setData(Uri.parse("mailto:" + recipientEmail));
+        emailIntent.setData(Uri.parse("mailto:"));
         emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {recipientEmail});
         emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
         emailIntent.putExtra(Intent.EXTRA_TEXT, msg);
 
-        String sendMsg = getString(R.string.send_message);
+        final String sendMsg = getString(R.string.send_message);
         try {
-            startActivity(Intent.createChooser(emailIntent, sendMsg));
-            finish();
+            if (emailIntent.resolveActivity(getPackageManager()) != null) {
+                startActivity(Intent.createChooser(emailIntent, sendMsg));
+            } else {
+                Toast.makeText(this, R.string.no_email_client, Toast.LENGTH_LONG).show();
+            }
             Log.i("Finished sending email...", "");
         } catch (android.content.ActivityNotFoundException ex) {
-            Toast.makeText(EmailFeedback.this, "There is no email client installed.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.no_email_client, Toast.LENGTH_LONG).show();
         }
+        finish();
     }
 }
