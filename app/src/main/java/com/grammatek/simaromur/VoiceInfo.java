@@ -246,9 +246,8 @@ public class VoiceInfo extends AppCompatActivity
 
         @Override
         public void hasFinished(boolean success) {
-
             // hide from the UI whether the download is a success or not.
-            findViewById(R.id.ccProgressBar).setVisibility(View.GONE);
+            runOnUiThread(() -> findViewById(R.id.ccProgressBar).setVisibility(View.GONE));
             if (!success) {
                 runOnUiThread(() -> {
                     mProgressBar.setProgress(0);
