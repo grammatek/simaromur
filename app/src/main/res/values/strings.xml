@@ -84,4 +84,5 @@
     <string name="voice_deletion_title">Delete voice</string>
     <string name="voice_deletion_q">Really delete voice?</string>
     <string name="voice_deletion_not_possible">You cannot delete the voice you are currently using, please select a different voice and try again</string>
+    <string name="no_email_client">There is no email client installed</string>
 </resources>

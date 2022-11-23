@@ -84,4 +84,5 @@
     <string name="voice_deletion_title">Eyða rödd</string>
     <string name="voice_deletion_q">Virkilega eyða rödd?</string>
     <string name="voice_deletion_not_possible">Þú getur ekki eytt röddinni sem er valin, vinsamlegast veldu aðra rödd og reyndu aftur</string>
+    <string name="no_email_client">Það er ekkert tölvupóstforrit uppsett</string>
 </resources>
