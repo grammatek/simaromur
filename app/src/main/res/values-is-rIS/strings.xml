@@ -13,6 +13,7 @@
     <string name="tts_settings_label">Stillingar fyrir talgervil</string>
     <string name="voice_list_update">Sækja lista af röddum</string>
     <string name="speak_button">Spila</string>
+    <string name="speak_progress">spilar</string>
     <string name="voice_lang_title">Tungumál</string>
     <string name="voice_name_title">Nafn</string>
     <string name="voice_gender_title">Kyn</string>
