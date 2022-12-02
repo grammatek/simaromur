@@ -129,7 +129,6 @@ public class Pronunciation {
 
     @NonNull
     private String transcribeString(String text, boolean isFlitev02) {
-        final String silToken = "<sil>";
         String[] tokens = text.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String tok : tokens) {
@@ -139,7 +138,7 @@ public class Pronunciation {
             else if (mPronDict.containsKey(tok)) {
                 transcr = mPronDict.get(tok).getTranscript().trim();
             }
-            else if (tok.equals(silToken)){
+            else if (tok.equals(SymbolsLvLIs.TagPause)){
                 transcr = SymbolsLvLIs.SymbolShortPause;
             }
             else {
@@ -154,6 +153,10 @@ public class Pronunciation {
             if (isFlitev02 && transcr.matches(".+s I n s"))
                 transcr = transcr.replaceAll("s I n s", "s I n n s");
 
+            // bug in Thrax grammar, catch the error here: insert space before C if missing
+            // like in 'Vilhjálmsdóttur' -> 'v I lC au l m s t ou h t Y r'
+            // TODO: remove when Thrax grammar is fixed!
+            transcr = transcr.replaceAll("([a-zA-Z])C", "$1 C");
             sb.append(transcr).append(" ");
         }
         return sb.toString().trim();
