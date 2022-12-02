@@ -904,7 +904,7 @@ public class AppRepository {
             // problem with trailing "." though, so we remove it
             String normalizedText = mFrontend.getNormalizationManager().process(text).replaceAll("\\.+$", "");
             final String phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
-            // prevent the network voices from proununcing 'sil'
+            // prevent the network voices from pronouncing 'sil'
             normalizedText = normalizedText.replaceAll(SymbolsLvLIs.TagPause, ",");
             Log.v(LOG_TAG, "onSynthesizeText: original (\"" + text + "\"), normalized (\"" + normalizedText + "\"), phonemes (\"" + phonemes + "\")");
             Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));

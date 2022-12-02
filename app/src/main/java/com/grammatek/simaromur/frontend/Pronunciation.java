@@ -153,6 +153,10 @@ public class Pronunciation {
             if (isFlitev02 && transcr.matches(".+s I n s"))
                 transcr = transcr.replaceAll("s I n s", "s I n n s");
 
+            // bug in Thrax grammar, catch the error here: insert space before C if missing
+            // like in 'Vilhjálmsdóttur' -> 'v I lC au l m s t ou h t Y r'
+            // TODO: remove when Thrax grammar is fixed!
+            transcr = transcr.replaceAll("([a-zA-Z])C", "$1 C");
             sb.append(transcr).append(" ");
         }
         return sb.toString().trim();
