@@ -4,6 +4,8 @@ import android.media.session.MediaSession;
 
 import androidx.annotation.NonNull;
 
+import com.grammatek.simaromur.device.SymbolsLvLIs;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -297,7 +299,7 @@ public class TTSNormalizer {
                 part2 = normalizeThousandDigit(part2, nextTag);
             else
                 part2 = normalizeNumber(part2, nextTag);
-            normalized = part1 + " <sil> " + part2;
+            normalized = part1 + " " + SymbolsLvLIs.TagPause + " " + part2;
         }
         // 01. (what kind of ordinal is this?)
         else if (numberToken.matches("^0\\d\\.$")) {
@@ -473,7 +475,7 @@ public class TTSNormalizer {
      * nominative representation, also  '+', '/', ':' are replaced.
      */
     private String normalizeDigits(String token) {
-        token = token.replaceAll(" ", "<sil> ");
+        token = token.replaceAll(" ", SymbolsLvLIs.TagPause + " ");
         for (String digit : NumberHelper.DIGIT_NUMBERS.keySet()) {
             final String replacement = NumberHelper.DIGIT_NUMBERS.get(digit);
             if (replacement != null) {

@@ -129,7 +129,6 @@ public class Pronunciation {
 
     @NonNull
     private String transcribeString(String text, boolean isFlitev02) {
-        final String silToken = "<sil>";
         String[] tokens = text.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String tok : tokens) {
@@ -139,7 +138,7 @@ public class Pronunciation {
             else if (mPronDict.containsKey(tok)) {
                 transcr = mPronDict.get(tok).getTranscript().trim();
             }
-            else if (tok.equals(silToken)){
+            else if (tok.equals(SymbolsLvLIs.TagPause)){
                 transcr = SymbolsLvLIs.SymbolShortPause;
             }
             else {
