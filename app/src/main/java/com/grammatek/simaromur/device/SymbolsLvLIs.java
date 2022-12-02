@@ -47,6 +47,9 @@ public class SymbolsLvLIs {
     private final static String SymbolsSpecial = SymbolShortPause + " " + SymbolSpokenNoise + " " +
             SymbolSilence;
 
+    // tags
+    public final static String TagPause = "<sil>";
+
     // IPA symbols as HashMap
     private static final HashMap<String, Integer> IPASymbolMap;
     static {

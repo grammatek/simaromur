@@ -28,6 +28,7 @@ import com.grammatek.simaromur.db.ApplicationDb;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
 import com.grammatek.simaromur.device.DownloadVoiceManager;
+import com.grammatek.simaromur.device.SymbolsLvLIs;
 import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.device.TTSEngineController;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
@@ -901,8 +902,10 @@ public class AppRepository {
             // we always need to normalize the text, but it doesn't hurt, if we always do G2P as well
             // for network voices, this is currently all that is needed. But there is an audible
             // problem with trailing "." though, so we remove it
-            final String normalizedText = mFrontend.getNormalizationManager().process(text).replaceAll("\\.+$", "");
+            String normalizedText = mFrontend.getNormalizationManager().process(text).replaceAll("\\.+$", "");
             final String phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
+            // prevent the network voices from proununcing 'sil'
+            normalizedText = normalizedText.replaceAll(SymbolsLvLIs.TagPause, ",");
             Log.v(LOG_TAG, "onSynthesizeText: original (\"" + text + "\"), normalized (\"" + normalizedText + "\"), phonemes (\"" + phonemes + "\")");
             Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
             item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
