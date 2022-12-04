@@ -3,6 +3,8 @@ package com.grammatek.simaromur.frontend;
 import android.content.Context;
 import android.util.Log;
 
+import com.grammatek.simaromur.device.SymbolsLvLIs;
+
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 
@@ -75,11 +77,11 @@ public class NormalizationManager {
             // Some very basic phrasing for longer sentences
             // TODO: improve!
             if (tags.length >= 10) {
-                postNormalized = postNormalized.replace(" og ", " <sil> og ");
-                postNormalized = postNormalized.replace(" en ", " <sil> en ");
-                postNormalized = postNormalized.replace(" þegar ", " <sil> þegar ");
-                postNormalized = postNormalized.replace(" sem ", " <sil> sem ");
-                postNormalized = postNormalized.replace(" ef ", " <sil> ef ");
+                postNormalized = postNormalized.replace(" og ", " " + SymbolsLvLIs.TagPause + " og ");
+                postNormalized = postNormalized.replace(" en ", " " + SymbolsLvLIs.TagPause + " en ");
+                postNormalized = postNormalized.replace(" þegar ", " " + SymbolsLvLIs.TagPause + " þegar ");
+                postNormalized = postNormalized.replace(" sem ", " " + SymbolsLvLIs.TagPause + " sem ");
+                postNormalized = postNormalized.replace(" ef ", " " + SymbolsLvLIs.TagPause + " ef ");
             }
             normalized.add(postNormalized);
         }
