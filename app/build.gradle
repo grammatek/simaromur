@@ -267,11 +267,8 @@ dependencies {
     // Add PyTorch dependencies
     implementation 'org.pytorch:pytorch_android_lite:1.12.2'
 
-    // Add Tensorflow lite dependencies, not needed, therefore disabling it because the release
-    // binary gets too big !
-    //implementation 'org.tensorflow:tensorflow-lite:2.6.0'
-    //implementation 'org.tensorflow:tensorflow-lite-support:0.3.0'
-    //implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.6.0'
+    // onnx runtime, full package
+    implementation 'com.microsoft.onnxruntime:onnxruntime-android:latest.release'
 
     implementation "androidx.datastore:datastore:1.0.0"
 

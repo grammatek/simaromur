@@ -90,6 +90,24 @@ public class TTSEngineController {
                     Log.v(LOG_TAG, "LoadEngine: (cached)");
                 }
                 break;
+            case Voice.TYPE_ONNX:
+                // use the asset voice manager to get the info for the voices, this assumes that
+                // the onnx model is only available inside the assets folder
+                devVoice = mAVM.getInfoForVoice(voice.name);
+                if (mEngine == null || devVoice != mCurrentVoice) {
+                    Log.v(LOG_TAG, "LoadEngine: " + devVoice.Type);
+                    try {
+                        mEngine = new TTSEngineOnnx(App.getContext().getAssets(), devVoice);
+                        mCurrentVoice = devVoice;
+                    } catch (IllegalArgumentException e) {
+                        Log.e(LOG_TAG, "LoadEngine: " + e.getMessage());
+                        throw e;
+                    }
+                }
+                else {
+                    Log.v(LOG_TAG, "LoadEngine: (cached)");
+                }
+                break;
             case Voice.TYPE_FLITE:
                 devVoice = mDVM.getInfoForVoice(voice.internalName);
                 if (mEngine == null || devVoice != mCurrentVoice) {

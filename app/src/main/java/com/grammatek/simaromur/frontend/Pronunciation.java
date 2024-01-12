@@ -24,6 +24,7 @@ public class Pronunciation {
     private final Context mContext;
     private NativeG2P mG2P;
     private Map<String, PronDictEntry> mPronDict;
+    private Map<String, PronDictEntry> mIpaPronDict;
     private final Map<String, Map<String, Map<String, String>>> mAlphabets;
 
     private final static String FLITE = "flite";
@@ -55,8 +56,9 @@ public class Pronunciation {
     }
 
     public Pronunciation(Context context) {
-        this.mContext = context;
-        initializePronDict();
+        mContext = context;
+        mPronDict = readPronDict();
+        mIpaPronDict = readIpaPronDict();
         mAlphabets = initializeAlphabets();
     }
 
@@ -196,17 +198,12 @@ public class Pronunciation {
         return List.copyOf(mAlphabets.keySet());
     }
 
-    private void initializeG2P() {
+    public void initializeG2P() {
         if (mG2P == null) {
             mG2P = new NativeG2P(this.mContext);
         }
     }
 
-    private void initializePronDict() {
-        if (mPronDict == null) {
-            mPronDict = readPronDict();
-        }
-    }
 
     /**
      * Initialize a symbol dictionary where we can look up mappings between all alphabets in ALPHABETS_FILE.
@@ -258,5 +255,32 @@ public class Pronunciation {
            }
        }
         return pronDict;
+    }
+
+    private Map<String, PronDictEntry> readIpaPronDict() {
+        Map<String, PronDictEntry> pronDict = new HashMap<>();
+        final List<String> fileContent = FileUtils.readLinesFromResourceFile(this.mContext,
+                R.raw.igc_wiki_news_dict_20240107);
+        for (String line : fileContent) {
+            String[] transcr = line.trim().split("\t");
+            if (transcr.length == 2) {
+                pronDict.put(transcr[0], new PronDictEntry(transcr[0], transcr[1]));
+            }
+        }
+        return pronDict;
+    }
+
+    public NativeG2P GetG2p() {
+        return mG2P;
+    }
+
+    public Map<String, PronDictEntry> GetPronDict() {
+        return mPronDict;
+    }
+    public Map<String, PronDictEntry> GetIpaPronDict() {
+        return mIpaPronDict;
+    }
+    public Map<String, Map<String, Map<String, String>>> GetAlphabets() {
+        return mAlphabets;
     }
 }

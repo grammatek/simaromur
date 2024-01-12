@@ -46,6 +46,10 @@ public class TTSService extends TextToSpeechService {
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
         mRepository.streamNetworkVoices("");
+        applyCachePolicy();
+    }
+
+    private void applyCachePolicy() {
         String val = mRepository.getAssetConfigValueFor("rm_cache_item_after_playing");
         if (val.equals("true")) {
             mRmCacheItemAfterPlaying = true;
@@ -214,6 +218,11 @@ public class TTSService extends TextToSpeechService {
                 break;
             case com.grammatek.simaromur.db.Voice.TYPE_TORCH:
                 startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_TORCH, false);
+                setSpeechMarksToBeginning(callback);
+                mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
+                break;
+            case com.grammatek.simaromur.db.Voice.TYPE_ONNX:
+                startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_ONNX, false);
                 setSpeechMarksToBeginning(callback);
                 mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
                 break;

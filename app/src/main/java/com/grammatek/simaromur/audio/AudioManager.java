@@ -20,6 +20,7 @@ public class AudioManager {
     public static final int SAMPLE_RATE_WAV = 16000;
     public static final int SAMPLE_RATE_MP3 = 22050;
     public static final int SAMPLE_RATE_TORCH = 22050;
+    public static final int SAMPLE_RATE_ONNX = 22050;
     public static final int N_CHANNELS = 1;
 
     /**

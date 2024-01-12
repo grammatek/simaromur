@@ -59,7 +59,9 @@ public class NormalizationManager {
         List<String> tokenized = mTokenizer.detectSentences(cleaned);
         List<String> normalizedSentences = normalize(tokenized);
         List<String> cleanNormalized = mUnicodeNormalizer.normalizeAlphabet(normalizedSentences);
-
+        for (String sentence : cleanNormalized) {
+            Log.v(LOG_TAG, "normalized sentence: " + sentence);
+        }
         return list2string(cleanNormalized);
     }
 
