@@ -32,7 +32,7 @@ public class VoiceManager extends AppCompatActivity {
 
         // Get a new or existing ViewModel from the ViewModelProvider.
         ViewModelProvider.Factory factory =
-                (ViewModelProvider.Factory) ViewModelProvider.AndroidViewModelFactory.getInstance(App.getApplication());
+                ViewModelProvider.AndroidViewModelFactory.getInstance(App.getApplication());
         VoiceViewModel voiceViewModel = new ViewModelProvider(this, factory).get(VoiceViewModel.class);
 
         // Add an observer on the LiveData returned by getAllVoices.
@@ -47,17 +47,10 @@ public class VoiceManager extends AppCompatActivity {
                 } else {
                     // we want to have the type sorted in the order of
                     // the following list:
-                    // 1. "flite"
-                    // 2. "torchscript"
+                    // 1. "vits"
                     // 3. "network"
-                    if (v1.type.equals("flite")) {
+                    if (v1.type.equals("vits")) {
                         return -1;
-                    } else if (v2.type.equals("flite")) {
-                        return 1;
-                    } else if (v1.type.equals("torchscript")) {
-                        return -1;
-                    } else if (v2.type.equals("torchscript")) {
-                        return 1;
                     } else {
                         return 0;
                     }
@@ -73,7 +66,6 @@ public class VoiceManager extends AppCompatActivity {
             Log.v(LOG_TAG, "onItemClick - Selected Voice: " + voice.name);
             launchVoiceInfoActivity(voice);
         });
-        App.getAppRepository().streamNetworkVoices("");
         setTitle("Símarómur / " + getResources().getString(R.string.simaromur_voice_manager));
     }
 

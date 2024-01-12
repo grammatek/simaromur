@@ -77,7 +77,13 @@ public class FileUtils {
             Log.e(LOG_TAG, "File not found: " + filePath);
             return null;
         }
-        return getMD5SumOfInputStream(fis);
+        String rv = getMD5SumOfInputStream(fis);
+        try {
+            fis.close();
+        } catch (IOException e) {
+            // Ignoring this exception.
+        }
+        return rv;
     }
 
     /**
@@ -93,7 +99,7 @@ public class FileUtils {
             Log.e(LOG_TAG, "MD5 could not be computed");
             return null;
         }
-        try {
+        try (fis) {
             while ((nread = fis.read(dataBytes)) != -1) {
                 md.update(dataBytes, 0, nread);
             }
@@ -101,13 +107,7 @@ public class FileUtils {
             Log.e(LOG_TAG, "Could not read from input stream");
             return null;
         }
-        finally {
-            try {
-                fis.close();
-            } catch (IOException e) {
-                // Ignoring this exception.
-            }
-        }
+        // Ignoring this exception.
 
         StringBuilder sb = new StringBuilder();
         byte[] mdBytes = md.digest();
@@ -249,6 +249,9 @@ public class FileUtils {
 
         try {
             files = assetManager.list(assetSubPath);
+            if (files == null) {
+                throw new IOException("No files found in " + assetSubPath);
+            }
             // create destination assetSubPath if not exists
             mkdir(destPath);
             String destDir = destPath + "/";
@@ -351,11 +354,11 @@ public class FileUtils {
         try {
             InputStream is = res.openRawResource(resID);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            if (is != null) {
-                while ((line = reader.readLine()) != null) {
-                    fileContent.add(line);
-                }
+            while ((line = reader.readLine()) != null) {
+                fileContent.add(line);
             }
+            reader.close();
+            is.close();
         } catch (Exception e) {
             Log.e(LOG_TAG, "Could not read resource " + resID + " : " + e.getMessage());
         }

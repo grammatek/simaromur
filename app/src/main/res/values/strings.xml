@@ -15,8 +15,8 @@
     <string name="speak_button">Play</string>
     <string name="speak_progress">playing</string>
     <string name="voice_test_text_network">Þetta er netrödd. Texti til lestrar er sendur á netþjón, sem sendir upplesturinn til baka á snjallsímann. Netraddirnar eru enn sem komið er hraðvirkari en raddirnar á símanum sjálfum.</string>
-    <string name="voice_test_text_on_device">Þessi rödd er mynduð á snjallsímanum þínum. Enn sem komið er tekur raddmyndun á síma frekar langan tíma, en því öflugri sem síminn þinn er, því styttri tíma tekur að mynda röddina.</string>
-    <string name="voice_test_text_on_device_fast">Þetta er hröð rödd af heldur minni gæðum en aðrar raddir í Símarómi.</string>
+    <string name="voice_test_text_on_device">Símarómur les íslenskan texta á snjallsímanum þínum. Raddirnar eru myndaðar á símanum og því er engin nettenging nauðsynleg. Jafnframt sendir Símarómur engan texta frá símanum og því er óhætt að nota Símaróm fyrir allan lestur.</string>
+    <string name="voice_test_text_on_device_fast">Símarómur les íslenskan texta á snjallsímanum þínum. Raddirnar eru myndaðar á símanum og því er engin nettenging nauðsynleg. Jafnframt sendir Símarómur engan texta frá símanum og því er óhætt að nota Símaróm fyrir allan lestur.</string>
     <string name="voice_name_title">Name</string>
     <string name="voice_gender_title">Gender</string>
     <string name="voice_availability_title">Status</string>

@@ -1,7 +1,5 @@
 package com.grammatek.simaromur.frontend;
 
-import android.media.session.MediaSession;
-
 import androidx.annotation.NonNull;
 
 import com.grammatek.simaromur.device.SymbolsLvLIs;
@@ -24,10 +22,53 @@ import java.util.stream.Stream;
 
 public class TTSNormalizer {
 
-    public static String VOWELS = "[AEIOUYÁÉÍÓÚÝÖaeiouyáéíóúýö]";
+    private final List<CategoryTuple> BigCardinalFilledTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples(), CardinalMillionTuples.getTuples(),
+                    CardinalBigTuples.getTuples())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+    private final List<CategoryTuple> BigCardinalTupleList = Stream.of(CardinalMillionTuples.getTuples(), CardinalBigTuples.getTuples())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+    private final List<CategoryTuple> OnesThousandsOrdinalTupleList = Stream.of(OrdinalOnesTuples.getTuples(), OrdinalThousandTuples.getTuples(),
+                    CardinalThousandTuples.getTuples())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+    private final List<CategoryTuple> OnesThousandsCardinalTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples())
+            .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+    private final List<CategoryTuple> ThousandsMillionsTupleList = Stream.of(OnesThousandsCardinalTupleList, CardinalMillionTuples.getTuples())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+    private final List<CategoryTuple> DecimalThousandsTupleList = Stream.of(OnesThousandsCardinalTupleList, DecimalThousandTuples.getTuples())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+    public static final Pattern VOWELS = Pattern.compile("[AEIOUYÁÉÍÓÚÝÖaeiouyáéíóúýö]");
+    private static final Pattern DIGITS_PTRN = Pattern.compile(".*\\d.*", 0);
+    private static final Pattern DIST_PTRN = Pattern.compile(".*\\b([pnµmcsdkN]?m|ft)(?![²2³3])\\.?\\b.*", 0);
+    private static final Pattern AREA_PTRN = Pattern.compile("(\\bha\\.?\\b.*)|([pnµmcsdkf\\s\\d]m\\.?\\b)|([pnµmcsdk]?m[²2³3])", 0);
+    private static final Pattern VOL_PTRN = Pattern.compile(".*\\b[dcmµ]?[Ll]\\.?\\b.*", 0);
+    private static final Pattern TIME_PTRN = Pattern.compile(".*\\b(klst|mín|m?s(ek)?)\\b.*", 0);
+    private static final Pattern CURRENCY_PTRN = Pattern.compile(".*(((ma?\\.?)?[Kk]r\\.?-?)|(C(HF|AD|ZK)|(DK|SE|NO)K|EUR|GBP|I(NR|SK)|JPY|PTE|(AU|US)D|mlj[óa]\\.?)|([$£¥€₹₤])).*", 0);
+    private static final Pattern ELECTRONIC_PTRN = Pattern.compile(".*\\b([kMGT]?(V|Hz|B|W|W\\.?(st|h)))\\.?\\b.*", 0);
+    private static final Pattern REST_PTRN = Pattern.compile(".*(%|\\b(stk|[Kk][Cc]al)\\.?\\b).*", 0);
+    private static final Pattern HYPHEN_PTRN = Pattern.compile(".*-.*", 0);
+    // TODO: this is a very simplistic pattern for emails; more appropriate would be sth. like:
+    //              (?<=\s|^)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?=\s|$|[.,!?])
+    //       This matches also inside strings for valid email addresses
+    private static final Pattern EMAIL_PTRN = Pattern.compile(".+@.+");
+    private static final Pattern EOS_PTRN = Pattern.compile("[.:?!;]");
+    private static final Pattern PUNCTUATION_TO_KEEP = Pattern.compile("[.:?!,\"]");
+    private static final Pattern NUM_OPT_DOT_PTRN = Pattern.compile("\\d+\\.?(\\d+)?");
+    private static final Pattern ANY_DIGIT_PTRN = Pattern.compile("\\d");
+    private static final Pattern SPORT_RES_PTRN = Pattern.compile("^\\d{1,2}/\\d{1,2}$");
+    private static final Pattern DIGIT_LEAD_ZERO_PTRN = Pattern.compile("^0\\d\\.$");
+    private static final Pattern URL_PTRN = Pattern.compile("https?://.+");
+
+    private static final List<String> SEPARATORS = Arrays.asList("", ".", "/", ":");
+    private static final List<String> LINK_ELEMS = Arrays.asList("http", "https", "www");
     // Max length of a token that should be spelled out, even if it contains a vowel.
     // Do we have examples of longer tokens?
-    public static Integer MAX_SPELLED_OUT = 4;
+    public static final Integer MAX_SPELLED_OUT = 4;
 
     public TTSNormalizer() {
 
@@ -44,7 +85,7 @@ public class TTSNormalizer {
         String domain = ""; //we will need to determine this from "text" in real life!
 
         // some pre-processing and formatting of digits
-        if (normalized.matches(".*\\d.*")) {
+        if (DIGITS_PTRN.matcher(normalized).matches()) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.preHelpDict);
         }
         // process strings containing a hyphen, affects weather description and combination of letters and hyphen
@@ -60,32 +101,32 @@ public class TTSNormalizer {
         if (normalized.contains("/")) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.denominatorDict);
         }
-        if (normalized.matches(".*\\d.*")) {
+        if (DIGITS_PTRN.matcher(normalized).matches()) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.weightDict);
         }
-        if (normalized.matches(".*\\b([pnµmcsdkN]?m|ft)\\.?\\b.*")) {
+        if (DIST_PTRN.matcher(normalized).matches()) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.getDistanceDict());
         }
-        if (normalized.matches(".*(\\bha\\.?\\b).*|([pnµmcsdk]?m\\b\\.?)|([pnµmcsdk]?m[²2³3]).*")) {
+        if (AREA_PTRN.matcher(normalized).find()) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.getAreaDict());
         }
-        if (normalized.matches(".*\\b[dcmµ]?[Ll]\\.?\\b.*")) {
+        if (VOL_PTRN.matcher(normalized).matches()) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.getVolumeDict());
         }
-        if (normalized.matches(".*\\b(klst|mín|m?s(ek)?)\\b.*")) {
+        if (TIME_PTRN.matcher(normalized).matches()) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.getTimeDict());
         }
-        if (normalized.matches(".*(\\W|^)((ma?\\.?)?[Kk]r\\.?-?|C(HF|AD|ZK)|(DK|SE|NO)K|EUR|GBP|I[NS]K|JPY|PTE|(AU|US)D|mlj[óa]\\.?)((\\W|$)|[$£¥])(.*)")) {
+        if (CURRENCY_PTRN.matcher(normalized).matches()) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.getCurrencyDict());
         }
-        if (normalized.matches(".*\\b([kMGT]?(V|Hz|B|W|W\\.?(st|h)))\\.?\\b.*")) {
+        if (ELECTRONIC_PTRN.matcher(normalized).matches()) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.getElectronicDict());
         }
-        if (normalized.matches(".*(%|\\b(stk|[Kk][Cc]al)\\.?\\b).*")) {
+        if (REST_PTRN.matcher(normalized).matches()) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.restDict);
         }
         // if we have domain "sport" a hyphen between numbers is silent, otherwise it is normalized to "til"
-        if (normalized.matches(".*-.*")) {
+        if (HYPHEN_PTRN.matcher(normalized).matches()) {
             normalized = replaceHyphen(normalized, domain);
         }
         return normalized;
@@ -101,56 +142,60 @@ public class TTSNormalizer {
      */
     public String postNormalize(String[] tokens, String[] tags) {
         // tokens and tags have to match - tag at index 'i' should be the tag for the token at index 'i'
-        if (tokens.length != tags.length)
+        if (tokens.length != tags.length) {
+            //Log.w(LOG_TAG, "tokens and tags have different lengths, returning empty string");
             return "";
+        }
 
         String token;
         String nextTag;
         String lastToken = "";
         StringBuilder sb = new StringBuilder();
-        final String linksPattern = NormalizationDictionaries.links.get(NormalizationDictionaries.LINK_PTRN_ALL);
+        final Pattern linksPattern = NormalizationDictionaries.links.get(NormalizationDictionaries.LINK_PTRN_ALL);
 
         // we always look at the next tag, hence only iterate up to length-2
         for (int i = 0; i < tags.length - 1; i++) {
             token = tokens[i];
             nextTag = tags[i + 1];
-            if (token.matches(".*\\d.*")) {
+            // in case the tag is "§", this special character returned from the PoS tagging function
+            // means, we don't have any numbers at all in tokens and PoS tagging has been skipped
+            if ((!nextTag.equals("§")) && DIGITS_PTRN.matcher(token).matches()) {
                 token = normalizeNumber(token, nextTag);
             }
             // add space between upper case letters, if they do not build known Acronyms like "RÚV"
-            else if (token.matches(NumberHelper.LETTERS_PTRN) && token.length() > 1) {
+            else if (token.length() > 1 && NumberHelper.LETTERS_PTRN.matcher(token).matches()) {
                 token = processLettersPattern(token);
             }
             else if (linksPattern != null) {
-                if (token.matches(linksPattern) || token.matches(".+@.+"))
+                if (linksPattern.matcher(token).matches() || EMAIL_PTRN.matcher(token).matches())
                     token = normalizeURL(token);
                 else if (token.length() > 1 && token.charAt(0) == token.charAt(1))
                     token = insertSpaces(token);
-                else if (token.matches(NormalizationDictionaries.NOT_LETTER))
+                else if ((token.length() > 1 && NormalizationDictionaries.NOT_LETTER.matcher(token).matches())
+                || (token.length() == 1 && !PUNCTUATION_TO_KEEP.matcher(token).matches()))
                     token = normalizeDigits(token);
             }
 
             sb.append(token.trim()).append(" ");
             lastToken = tokens[i + 1];
         }
-        if (tokens.length == 1 && tokens[0].matches(Tokenizer.EOS_SYMBOLS))
+        if (tokens.length == 1 && EOS_PTRN.matcher(tokens[0]).matches())
             lastToken = tokens[0];
         sb.append(lastToken); //what if this is a digit or something that needs normalizing?
         String result = sb.toString();
         return result.replaceAll("\\s+", " ");
     }
 
-    public String replaceFromDict(String text, Map<String, String> dict) {
-        for (String regex : dict.keySet()) {
-            text = replacePattern(text, regex, dict);
+    public String replaceFromDict(String text, final Map<Pattern, String> dict) {
+        String rv = text;
+        for (final Pattern regex : dict.keySet()) {
+            rv = replacePattern(rv, regex, dict);
         }
-        return text;
+        return rv;
     }
 
-    // Replace a given regex with the corresponding replacement pattern from 'dict'
-    private String replacePattern(String text, String regex, Map<String, String> dict) {
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(text);
+    private String replacePattern(final String text, final Pattern regex, final Map<Pattern, String> dict) {
+        final Matcher matcher = regex.matcher(text);
         String replaced = text;
         while (matcher.find()) {
             final String regexS = dict.get(regex);
@@ -210,7 +255,10 @@ public class TTSNormalizer {
         String[] textArr = text.split(" ");
         for (int i = 2; i < textArr.length - 1; i++) {
             // pattern: "digit - digit"
-            if (textArr[i].equals("-") && textArr[i - 1].matches("\\d+\\.?(\\d+)?") && textArr[i + 1].matches("\\d+\\.?(\\d+)?")) {
+            if (textArr[i].equals("-")
+                    && NUM_OPT_DOT_PTRN.matcher(textArr[i-1]).matches()
+                    && NUM_OPT_DOT_PTRN.matcher(textArr[i+1]).matches())
+            {
                 if (domain.equals("sport"))
                     textArr[i] = "";
                 else
@@ -230,79 +278,68 @@ public class TTSNormalizer {
     normalize. Return the normalized numberToken.
      */
     private String normalizeNumber(String numberToken, String nextTag) {
-        String normalized = numberToken;
+        String normalized;
         // default for one digit numbers masc and not neutr as in original Regina
         // 1, 2, 3, 4
-        if (numberToken.matches("\\d") && (nextTag.isEmpty() || nextTag.equals("p"))) {
+        if (ANY_DIGIT_PTRN.matcher(numberToken).matches() && (nextTag.isEmpty() || nextTag.equals("p"))) {
             normalized = NumberHelper.DIGIT_NUMBERS.get(numberToken);
         }
-        else if (numberToken.matches(NumberHelper.CARDINAL_BIG_PTRN)) {
-            Map<String, Map<String, String>> cardinalMillionsDict = makeDict(numberToken, NumberHelper.INT_COLS_BIG);
-            List<CategoryTuple> mergedTupleList = Stream.of(CardinalMillionTuples.getTuples(), CardinalBigTuples.getTuples())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            normalized = fillDict(numberToken, nextTag, mergedTupleList, cardinalMillionsDict, NumberHelper.INT_COLS_BIG);
+        else if (NumberHelper.CARDINAL_BIG_PTRN.matcher(numberToken).matches()) {
+            final Map<String, Map<String, String>> cardinalMillionsDict = makeDict(numberToken, NumberHelper.INT_COLS_BIG);
+            normalized = fillDict(numberToken, nextTag, BigCardinalFilledTupleList, cardinalMillionsDict, NumberHelper.INT_COLS_BIG);
+            //normalized = fillDict(numberToken, nextTag, BigCardinalTupleList, cardinalMillionsDict, NumberHelper.INT_COLS_BIG);
         }
         //1.234. or 1. or 12. or 123.
-        else if (numberToken.matches(NumberHelper.ORDINAL_THOUSAND_PTRN)) {
-            Map<String, Map<String, String>> ordinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND); // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
-            List<CategoryTuple> mergedTupleList = Stream.of(OrdinalOnesTuples.getTuples(), OrdinalThousandTuples.getTuples(),
-                    CardinalThousandTuples.getTuples())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            normalized = fillDict(numberToken, nextTag, mergedTupleList, ordinalThousandDict, NumberHelper.INT_COLS_THOUSAND);
+        else if (NumberHelper.ORDINAL_THOUSAND_PTRN.matcher(numberToken).matches()) {
+            // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
+            final Map<String, Map<String, String>> ordinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND);
+            normalized = fillDict(numberToken, nextTag, OnesThousandsOrdinalTupleList, ordinalThousandDict, NumberHelper.INT_COLS_THOUSAND);
         }
         //1.234 or 1 or 12 or 123
-        else if (numberToken.matches(NumberHelper.CARDINAL_THOUSAND_PTRN)) {
+        else if (NumberHelper.CARDINAL_THOUSAND_PTRN.matcher(numberToken).matches()) {
             normalized = normalizeThousandDigit(numberToken, nextTag);
         }
         //1.234 or 12.345 or 123.456 -> asking the same thing twice, check
-        else if (numberToken.matches(NumberHelper.CARDINAL_MILLION_PTRN)) {
-            Map<String, Map<String, String>> cardinalMillionDict = makeDict(numberToken, NumberHelper.INT_COLS_MILLION); // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
-            List<CategoryTuple> mergedTupleList = Stream.of(CardinalThousandTuples.getTuples(), CardinalMillionTuples.getTuples())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            normalized = fillDict(numberToken, nextTag, mergedTupleList, cardinalMillionDict, NumberHelper.INT_COLS_MILLION);
+        else if (NumberHelper.CARDINAL_MILLION_PTRN.matcher(numberToken).matches()) {
+            // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
+            final Map<String, Map<String, String>> cardinalMillionDict = makeDict(numberToken, NumberHelper.INT_COLS_MILLION);
+            normalized = fillDict(numberToken, nextTag, ThousandsMillionsTupleList, cardinalMillionDict, NumberHelper.INT_COLS_MILLION);
         }
         //1.123,4 or 1232,4 or 123,4 or 12,42345 or 1,489 ; NOT: 12345,5
-        else if (numberToken.matches(NumberHelper.DECIMAL_THOUSAND_PTRN)) {
-            Map<String, Map<String, String>> decimalDict = makeDict(numberToken, NumberHelper.DECIMAL_COLS_THOUSAND); // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
-
-            List<CategoryTuple> mergedCardinalTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            List<CategoryTuple> mergedTupleList = Stream.of(mergedCardinalTupleList, DecimalThousandTuples.getTuples())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            normalized = fillDict(numberToken, nextTag, mergedTupleList, decimalDict, NumberHelper.DECIMAL_COLS_THOUSAND);
+        else if (NumberHelper.DECIMAL_THOUSAND_PTRN.matcher(numberToken).matches()) {
+            // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
+            final Map<String, Map<String, String>> decimalDict = makeDict(numberToken, NumberHelper.DECIMAL_COLS_THOUSAND);
+            normalized = fillDict(numberToken, nextTag, DecimalThousandsTupleList, decimalDict, NumberHelper.DECIMAL_COLS_THOUSAND);
         }
         // 01:55 or 01.55
-        else if (numberToken.matches(NumberHelper.TIME_PTRN)) {
-            Map<String, Map<String, String>> timeDict = makeDict(numberToken, NumberHelper.TIME_SPORT_COLS); // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
+        else if (NumberHelper.TIME_PTRN.matcher(numberToken).matches()) {
+            // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
+            final Map<String, Map<String, String>> timeDict = makeDict(numberToken, NumberHelper.TIME_SPORT_COLS);
             normalized = fillDict(numberToken, nextTag, TimeTuples.getTuples(), timeDict, NumberHelper.TIME_SPORT_COLS);
         }
-        else if (numberToken.matches("^\\d{1,2}/\\d{1,2}$")) {
+        else if (SPORT_RES_PTRN.matcher(numberToken).matches()) {
             // if domain == "other" - do other things, below is the handling for sport results:
-            Map<String, Map<String, String>> sportsDict = makeDict(numberToken, NumberHelper.TIME_SPORT_COLS); // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
+            // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
+            final Map<String, Map<String, String>> sportsDict = makeDict(numberToken, NumberHelper.TIME_SPORT_COLS);
             normalized = fillDict(numberToken, nextTag, SportTuples.getTuples(), sportsDict, NumberHelper.TIME_SPORT_COLS);
         }
         // 4/8 or ⅓ , etc.
-        else if (numberToken.matches(NumberHelper.FRACTION_PTRN)) {
+        else if (NumberHelper.FRACTION_PTRN.matcher(numberToken).matches()) {
             String[] splitted = numberToken.split("/");
             String part1 = splitted[0];
             String part2 = splitted[1];
-            if (part1.matches(NumberHelper.CARDINAL_THOUSAND_PTRN))
+            if (NumberHelper.CARDINAL_THOUSAND_PTRN.matcher(part1).matches())
                 part1 = normalizeThousandDigit(part1, nextTag);
             else
                 part1 = normalizeNumber(part1, nextTag);
-            if (part2.matches(NumberHelper.CARDINAL_THOUSAND_PTRN))
+            if (NumberHelper.CARDINAL_THOUSAND_PTRN.matcher(part2).matches())
                 part2 = normalizeThousandDigit(part2, nextTag);
             else
                 part2 = normalizeNumber(part2, nextTag);
             normalized = part1 + " " + SymbolsLvLIs.TagPause + " " + part2;
         }
         // 01. (what kind of ordinal is this?)
-        else if (numberToken.matches("^0\\d\\.$")) {
+        else if (DIGIT_LEAD_ZERO_PTRN.matcher(numberToken).matches()) {
             normalized = normalizeDigitOrdinal(numberToken);
         }
         else {
@@ -312,13 +349,9 @@ public class TTSNormalizer {
     }
 
     private String normalizeThousandDigit(String numberToken, String nextTag) {
-        String normalized;
-        Map<String, Map<String, String>> cardinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND); // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
-        List<CategoryTuple> mergedTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples())
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-        normalized = fillDict(numberToken, nextTag, mergedTupleList, cardinalThousandDict, NumberHelper.INT_COLS_THOUSAND);
-        return normalized;
+        // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
+        final Map<String, Map<String, String>> cardinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND);
+        return fillDict(numberToken, nextTag, OnesThousandsCardinalTupleList, cardinalThousandDict, NumberHelper.INT_COLS_THOUSAND);
     }
 
     /*
@@ -338,23 +371,66 @@ public class TTSNormalizer {
      *  - twitter and instagram handles (containing '@')
      */
     private String normalizeURL(String token) {
-        String normalized = "";
-        // analyse a URL or e-mail pattern
-        if (token.indexOf('.') > 0) {
-            normalized = processTokenWithDots(token);
+        String[] linkItemsTmp = token.split("[:./_\\-@#]");
+        List<String> linkItems = insertSymbols(linkItemsTmp, token);
+        List<String> normalizedItems = normalizeWlinkItems(linkItems);
+        return String.join(" ", normalizedItems);
+    }
+
+    /*
+        Insert the symbols again that were used to split on.
+        Approach: for each item in list, extract the next char from the original text. If we encounter an empty
+        item after the first one, ignore (multiple symbols in a row cause the split string to contain
+        empty elements.) We check the first one, since a pattern might start with a symbol (e.g. #hashtag)
+     */
+    private List<String> insertSymbols(String[] items, String token) {
+        List<String> linkItems = new ArrayList<>();
+        int currInd = 0;
+        for (String item : items) {
+            if (item.isEmpty() && currInd > 0)
+                continue;
+            int itemInd = token.indexOf(item, currInd);
+            linkItems.add(item);
+            if (token.length() > itemInd + item.length() + 1) {
+                String symbol = token.substring(itemInd + item.length(), itemInd + item.length() + 1);
+                linkItems.add(symbol);
+            }
+            currInd += item.length();
         }
-        else
-            normalized = token;
-        // don't pronounce the last "slash" at the end of a URL
-        // "mbl.is/frettir/" becomes "m b l punktur is skástrik fréttir"
-        if (normalized.endsWith("/"))
-            normalized = normalized.substring(0, normalized.length() - 1);
-        // replace symbols that might be left in the normalized string
+        return linkItems;
+    }
+    /*
+      Normalize the items in the items list, skip 'http(s)' and 'www' and the following symbols, spell out
+      tokens that do not contain a vowel, replace digits one by one, replace symbols with their names.
+      Returns a list of normalized items.
+     */
+    List<String> normalizeWlinkItems(List<String> items) {
+        List<String> normalizedItems = new ArrayList<>();
+        boolean skipNext = false;
+        for (String item : items) {
+            if (skipNext) {
+                if (SEPARATORS.contains(item))
+                    continue;
+                else
+                    skipNext = false;
+            }
+            if (LINK_ELEMS.contains(item)) {
+                skipNext = true;
+                continue;
+            }
+            String normalized = replaceWlinkSymbols(item);
+            // check if the item should be spelled out or spoken as a word, process and add to items
+            normalizedItems.add(processLettersPattern(normalized));
+        }
+        return normalizedItems;
+    }
+
+    private String replaceWlinkSymbols(String item) {
         for (String symbol : NumberHelper.WLINK_NUMBERS.keySet()) {
-            normalized = normalized.replaceAll(symbol,
+            item = item.replaceAll(symbol,
                     " " + NumberHelper.WLINK_NUMBERS.get(symbol) + " ");
         }
-        return normalized;
+        return item;
     }
 
     @NonNull
@@ -363,7 +439,7 @@ public class TTSNormalizer {
         String[] arr = token.split("\\.");
         String prefix = arr[0];
         // only keep the first part if it is not an 'http' or a 'www' prefix
-        if (prefix.matches("https?://.+")) {
+        if (URL_PTRN.matcher(prefix).matches()) {
             prefix = prefix.substring(prefix.indexOf("//") + 2);
         }
         if (prefix.startsWith("www")) {
@@ -430,11 +506,13 @@ public class TTSNormalizer {
      * spoken as a word, otherwise spelled out
      */
     private boolean pronounceAsWord(String token) {
-        Pattern vowelPattern = Pattern.compile(VOWELS);
-        Matcher matcher = vowelPattern.matcher(token);
         double count = 0.0;
-        while (matcher.find())
+        List<String> matches = new ArrayList<>();
+        Matcher matcher = VOWELS.matcher(token);
+        while (matcher.find()) {
+            matches.add(matcher.group());
             count++;
+        }
 
         // Somewhat arbitrary ratio, we have an example like 'Busch' with a vowel-consonant
         // ratio of 0.2 where we definitely want to keep the token as is.
@@ -489,7 +567,7 @@ public class TTSNormalizer {
      * Initializes a map to hold the digit positions for a token, e.g.:
      * {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
      */
-    private Map<String, Map<String, String>> makeDict(String token, String[] columns) {
+    private Map<String, Map<String, String>> makeDict(String token, final String[] columns) {
         Map<String, Map<String, String>> valueDict = new HashMap<>();
         Map<String, String> innerMap = new HashMap<>();
         for (String s : columns)
@@ -498,28 +576,42 @@ public class TTSNormalizer {
         return valueDict;
     }
 
-    /*
+    /**
      * Fills a map that holds the digit positions for a token, e.g.:
-     * {"1983": {thousands: "", hundreds: "nítján hundruð", dozens: " áttatíu og", ones: "þrjú"}}
+     *      {"1983": {thousands: "", hundreds: "nítján hundruð", dozens: " áttatíu og", ones: "þrjú"}}
      * Returns a string combined of the values, e.g.: "nítján hundruð áttatíu og þrjú"
+     *
+     * @param token     the token to fill the dictionary for
+     * @param tag       the tag to fill the dictionary for
+     * @param tuples    the list of tuples to use for filling the dictionary
+     * @param typeDict  the dictionary to fill
+     * @param columns   the columns to fill in the dictionary
+     * @return         the string combined of the values
      */
-    private String fillDict(String token, String tag, List<CategoryTuple> tuples, Map<String, Map<String, String>> typeDict, String[] columns) {
+    private String fillDict(String token, String tag, final List<CategoryTuple> tuples, Map<String, Map<String, String>> typeDict, final String[] columns) {
         StringBuilder result = new StringBuilder();
 
-        for (int i = 0; i < tuples.size(); i++) {
-            if (token.matches(".*" + tuples.get(i).getNumberPattern() + ".*") && tag.matches(".*" + tuples.get(i).getRule())) {
-                if (typeDict.containsKey(token)) {
-                    if (typeDict.get(token).containsKey(tuples.get(i).getCategory())) {
-                        Map<String, String> tmp = typeDict.get(token);
-                        tmp.put(tuples.get(i).getCategory(), tuples.get(i).getExpansion());
-                        typeDict.put(token, tmp); // not really necessary, since the previous assignment updates the map in typeDict, but this is more clear
-                    }
-                }
+        Map<String, String> tokenMap = typeDict.get(token);
+        if (tokenMap == null) {
+            // this must have been done inside makeDict(), which needs to be called right before
+            // this method
+            throw new IllegalArgumentException("Token " + token + " not found in typeDict");
+        }
+
+        for (final CategoryTuple tuple : tuples) {
+            final Pattern numberPattern = tuple.getNumberPattern();
+            final Pattern rule = tuple.getRule();
+            if (numberPattern.matcher(token).matches() && rule.matcher(tag).matches()) {
+                tokenMap.put(tuple.getCategory(), tuple.getExpansion());
             }
         }
-        for (String s : columns)
-            result.append(typeDict.get(token).get(s));
 
+        for (final String column : columns) {
+            final String value = tokenMap.get(column);
+            if (value != null) {
+                result.append(value);
+            }
+        }
         return result.toString();
     }
 

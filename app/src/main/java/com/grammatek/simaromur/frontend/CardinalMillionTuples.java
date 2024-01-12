@@ -14,10 +14,6 @@ public class CardinalMillionTuples {
         if (!TUPLES.isEmpty())
             return TUPLES;
 
-        TUPLES.add(new CategoryTuple(NumberPatterns.TNS_PTRN + "10" + NumberPatterns.THSNDS_AND_PTRN_CARDINAL + NumberPatterns.DEC_PTRN_ORDINAL,
-                NormalizationDictionaries.MATCH_ANY, NumberHelper.TEN_THOUSANDS, "tíu þúsund og"));
-        TUPLES.add(new CategoryTuple(NumberPatterns.TNS_PTRN + "10" + NumberPatterns.THSNDS_AND_PTRN_CARDINAL,
-                NormalizationDictionaries.MATCH_ANY, NumberHelper.TEN_THOUSANDS, "tíu þúsund og"));
         TUPLES.add(new CategoryTuple(NumberPatterns.TNS_PTRN + "10" + NumberPatterns.THSNDS_PTRN_AFTER + NumberPatterns.DEC_PTRN_ORDINAL,
                 NormalizationDictionaries.MATCH_ANY, NumberHelper.TEN_THOUSANDS, " tíu þúsund"));
         TUPLES.add(new CategoryTuple(NumberPatterns.HNDRDS_PTRN + "100" + NumberPatterns.THSNDS_AND_PTRN_CARDINAL + NumberPatterns.DEC_PTRN,

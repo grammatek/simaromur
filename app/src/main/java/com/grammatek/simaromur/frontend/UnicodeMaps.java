@@ -95,6 +95,7 @@ public class UnicodeMaps {
         postDictLookupMap.put('Ä', "E");
         postDictLookupMap.put('Ü', "U");
         postDictLookupMap.put('Ø', "Ö");
+        postDictLookupMap.put('Ô', "Ó");
     }
 
     // delete in MVP, transliterate later if necessary

@@ -82,7 +82,7 @@ public class ConnectionCheck {
     private void startTTSServiceHealthCheck() {
         // if already started: do nothing
         if (periodicFuture == null || periodicFuture.isCancelled()) {
-            periodicFuture = sch.scheduleAtFixedRate(periodicTask, 0, 30, TimeUnit.SECONDS);
+            periodicFuture = sch.schedule(periodicTask, 0, TimeUnit.SECONDS);
         }
     }
 

@@ -9,8 +9,10 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -21,7 +23,7 @@ import java.util.Set;
  */
 public class TTSUnicodeNormalizer {
 
-    public static Set<String> mLexicon = new HashSet<>();
+    public static Map<String, PronDictEntry> mLexicon = new HashMap<>();
 
     // The Icelandic alphabet, the grapheme set valid for automatic g2p
     private final static Set<Character> CHAR_SET = new HashSet<>();
@@ -60,8 +62,12 @@ public class TTSUnicodeNormalizer {
         CHAR_SET.add('x');
     }
 
-    public TTSUnicodeNormalizer(Context context) {
-        mLexicon = initLexicon(context);
+    // we want to keep punctuation marks still present in the normalized
+    // string, but delete the unknown character otherwise
+    private final String DONT_DELETE = "[.,\":?!-]";
+
+    public TTSUnicodeNormalizer(Context context, Map<String, PronDictEntry> pronDict) {
+        mLexicon = pronDict;
     }
 
     /**
@@ -87,13 +93,13 @@ public class TTSUnicodeNormalizer {
      * This method is the last in the normalization process. That is, we already have
      * normalized the text with regards to abbreviations, digits, etc., but as last procedure
      * we need to ensure that no non-valid characters are delivered to the g2p system.
-     *
+     * <p>
      * Before replaceing possible non-valid characters, we make a lexicon-lookup, since
      * words with non-Icelandic characters might be stored there, even if automatic g2p
      * would fail.
-     *
+     * <p>
      * TODO: this needs more careful handling and a "contract" with the g2p module: which
-     * characters should be allowed?
+     *       characters should be allowed?
      * @param sentences normalized sentences
      * @return the list of 'sentences', cleaned of any non-valid characters for g2p
      */
@@ -102,6 +108,7 @@ public class TTSUnicodeNormalizer {
         for (String sent : sentences) {
             StringBuilder sb = new StringBuilder();
             String[] sentArr = sent.split(" ");
+
             for (String wrd : sentArr) {
                 if (isTag(wrd)) {
                     sb.append(wrd).append(" ");
@@ -111,41 +118,43 @@ public class TTSUnicodeNormalizer {
                     // If we have a "sentence" consisting of one symbol that hasn't been
                     // normalized yet, we take care of that here.
                     // Example: "( ." becomes: "vinstri svigi ."
-                    if (UnicodeMaps.SymbolsMap.containsKey(wrd))
-                        wrd = UnicodeMaps.SymbolsMap.get(wrd);
+                    String wrdCopy = UnicodeMaps.SymbolsMap.get(wrd);
+                    if (wrdCopy != null) {
+                        sb.append(wrdCopy).append(" ");
+                        continue;
+                    }
                 }
                 if (!inDictionary(wrd) && !wrd.contains(" ")) {
+                    StringBuilder newWrd = new StringBuilder();
                     for (int i = 0; i < wrd.length(); i++) {
-                        // is it an Icelandic character?
-                        if (!CHAR_SET.contains(Character.toLowerCase(wrd.charAt(i)))) {
-                            int codePoint = wrd.codePointAt(i);
-                            String charValue = String.valueOf(Character.toChars(codePoint));
-                            String repl = getIceAlphaReplacement(wrd.charAt(i));
-                            // we found a replacement for the non-Icelandic character
-                            if (!repl.isEmpty())
-                                wrd = wrd.replace(Character.toString(wrd.charAt(i)), repl);
-                            else if (charValue.length() > 1) {
-                                // probably a 16-bit unicode like an emoji, delete all of it
-                                wrd = "";
+                        char currentChar = wrd.charAt(i);
+                        String charValue = String.valueOf(Character.toChars(wrd.codePointAt(i)));
+                        String repl = getIceAlphaReplacement(currentChar);
+
+                        if (!CHAR_SET.contains(Character.toLowerCase(currentChar))) {
+                            // Check if a replacement exists
+                            if (!repl.isEmpty()) {
+                                newWrd.append(repl);
+                            } else if (charValue.length() > 1) {
+                                // Handle 16-bit unicode like an emoji, delete all of it
+                                newWrd = new StringBuilder();
                                 break;
+                            } else if (wrd.charAt(i) == '(' || wrd.charAt(i) == ')') {
+                                // sounds odd if parenthesis are ignored and don't cause the tts voice
+                                // to pause a little, try <sil>
+                                // TODO: we might need a more general approach to this, i.e. which
+                                //  symbols and punctuation chars should cause the voice to pause?
+                                newWrd.append("<sil>");
+                            } else if (!Character.toString(currentChar).matches(DONT_DELETE)) {
+                                // If it doesn't match DONT_DELETE, exclude it (do nothing)
+                            } else {
+                                newWrd.append(currentChar);
                             }
-                            // sounds odd if parenthesis are ignored and don't cause the tts voice
-                            // to pause a little, try a comma
-                            // TODO: we might need a more general approach to this, i.e. which
-                            // symbols and punctuation chars should cause the voice to pause?
-                            else if (wrd.charAt(i) == '(' || wrd.charAt(i) == ')' || wrd.charAt(i) == '"')
-                                wrd = wrd.replace(Character.toString(wrd.charAt(i)), ",");
-                            // for now, replace end of sentence symbols with a full stop,
-                            // later the exclamation mark and question mark might have a special
-                            // meaning for the TTS engine
-                            else if (Character.toString(wrd.charAt(i)).matches("[:!?]"))
-                                wrd = wrd.replace(Character.toString(wrd.charAt(i)), ".");
-                            // we want to keep punctuation marks still present in the normalized
-                            // string, but delete the unknown character otherwise
-                            else if (!Character.toString(wrd.charAt(i)).matches("[.,]"))
-                                wrd = wrd.replace(Character.toString(wrd.charAt(i)), "");
+                        } else {
+                            newWrd.append(currentChar);
                         }
                     }
+                    wrd = newWrd.toString();
                 }
                 // we restore the original string with valid words / characters only
                 sb.append(wrd);
@@ -163,7 +172,7 @@ public class TTSUnicodeNormalizer {
     }
 
     public static boolean inDictionary(String wrd) {
-        return mLexicon.contains(wrd.toLowerCase());
+        return mLexicon.containsKey(wrd.toLowerCase());
     }
 
     private boolean isTag(String wrd) {
@@ -198,23 +207,5 @@ public class TTSUnicodeNormalizer {
             return UnicodeMaps.postDictLookupMap.get(c);
 
         return "";
-    }
-
-    private Set<String> initLexicon(Context context) {
-        Set<String> lexicon = new HashSet<>();
-        Resources res = context.getResources();
-        String line;
-        try {
-            InputStream is = res.openRawResource(R.raw.lexicon_v2201);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            if (is != null) {
-                while ((line = reader.readLine()) != null) {
-                    lexicon.add(line.trim());
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return lexicon;
     }
 }

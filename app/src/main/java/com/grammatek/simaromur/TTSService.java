@@ -2,6 +2,7 @@ package com.grammatek.simaromur;
 
 import android.media.AudioFormat;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.provider.Settings;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.SynthesisRequest;
@@ -19,7 +20,6 @@ import com.grammatek.simaromur.network.ConnectionCheck;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -41,11 +41,18 @@ public class TTSService extends TextToSpeechService {
     @Override
     public void onCreate() {
         Log.i(LOG_TAG, "onCreate()");
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder(StrictMode.getVmPolicy())
+                .detectLeakedClosableObjects()
+                .build());
 
         mRepository = App.getAppRepository();
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
-        mRepository.streamNetworkVoices("");
+        applyCachePolicy();
+        Log.i(LOG_TAG, "onCreate() finished");
+    }
+
+    private void applyCachePolicy() {
         String val = mRepository.getAssetConfigValueFor("rm_cache_item_after_playing");
         if (val.equals("true")) {
             mRmCacheItemAfterPlaying = true;
@@ -59,7 +66,7 @@ public class TTSService extends TextToSpeechService {
     // mandatory
     @Override
     protected int onIsLanguageAvailable(String language, String country, String variant) {
-        Log.v(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+")");
+        Log.i(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+")");
         if (variant.endsWith(ApiDbUtil.NET_VOICE_SUFFIX)) {
             if (!ConnectionCheck.isTTSServiceReachable()) {
                 Log.v(LOG_TAG, "onIsLanguageAvailable: TTS API NOT reachable");
@@ -67,7 +74,7 @@ public class TTSService extends TextToSpeechService {
             }
         }
         int rv = mRepository.isLanguageAvailable(language, country, variant);
-        Log.v(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+"): " + rv);
+        Log.i(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+"): " + rv);
         return rv;
     }
 
@@ -75,7 +82,7 @@ public class TTSService extends TextToSpeechService {
     @Override
     protected String[] onGetLanguage() {
         // @todo: return currently set language as selected from the settings menu
-        Log.e(LOG_TAG, "onGetLanguage()");
+        Log.i(LOG_TAG, "onGetLanguage()");
         return new String[] {"isl", "ISL", ""};
     }
 
@@ -102,7 +109,7 @@ public class TTSService extends TextToSpeechService {
      * waiting for a TTSProcessingResult inside onSynthesizeText(). If afterwards the audio processing is
      * finished, the processing result is received and discarded, because the current utterance is
      * already finished and has changed.
-     *
+     * <p>
      * Note:  mandatory, don't synchronize this method !
      */
     @Override
@@ -135,10 +142,11 @@ public class TTSService extends TextToSpeechService {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        Log.v(LOG_TAG, "onSynthesizeText: " + text);
+        Log.i(LOG_TAG, "onSynthesizeText: " + text);
         Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/" + country + "/" + variant
                 + "), callerUid: " + callerUid + " speed: " + speechrate + " pitch: " + pitch
                 + " bundle: " + params);
+        speechrate = adaptSpeechRate(speechrate);
 
         String loadedVoiceName = mRepository.getLoadedVoiceName();
         if (loadedVoiceName.equals("")) {
@@ -149,7 +157,7 @@ public class TTSService extends TextToSpeechService {
                 loadedVoiceName = mRepository.getLoadedVoiceName();
             } else {
                 Log.w(LOG_TAG, "onSynthesizeText: couldn't load voice ("+voiceNameToLoad+")");
-                callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
+                callback.start(mRepository.getVoiceNativeSampleRate(), AudioFormat.ENCODING_PCM_16BIT,
                         AudioManager.N_CHANNELS);
                 callback.error(TextToSpeech.ERROR_SERVICE);
                 if (callback.hasStarted() && ! callback.hasFinished()) {
@@ -175,9 +183,9 @@ public class TTSService extends TextToSpeechService {
             return;
         }
         if (text.isEmpty()) {
-            Log.i(LOG_TAG, "onSynthesizeText: End of TTS session");
-            playSilence(callback);
+            //playSilence(callback);
             mShouldPlayNetworkError = true;
+            Log.i(LOG_TAG, "onSynthesizeText: End of TTS session");
             return;
         }
         // if cache item for text already exists: retrieve it, otherwise create a new cache
@@ -208,17 +216,12 @@ public class TTSService extends TextToSpeechService {
                     Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
                     return;
                 }
-                startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_WAV, true);
+                startSynthesisCallback(callback, mRepository.getVoiceNativeSampleRate(), true);
                 setSpeechMarksToBeginning(callback);
                 mRepository.startNetworkTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
                 break;
-            case com.grammatek.simaromur.db.Voice.TYPE_TORCH:
-                startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_TORCH, false);
-                setSpeechMarksToBeginning(callback);
-                mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
-                break;
-            case com.grammatek.simaromur.db.Voice.TYPE_FLITE:
-                startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_FLITE, false);
+            case com.grammatek.simaromur.db.Voice.TYPE_ONNX:
+                startSynthesisCallback(callback, mRepository.getVoiceNativeSampleRate(), false);
                 setSpeechMarksToBeginning(callback);
                 mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
                 break;
@@ -227,7 +230,33 @@ public class TTSService extends TextToSpeechService {
                 break;
         }
         handleProcessingResult(callback, item, ttsRequest, voice);
-        Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
+        Log.i(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
+    }
+
+    /**
+     * Adapt speechrate to feasible values.
+     * The possible values retrievable for speechrate are from 10 - 600 (i.e. 0.1x - 6.0x).
+     * We reduce these to values between 50 and 300 (0.5x - 3.0x). A speechrate of 100 still
+     * should be 100. We adapt all values != 100 to the above range proportionally
+     *
+     * @param speechrate    The speechrate to adapt
+     * @return            The adapted speechrate
+     */
+    private static int adaptSpeechRate(int speechrate) {
+        // cap the speechrate to expected limits
+        if (speechrate > 600) {
+            speechrate = 600;
+        } else if (speechrate < 10) {
+            speechrate = 10;
+        }
+        // adapt the speechrate to a range between 50 and 300
+        if (speechrate > 100) {
+            speechrate = (int) (100 + (speechrate - 100) * 0.4f);
+        } else if (speechrate < 100) {
+            speechrate = (int) (100 - (100 - speechrate) * 0.5f);
+        }
+        Log.v(LOG_TAG, "onSynthesizeText: adapted speechrate: " + speechrate);
+        return speechrate;
     }
 
     /**
@@ -239,7 +268,7 @@ public class TTSService extends TextToSpeechService {
     private void handleProcessingResult(SynthesisCallback callback, CacheItem item, TTSRequest ttsRequest, com.grammatek.simaromur.db.Voice voice) {
         Log.v(LOG_TAG, "handleProcessingResult for (" + item.getUuid() + ")");
         try {
-            // get the current time for caclulating the amount of time that we have waited
+            // get the current time for calculating the amount of time that we have waited
             long startTime = System.currentTimeMillis();
             boolean isCached = item.containsVoiceAudioEntries(UtteranceCacheManager.buildVoiceKey(voice.internalName, voice.version));
             // here we wait for the response of the speak request. The result is sent via the queue
@@ -249,7 +278,7 @@ public class TTSService extends TextToSpeechService {
                 // todo: we need to handle timeout errors here, e.g. processing
                 //       timeouts, some error, e.g. network timeouts are already taken care of
                 TTSProcessingResult elem = mRepository.dequeueTTSProcessingResult();
-                float rtf = estimateRTF(startTime, System.currentTimeMillis(), item, elem);
+                float rtf = estimateRTF(startTime, System.currentTimeMillis(), elem);
                 Log.v(LOG_TAG, "estimateRTF: rtf=" + rtf);
                 if (rtf > 500.0f && !isCached) {
                     Log.w(LOG_TAG, "handleProcessingResult: rtf > 500.0f, something went wrong for the estimation");
@@ -282,7 +311,9 @@ public class TTSService extends TextToSpeechService {
                                 mRepository.getUtteranceCache().deleteCacheItem(item.getUuid());
                             } else if (mRmCacheItemForFastVoices && !isCached) {
                                 // if the voice is fast, we can delete the cache item after playing
-                                if (rtf > 20.0f) {
+                                // TODO: something we should think about more carefully: we need
+                                //       much bigger RTF for not needing to cache the item
+                                if (rtf > 50.0f) {
                                     Log.v(LOG_TAG, "rm_cache_item_for_fast_voices: delete cache item "
                                             + rcvdTtsRequest.serialize());
                                     mRepository.getUtteranceCache().deleteCacheItem(item.getUuid());
@@ -303,6 +334,7 @@ public class TTSService extends TextToSpeechService {
             e.printStackTrace();
         }
         if (callback.hasStarted() && ! callback.hasFinished()) {
+            Log.v(LOG_TAG, "onSynthesizeText: callback.done()");
             callback.done();
         }
     }
@@ -315,11 +347,10 @@ public class TTSService extends TextToSpeechService {
      *
      * @param startTimeMillis   time when the processing started
      * @param stopTimeMillis    time when the processing stopped
-     * @param item              cache item
      * @param elem              processing result
      * @return the real time factor
      */
-    private float estimateRTF(long startTimeMillis, long stopTimeMillis, CacheItem item, TTSProcessingResult elem) {
+    private float estimateRTF(long startTimeMillis, long stopTimeMillis, TTSProcessingResult elem) {
         String uuid = elem.getTTSRequest().getCacheItemUuid();
         Log.v(LOG_TAG, "estimateRTF for: " + uuid);
 
@@ -331,7 +362,7 @@ public class TTSService extends TextToSpeechService {
         // assume currently slowest used sample rate, i.e. 16kHz and 16 bit with 1 channel
         // TODO: we should use the real sample rate here, but this needs to be passed via the
         //       TTSProcessingResult
-        final int sampleRate = AudioManager.SAMPLE_RATE_WAV;
+        final int sampleRate = mRepository.getVoiceNativeSampleRate();
         final int bytesPerSample = 2;
         final int channels = 1;
 
@@ -371,6 +402,10 @@ public class TTSService extends TextToSpeechService {
      */
     private static void setSpeechMarksToBeginning(SynthesisCallback callback) {
         Log.v(LOG_TAG, "setSpeechMarksToBeginning()");
+        if (! callback.hasStarted()) {
+            Log.w(LOG_TAG, "setSpeechMarksToBeginning(): callback not started yet ?!");
+            return;
+        }
         callback.rangeStart(0, 0, 1);
         byte[] silenceData = new byte[callback.getMaxBufferSize()];
         callback.audioAvailable(silenceData, 0, silenceData.length);
@@ -436,7 +471,7 @@ public class TTSService extends TextToSpeechService {
 
     /**
      * Signal TTS client a TTS error with given error code.
-     *
+     * <p>
      * The sequence for signalling an error seems to be important: callback.start(),
      * callback.error(), callback.done(). Any callback.audioAvailable() call after a callback.error()
      * is ignored.
@@ -446,7 +481,7 @@ public class TTSService extends TextToSpeechService {
      */
     private void signalTtsError(SynthesisCallback callback, int errorCode) {
         Log.w(LOG_TAG, "signalTtsError(): errorCode = " + errorCode);
-        callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
+        callback.start(mRepository.getVoiceNativeSampleRate(), AudioFormat.ENCODING_PCM_16BIT,
                 AudioManager.N_CHANNELS);
         callback.error(errorCode);
         callback.done();
@@ -458,16 +493,17 @@ public class TTSService extends TextToSpeechService {
      *
      * @param callback  TTS callback provided in the onSynthesizeText() callback
      */
-    private static void playSilence(SynthesisCallback callback) {
+    private void playSilence(SynthesisCallback callback) {
         Log.v(LOG_TAG, "playSilence() ...");
-        callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
-                    AudioManager.N_CHANNELS);
+        int sampleRate = mRepository.getVoiceNativeSampleRate();
+        callback.start(sampleRate, AudioFormat.ENCODING_PCM_16BIT, AudioManager.N_CHANNELS);
         setSpeechMarksToBeginning(callback);
-        byte[] silenceData = new byte[callback.getMaxBufferSize()/2];
+        byte[] silenceData = AudioManager.generatePcmSilence(0.25f, sampleRate);
         callback.audioAvailable(silenceData, 0, silenceData.length);
         if (! callback.hasFinished() && callback.hasStarted()) {
             callback.done();
         }
+        Log.v(LOG_TAG, "playSilence() finished");
     }
 
     @Override
@@ -486,19 +522,22 @@ public class TTSService extends TextToSpeechService {
         List<Voice> announcedVoiceList = new ArrayList<>();
 
         for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
-            int quality = Voice.QUALITY_VERY_LOW;
-            int latency = Voice.LATENCY_LOW;
+            int quality = Voice.QUALITY_NORMAL;
+            // TODO: experiment with this setting: which impact does it have ?
+            int latency = Voice.LATENCY_VERY_HIGH;
             boolean needsNetwork = false;
             Set<String> features = new HashSet<>();
 
-            if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_NETWORK)) {
-                latency = Voice.LATENCY_VERY_HIGH;
-                quality = Voice.QUALITY_HIGH;
-                features.add(TextToSpeech.Engine.KEY_FEATURE_NETWORK_RETRIES_COUNT);
-                needsNetwork = true;
-            } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TORCH)) {
-                quality = Voice.QUALITY_VERY_HIGH;
-                latency = Voice.LATENCY_VERY_HIGH;
+            switch(voice.type) {
+                case com.grammatek.simaromur.db.Voice.TYPE_NETWORK:
+                    features.add(TextToSpeech.Engine.KEY_FEATURE_NETWORK_RETRIES_COUNT);
+                    needsNetwork = true;
+                    break;
+                case com.grammatek.simaromur.db.Voice.TYPE_ONNX:
+                    break;
+                default:
+                    latency = Voice.LATENCY_NORMAL;
+                    break;
             }
             if (voice.needsDownload()) {
                 features.add(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED);
@@ -506,8 +545,8 @@ public class TTSService extends TextToSpeechService {
             Voice ttsVoice = new Voice(voice.name, voice.getLocale(), quality, latency,
                     needsNetwork, features);
             announcedVoiceList.add(ttsVoice);
-            Log.v(LOG_TAG, "onGetVoices: " + ttsVoice);
         }
+        Log.i(LOG_TAG, "onGetVoices: " + announcedVoiceList);
         return announcedVoiceList;
     }
 
@@ -517,7 +556,7 @@ public class TTSService extends TextToSpeechService {
         Log.i(LOG_TAG, "onIsValidVoiceName("+name+")");
         for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
             if (voice.name.equals(name)) {
-                Log.v(LOG_TAG, "voice name is valid");
+                Log.i(LOG_TAG, "onIsValidVoiceName: successful");
                 return TextToSpeech.SUCCESS;
             }
         }
@@ -538,7 +577,7 @@ public class TTSService extends TextToSpeechService {
         Log.i(LOG_TAG, "onLoadVoice("+name+")");
         if (onIsValidVoiceName(name) == TextToSpeech.SUCCESS) {
             if (TextToSpeech.SUCCESS == mRepository.loadVoice(name)) {
-                Log.v(LOG_TAG, "voice loading successful");
+                Log.i(LOG_TAG, "onLoadVoice successful");
                 return TextToSpeech.SUCCESS;
             }
         }

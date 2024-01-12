@@ -60,7 +60,7 @@ public class VoiceRepo {
         // your personal access token is required to avoid rate limiting (60 requests per hour)
         final String oAuthToken = App.getAppRepository().getAssetConfigValueFor("github_auth0_token");
         GitHub gh;
-        if (oAuthToken.isEmpty()) {
+        if (oAuthToken == null || oAuthToken.isEmpty()) {
             gh = GitHub.connectAnonymously();
         } else {
             // this sets the rate limit to 5000 requests per hour

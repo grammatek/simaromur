@@ -21,5 +21,4 @@ elseif("${ANDROID_ABI}" STREQUAL "x86_64")
 endif()
 
 add_subdirectory(g2p)
-add_subdirectory(flite)
 
