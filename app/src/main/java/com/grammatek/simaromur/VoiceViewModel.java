@@ -70,6 +70,7 @@ public class VoiceViewModel extends AndroidViewModel {
                 break;
             case Voice.TYPE_TORCH:
             case Voice.TYPE_FLITE:  // FALLTHROUGH
+            case Voice.TYPE_ONNX:  // FALLTHROUGH
                 mDevSpeakTask = mRepository.startDeviceSpeak(voice, item, speed, pitch, finishedObserver);
                 break;
             default:

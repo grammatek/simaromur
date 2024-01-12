@@ -370,7 +370,11 @@ public class DownloadVoiceManager {
      */
     synchronized
     public DeviceVoice getInfoForVoice(String internalName) throws IOException {
-        for (DeviceVoice voice:getVoiceList().Voices) {
+        List<DeviceVoice> voices = getVoiceList().Voices;
+        if (voices == null) {
+            throw new IOException("No voices available");
+        }
+        for (DeviceVoice voice:voices) {
             if (voice.InternalName.equals(internalName)) {
                 return voice;
             }

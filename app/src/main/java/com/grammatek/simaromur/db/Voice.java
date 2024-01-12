@@ -32,10 +32,10 @@ public class Voice {
     public final static String TYPE_NETWORK_OLD = "tiro";
     public final static String TYPE_NETWORK = "network";
     public final static String TYPE_TORCH = "torchscript";
-    public final static String TYPE_TFLOW = "tensorflow";
     public final static String TYPE_FLITE = "flite";
+    public final static String TYPE_ONNX = "onnx";
 
-    public static final List<String> Types = Arrays.asList(TYPE_NETWORK, TYPE_NETWORK_OLD, TYPE_FLITE, TYPE_TORCH, TYPE_TFLOW);
+    public static final List<String> Types = Arrays.asList(TYPE_NETWORK, TYPE_NETWORK_OLD, TYPE_FLITE, TYPE_TORCH, TYPE_ONNX);
     static final String SEP = "-";
 
     @PrimaryKey(autoGenerate = true)

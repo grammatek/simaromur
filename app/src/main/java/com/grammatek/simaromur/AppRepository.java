@@ -549,7 +549,9 @@ public class AppRepository {
         List<Voice> voices = mVoiceDao.getAnyVoices();
         for (final Voice voice : voices) {
             if (voice.name.equals(voiceName)) {
-                if (voice.type.equals(Voice.TYPE_TORCH) || voice.type.equals(Voice.TYPE_FLITE)) {
+                if (voice.type.equals(Voice.TYPE_TORCH)
+                        || voice.type.equals(Voice.TYPE_FLITE)
+                        || voice.type.equals(Voice.TYPE_ONNX)) {
                     try {
                         mTTSEngineController.LoadEngine(voice);
                     } catch (IOException e) {
