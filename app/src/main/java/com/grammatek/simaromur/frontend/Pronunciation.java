@@ -92,6 +92,8 @@ public class Pronunciation {
      *   If a symbol in the input string is not found in the respective from alphabet, the symbol is
      *   kept as is and not converted. A message is logged as a warning if this happens.
      *
+     * @note  The symbols need to be separated by a space !
+     *
      * @param transcribed a transcribed string
      * @param fromAlphabet the alphabet of the transcribed string
      * @param toAlphabet the alphabet to convert the transcribed string into
@@ -111,8 +113,13 @@ public class Pronunciation {
 
         StringBuilder converted = new StringBuilder();
         final Map<String, Map<String, String>> currentDict = mAlphabets.get(fromAlphabet);
+        assert currentDict != null;
         for (String symbol : transcribed.split(" ")) {
-            assert currentDict != null;
+            if (symbol.equals("ˈ") || symbol.equals("ˌ")) {
+                converted.append(symbol);
+                converted.append(" ");
+                continue;
+            }
             if (!currentDict.containsKey(symbol)) {
                 Log.w(LOG_TAG, "Symbol (" + symbol + ") seems not to be a valid symbol in " + fromAlphabet +
                         ". Skipping conversion.");

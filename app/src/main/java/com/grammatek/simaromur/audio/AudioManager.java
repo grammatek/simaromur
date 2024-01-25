@@ -20,7 +20,8 @@ public class AudioManager {
     public static final int SAMPLE_RATE_WAV = 16000;
     public static final int SAMPLE_RATE_MP3 = 22050;
     public static final int SAMPLE_RATE_TORCH = 22050;
-    public static final int SAMPLE_RATE_ONNX = 22050;
+    public static final int SAMPLE_RATE_ONNX = 16000;
+    //public static final int SAMPLE_RATE_ONNX = 22050;
     public static final int N_CHANNELS = 1;
 
     /**
@@ -166,10 +167,13 @@ public class AudioManager {
      * @param pcmFloats pcm floats [-1.0 .. 1.0]
      *
      * @return byte array PCM big endian
+     *
+     * @note: no normalization is done, the floats need to be in the range [-1.0 .. 1.0] and the
+     *        max. dynamic range is not applied
      */
     static public byte[] pcmFloatTo16BitPCM(float[] pcmFloats) {
         final int bitDepth = 16;
-        Log.v(LOG_TAG, "pcmFloatTo16BitPCM: Converting " + pcmFloats.length + " float samples to " + bitDepth + " bit wav ...");
+        Log.d(LOG_TAG, "pcmFloatTo16BitPCM: Converting " + pcmFloats.length + " float samples to " + bitDepth + " bit wav ...");
         final int ByteRate = bitDepth / 8;
         final int MULT_FACTOR = (int) Math.pow(2, bitDepth-1);
         int nClipped = 0;
@@ -202,13 +206,12 @@ public class AudioManager {
         if (nClipped > 0) {
             Log.w(LOG_TAG, "pcmFloatTo16BitPCM: " + nClipped + " clipped samples detected");
         }
-        Log.w(LOG_TAG, "pcmFloatTo16BitPCM: values min/max: " + min + "/" + max);
 
         buffer.rewind();
         buffer.order(ByteOrder.BIG_ENDIAN);
         byte[] outBuf = new byte[pcmFloats.length * ByteRate];
         buffer.get(outBuf);
-        Log.v(LOG_TAG, "Done.");
+        Log.d(LOG_TAG, "pcmFloatTo16BitPCM: values min/max: " + min + "/" + max);
         return outBuf;
     }
 

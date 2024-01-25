@@ -19,7 +19,10 @@ public class VitsConfig {
     public Map<String, Object> phonemeMap;
 
     @SerializedName("phoneme_id_map")
-    public Map<String, int[]> phonemeIdMap;
+    public Map<String, Integer> phonemeIdMap;
+
+    @SerializedName("phoneme_type")
+    public String phonemeType;
 
     @SerializedName("num_symbols")
     public int numSymbols;
@@ -40,6 +43,7 @@ public class VitsConfig {
                 ", phonemeMap=" + phonemeMap +
                 ", phonemeIdMap=" + phonemeIdMap +
                 ", numSymbols=" + numSymbols +
+                ", phonemeType=" + phonemeType +
                 ", numSpeakers=" + numSpeakers +
                 ", speakerIdMap=" + speakerIdMap +
                 '}';

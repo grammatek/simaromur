@@ -1,7 +1,5 @@
 package com.grammatek.simaromur.frontend;
 
-import android.media.session.MediaSession;
-
 import androidx.annotation.NonNull;
 
 import com.grammatek.simaromur.device.SymbolsLvLIs;
@@ -24,6 +22,27 @@ import java.util.stream.Stream;
 
 public class TTSNormalizer {
 
+    private final List<CategoryTuple> BigCardinalFilledTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples(), CardinalMillionTuples.getTuples(),
+                    CardinalBigTuples.getTuples())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+    private final List<CategoryTuple> BigCardinalTupleList = Stream.of(CardinalMillionTuples.getTuples(), CardinalBigTuples.getTuples())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+    private final List<CategoryTuple> OnesThousandsOrdinalTupleList = Stream.of(OrdinalOnesTuples.getTuples(), OrdinalThousandTuples.getTuples(),
+                    CardinalThousandTuples.getTuples())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+    private final List<CategoryTuple> ThousandsMillionsTupleList = Stream.of(CardinalThousandTuples.getTuples(), CardinalMillionTuples.getTuples())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+
+    private final List<CategoryTuple> OnesThousandsCardinalTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples())
+            .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+    private final List<CategoryTuple> DecimalThousandsTupleList = Stream.of(OnesThousandsCardinalTupleList, DecimalThousandTuples.getTuples())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
     public static String VOWELS = "[AEIOUYÁÉÍÓÚÝÖaeiouyáéíóúýö]";
     // Max length of a token that should be spelled out, even if it contains a vowel.
     // Do we have examples of longer tokens?
@@ -101,8 +120,10 @@ public class TTSNormalizer {
      */
     public String postNormalize(String[] tokens, String[] tags) {
         // tokens and tags have to match - tag at index 'i' should be the tag for the token at index 'i'
-        if (tokens.length != tags.length)
+        if (tokens.length != tags.length) {
+            //Log.w(LOG_TAG, "tokens and tags have different lengths, returning empty string");
             return "";
+        }
 
         String token;
         String nextTag;
@@ -114,7 +135,9 @@ public class TTSNormalizer {
         for (int i = 0; i < tags.length - 1; i++) {
             token = tokens[i];
             nextTag = tags[i + 1];
-            if (token.matches(".*\\d.*")) {
+            // in case the tag is "§", this special character returned from the PoS tagging function
+            // means, we don't have any numbers at all in tokens and PoS tagging has been skipped
+            if ((!nextTag.equals("§")) && token.matches(".*\\d.*")) {
                 token = normalizeNumber(token, nextTag);
             }
             // add space between upper case letters, if they do not build known Acronyms like "RÚV"
@@ -230,27 +253,22 @@ public class TTSNormalizer {
     normalize. Return the normalized numberToken.
      */
     private String normalizeNumber(String numberToken, String nextTag) {
-        String normalized = numberToken;
+        String normalized;
         // default for one digit numbers masc and not neutr as in original Regina
         // 1, 2, 3, 4
         if (numberToken.matches("\\d") && (nextTag.isEmpty() || nextTag.equals("p"))) {
             normalized = NumberHelper.DIGIT_NUMBERS.get(numberToken);
         }
         else if (numberToken.matches(NumberHelper.CARDINAL_BIG_PTRN)) {
-            Map<String, Map<String, String>> cardinalMillionsDict = makeDict(numberToken, NumberHelper.INT_COLS_BIG);
-            List<CategoryTuple> mergedTupleList = Stream.of(CardinalMillionTuples.getTuples(), CardinalBigTuples.getTuples())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            normalized = fillDict(numberToken, nextTag, mergedTupleList, cardinalMillionsDict, NumberHelper.INT_COLS_BIG);
+            final Map<String, Map<String, String>> cardinalMillionsDict = makeDict(numberToken, NumberHelper.INT_COLS_BIG);
+            normalized = fillDict(numberToken, nextTag, BigCardinalFilledTupleList, cardinalMillionsDict, NumberHelper.INT_COLS_BIG);
+            //normalized = fillDict(numberToken, nextTag, BigCardinalTupleList, cardinalMillionsDict, NumberHelper.INT_COLS_BIG);
         }
         //1.234. or 1. or 12. or 123.
         else if (numberToken.matches(NumberHelper.ORDINAL_THOUSAND_PTRN)) {
-            Map<String, Map<String, String>> ordinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND); // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
-            List<CategoryTuple> mergedTupleList = Stream.of(OrdinalOnesTuples.getTuples(), OrdinalThousandTuples.getTuples(),
-                    CardinalThousandTuples.getTuples())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            normalized = fillDict(numberToken, nextTag, mergedTupleList, ordinalThousandDict, NumberHelper.INT_COLS_THOUSAND);
+            // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
+            final Map<String, Map<String, String>> ordinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND);
+            normalized = fillDict(numberToken, nextTag, OnesThousandsOrdinalTupleList, ordinalThousandDict, NumberHelper.INT_COLS_THOUSAND);
         }
         //1.234 or 1 or 12 or 123
         else if (numberToken.matches(NumberHelper.CARDINAL_THOUSAND_PTRN)) {
@@ -258,32 +276,26 @@ public class TTSNormalizer {
         }
         //1.234 or 12.345 or 123.456 -> asking the same thing twice, check
         else if (numberToken.matches(NumberHelper.CARDINAL_MILLION_PTRN)) {
-            Map<String, Map<String, String>> cardinalMillionDict = makeDict(numberToken, NumberHelper.INT_COLS_MILLION); // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
-            List<CategoryTuple> mergedTupleList = Stream.of(CardinalThousandTuples.getTuples(), CardinalMillionTuples.getTuples())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            normalized = fillDict(numberToken, nextTag, mergedTupleList, cardinalMillionDict, NumberHelper.INT_COLS_MILLION);
+            // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
+            final Map<String, Map<String, String>> cardinalMillionDict = makeDict(numberToken, NumberHelper.INT_COLS_MILLION);
+            normalized = fillDict(numberToken, nextTag, ThousandsMillionsTupleList, cardinalMillionDict, NumberHelper.INT_COLS_MILLION);
         }
         //1.123,4 or 1232,4 or 123,4 or 12,42345 or 1,489 ; NOT: 12345,5
         else if (numberToken.matches(NumberHelper.DECIMAL_THOUSAND_PTRN)) {
-            Map<String, Map<String, String>> decimalDict = makeDict(numberToken, NumberHelper.DECIMAL_COLS_THOUSAND); // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
-
-            List<CategoryTuple> mergedCardinalTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            List<CategoryTuple> mergedTupleList = Stream.of(mergedCardinalTupleList, DecimalThousandTuples.getTuples())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
-            normalized = fillDict(numberToken, nextTag, mergedTupleList, decimalDict, NumberHelper.DECIMAL_COLS_THOUSAND);
+            // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
+            final Map<String, Map<String, String>> decimalDict = makeDict(numberToken, NumberHelper.DECIMAL_COLS_THOUSAND);
+            normalized = fillDict(numberToken, nextTag, DecimalThousandsTupleList, decimalDict, NumberHelper.DECIMAL_COLS_THOUSAND);
         }
         // 01:55 or 01.55
         else if (numberToken.matches(NumberHelper.TIME_PTRN)) {
-            Map<String, Map<String, String>> timeDict = makeDict(numberToken, NumberHelper.TIME_SPORT_COLS); // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
+            // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
+            final Map<String, Map<String, String>> timeDict = makeDict(numberToken, NumberHelper.TIME_SPORT_COLS);
             normalized = fillDict(numberToken, nextTag, TimeTuples.getTuples(), timeDict, NumberHelper.TIME_SPORT_COLS);
         }
         else if (numberToken.matches("^\\d{1,2}/\\d{1,2}$")) {
             // if domain == "other" - do other things, below is the handling for sport results:
-            Map<String, Map<String, String>> sportsDict = makeDict(numberToken, NumberHelper.TIME_SPORT_COLS); // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
+            // should look like: {token: {"first_ten", "first_one","between_teams","second_ten", "second_one"}}
+            final Map<String, Map<String, String>> sportsDict = makeDict(numberToken, NumberHelper.TIME_SPORT_COLS);
             normalized = fillDict(numberToken, nextTag, SportTuples.getTuples(), sportsDict, NumberHelper.TIME_SPORT_COLS);
         }
         // 4/8 or ⅓ , etc.
@@ -312,13 +324,9 @@ public class TTSNormalizer {
     }
 
     private String normalizeThousandDigit(String numberToken, String nextTag) {
-        String normalized;
-        Map<String, Map<String, String>> cardinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND); // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
-        List<CategoryTuple> mergedTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples())
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-        normalized = fillDict(numberToken, nextTag, mergedTupleList, cardinalThousandDict, NumberHelper.INT_COLS_THOUSAND);
-        return normalized;
+        // should look like: {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
+        final Map<String, Map<String, String>> cardinalThousandDict = makeDict(numberToken, NumberHelper.INT_COLS_THOUSAND);
+        return fillDict(numberToken, nextTag, OnesThousandsCardinalTupleList, cardinalThousandDict, NumberHelper.INT_COLS_THOUSAND);
     }
 
     /*
@@ -507,12 +515,17 @@ public class TTSNormalizer {
         StringBuilder result = new StringBuilder();
 
         for (int i = 0; i < tuples.size(); i++) {
-            if (token.matches(".*" + tuples.get(i).getNumberPattern() + ".*") && tag.matches(".*" + tuples.get(i).getRule())) {
+            String numberPattern = tuples.get(i).getNumberPattern();
+            String rule = tuples.get(i).getRule();
+            if (token.matches(".*" + numberPattern + ".*") && tag.matches(".*" + rule)) {
                 if (typeDict.containsKey(token)) {
-                    if (typeDict.get(token).containsKey(tuples.get(i).getCategory())) {
+                    final String category = tuples.get(i).getCategory();
+                    if (typeDict.get(token).containsKey(category)) {
                         Map<String, String> tmp = typeDict.get(token);
-                        tmp.put(tuples.get(i).getCategory(), tuples.get(i).getExpansion());
-                        typeDict.put(token, tmp); // not really necessary, since the previous assignment updates the map in typeDict, but this is more clear
+                        tmp.put(category, tuples.get(i).getExpansion());
+                        // not really necessary, since the previous assignment updates the map in
+                        // typeDict, but this is more clear
+                        typeDict.put(token, tmp);
                     }
                 }
             }

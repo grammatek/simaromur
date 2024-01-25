@@ -900,25 +900,27 @@ public class AppRepository {
      */
     synchronized
     public CacheItem executeFrontendAndSaveIntoCache(String text, CacheItem item, com.grammatek.simaromur.db.Voice voice) {
+        String phonemes = "";
         if (item.getUtterance().getNormalized().isEmpty()) {
             // we always need to normalize the text, but it doesn't hurt, if we always do G2P as well
-            // for network voices, this is currently all that is needed. But there is an audible
-            // problem with trailing "." though, so we remove it
-            String normalizedText = mFrontend.getNormalizationManager().process(text).replaceAll("\\.+$", "");
-            final String phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
-            // prevent the network voices from pronouncing 'sil'
-            normalizedText = normalizedText.replaceAll(SymbolsLvLIs.TagPause, ",");
+            // for network voices, this is currently all that is needed.
+            String normalizedText = mFrontend.getNormalizationManager().process(text);
+            phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
             Log.v(LOG_TAG, "onSynthesizeText: original (\"" + text + "\"), normalized (\"" + normalizedText + "\"), phonemes (\"" + phonemes + "\")");
-            Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
-            item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
-            Log.v(LOG_TAG, "... normalization/G2P saved into cache");
+            if (!phonemes.isEmpty()) {
+                Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
+                item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
+                Log.v(LOG_TAG, "... normalization/G2P saved into cache");
+            }
         } else if (item.getUtterance().getPhonemesCount() == 0) {
             final String normalizedText = item.getUtterance().getNormalized();
-            final String phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
+            phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
             Log.v(LOG_TAG, "onSynthesizeText: normalized (\"" + normalizedText + "\"), phonemes (\"" + phonemes + "\")");
-            Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
-            item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
-            Log.v(LOG_TAG, "... G2P saved into cache");
+            if (!phonemes.isEmpty()) {
+                Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
+                item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
+                Log.v(LOG_TAG, "... G2P saved into cache");
+            }
         } else {
             Log.v(LOG_TAG, "normalization/G2P skipped (hot cache)");
         }
