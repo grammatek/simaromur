@@ -23,11 +23,15 @@ allprojects {
         google()
         mavenCentral()
     }
-    tasks.withType(Test) {
-        maxParallelForks = Runtime.runtime.availableProcessors()
+    tasks.withType(Test).tap {
+        configureEach {
+            // maxParallelForks = Runtime.runtime.availableProcessors()
+            maxParallelForks = 2
+            maxHeapSize = "4096m"
+        }
     }
 }
 
-task clean(type: Delete) {
+tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }

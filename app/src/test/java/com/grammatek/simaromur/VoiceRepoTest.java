@@ -112,9 +112,10 @@ public class VoiceRepoTest {
         final String releaseName = "0.1 test release";
         final ArrayList<String> platforms = new ArrayList<>();
         platforms.add("aarch64");
-        platforms.add("armv7a");
-        platforms.add("x86_64");
-        platforms.add("i686");
+        // it is sufficient to test one platform, since the release info is the same for all platforms
+        // platforms.add("armv7a");
+        // platforms.add("x86_64");
+        // platforms.add("i686");
 
         VoiceRepo voiceRepo = null;
         try {
@@ -138,6 +139,8 @@ public class VoiceRepoTest {
 
     @Test
     public void Test_downloadAllVoicesFromRelease() {
+        // @note this test can only be run with a valid github token, as we will hit the rate limit
+        //       otherwise
         VoiceRepo voiceRepo = null;
         try {
             voiceRepo = new VoiceRepo(mVoiceRepoUrl);

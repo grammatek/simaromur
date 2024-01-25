@@ -52,6 +52,17 @@ public class FrontendManager {
         return transcribe(normalized, IGNORE_TYPE, IGNORE_VERSION);
     }
 
+    /**
+     * Transcribe text to IPA symbols. Punctuation is kept as is, which conforms to the kind of
+     * IPA dialect encoded into the VITS model.
+     *
+     * @param text          The text to be transcribed to IPA phonemes
+     * @param voiceType     The voice type, e.g. "onnx"
+     * @param voiceVersion  The voice version, e.g. "1.0"
+     *
+     * @return  The transcription as IPA phonemes separated by spaces or empty string if no
+     *          relevant phonemes were found.
+     */
     public String transcribe(String text, String voiceType, String voiceVersion) {
         Log.v(LOG_TAG, "transcribe() called");
 

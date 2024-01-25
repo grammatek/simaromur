@@ -56,8 +56,9 @@ public class NormalizationManager {
     public String process(final String text) {
         Log.v(LOG_TAG, "process() called");
         String cleaned = mUnicodeNormalizer.normalizeEncoding(text);
-        List<String> tokenized = mTokenizer.detectSentences(cleaned);
-        List<String> normalizedSentences = normalize(tokenized);
+
+        List<String> strings = mTokenizer.detectSentences(cleaned);
+        List<String> normalizedSentences = normalize(strings);
         List<String> cleanNormalized = mUnicodeNormalizer.normalizeAlphabet(normalizedSentences);
         for (String sentence : cleanNormalized) {
             Log.v(LOG_TAG, "normalized sentence: " + sentence);
@@ -66,25 +67,16 @@ public class NormalizationManager {
     }
 
     // pre-normalization, tagging and final normalization of the sentences in 'tokenized'
-    private List<String> normalize(final List<String> tokenized) {
+    private List<String> normalize(final List<String> strings) {
         String preNormalized;
         List<String> normalized = new ArrayList<>();
 
-        for (String sentence : tokenized) {
+        for (String sentence : strings) {
             preNormalized = mTTSNormalizer.preNormalize(sentence);
             String[] tags = tagText(preNormalized);
             // preNormalized is tokenized as string, so we know splitting on whitespace will give
             // us the correct tokens according to the tokenizer
             String postNormalized = mTTSNormalizer.postNormalize(preNormalized.split(" "), tags);
-            // Some very basic phrasing for longer sentences
-            // TODO: improve!
-            if (tags.length >= 10) {
-                postNormalized = postNormalized.replace(" og ", " " + SymbolsLvLIs.TagPause + " og ");
-                postNormalized = postNormalized.replace(" en ", " " + SymbolsLvLIs.TagPause + " en ");
-                postNormalized = postNormalized.replace(" þegar ", " " + SymbolsLvLIs.TagPause + " þegar ");
-                postNormalized = postNormalized.replace(" sem ", " " + SymbolsLvLIs.TagPause + " sem ");
-                postNormalized = postNormalized.replace(" ef ", " " + SymbolsLvLIs.TagPause + " ef ");
-            }
             normalized.add(postNormalized);
         }
 
@@ -100,15 +92,31 @@ public class NormalizationManager {
         return sb.toString().trim();
     }
 
+    /**
+     * Tags the text with POS tags. If there are no numbers in the text, we can skip the
+     * pos-tagging and return a list of dummy tags that just contain "§" for each token.
+     *
+     * @param text  the text to be tagged
+     * @return      the tags for each token in the text
+     */
     private String[] tagText(final String text) {
-        String[] tags = new String[0];
+        String[] tags;
         String[] tokens = text.split(" ");
-        tags = mPosTagger.tag(tokens);
 
+        // optimization: if there are no numbers in the text, we can skip the pos-tagging
+        // and return a list of dummy tags that just contain "§" for each token
+        if (! text.matches(".*\\d.*")) {
+            tags = new String[tokens.length];
+            for (int i = 0; i < tokens.length; i++) {
+                tags[i] = "§";
+            }
+
+            return tags;
+        }
+        tags = mPosTagger.tag(tokens);
         if (DEBUG) {
             printProbabilities(tags, mPosTagger, tokens);
         }
-
         return tags;
     }
 

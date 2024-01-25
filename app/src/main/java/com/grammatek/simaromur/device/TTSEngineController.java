@@ -287,11 +287,13 @@ public class TTSEngineController {
             }
 
             byte[] audioData;
+            PhonemeEntry phonemeEntry = null;
             if (!audioBuffers.isEmpty()) {
                 audioData = audioBuffers.get(0);
             } else {
                 // no audio for utterance yet
-                PhonemeEntry phonemeEntry = utterance.getPhonemesList().get(0);
+                // TODO: optimization: could we save the phonemes directly
+                phonemeEntry = utterance.getPhonemesList().get(0);
                 audioData = synthesizeSpeech(phonemeEntry);
             }
 
@@ -316,6 +318,12 @@ public class TTSEngineController {
             } else {
                 observer.update(audioData, ttsRequest);
             }
+
+            // update utterance cache with the synthesized audio. We do this only after the audio
+            // have been enqueued
+            if (phonemeEntry != null) {
+                saveAudioToCacheEntry(phonemeEntry, audioData);
+            }
         }
 
         /**
@@ -329,14 +337,15 @@ public class TTSEngineController {
          */
         @Nullable
         private byte[] synthesizeSpeech(PhonemeEntry phonemeEntry) {
-            Log.v(LOG_SPEAK_TASK_TAG, "synthesizeSpeech() :" + phonemeEntry.getSymbols());
-            byte[] bytes;
+            Log.v(LOG_SPEAK_TASK_TAG, "synthesizeSpeech() called");
             if (mEngine == null) {
                 Log.e(LOG_SPEAK_TASK_TAG, "synthesizeSpeech(): mEngine is null");
                 return null;
             }
-            bytes = mEngine.SpeakToPCM(phonemeEntry.getSymbols());
+            return mEngine.SpeakToPCM(phonemeEntry.getSymbols());
+        }
 
+        private boolean saveAudioToCacheEntry(PhonemeEntry phonemeEntry, byte[] bytes) {
             SampleRate sampleRate;
             if (mEngine.GetNativeSampleRate() == 22050) {
                 sampleRate = SAMPLE_RATE_22KHZ;
@@ -349,17 +358,16 @@ public class TTSEngineController {
                     sampleRate, bytes.length, mCurrentVoice.InternalName, mCurrentVoice.Version);
             if (bytes.length == 0) {
                 Log.w(LOG_SPEAK_TASK_TAG, "synthesizeSpeech(): No audio generated ?!");
-                return null;
+                return false;
             }
             UtteranceCacheManager ucm = App.getAppRepository().getUtteranceCache();
             if (ucm.addAudioToCacheItem(this.item.getUuid(), phonemeEntry, vad, bytes)) {
                 Log.v(LOG_SPEAK_TASK_TAG, "Cached speech audio " + this.item.getUuid());
             } else {
                 Log.e(LOG_SPEAK_TASK_TAG, "Couldn't add audio to cache item " + this.item.getUuid());
-                return null;
+                return false;
             }
-
-            return bytes;
+            return true;
         }
 
         /**

@@ -3,6 +3,8 @@ package com.grammatek.simaromur.device;
 import android.content.res.AssetManager;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.grammatek.simaromur.App;
@@ -19,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +37,7 @@ import ai.onnxruntime.OrtSession.SessionOptions.OptLevel;
 
 public class TTSEngineOnnx  implements TTSEngine {
     private final static String LOG_TAG = "Simaromur_" + TTSEngineOnnx.class.getSimpleName();
-    private final static int SAMPLE_RATE = 22050;
+    private final static int SAMPLE_RATE = 16000;
     private static DeviceVoice mVoice = null;
 
     private OrtEnvironment mOrtEnv;
@@ -44,6 +47,7 @@ public class TTSEngineOnnx  implements TTSEngine {
     private final Pronunciation mPronunciation;
     private final PronunciationVits mPronunciationVits;
     private VitsConfig mModelConfig;
+    private VitsPhoneConverter mPhoneConverter;
 
     public TTSEngineOnnx(AssetManager asm, DeviceVoice voice) {
         assert (voice.Type.equals("onnx"));
@@ -79,6 +83,7 @@ public class TTSEngineOnnx  implements TTSEngine {
         }
         mPronunciation = new Pronunciation(App.getContext());
         mPronunciationVits = new PronunciationVits(mPronunciation);
+        mPhoneConverter = new VitsPhoneConverter(mModelConfig.phonemeIdMap);
 
         Log.v(LOG_TAG, "Onnx model loaded from assets/" + modelPath);
         mVoice = voice;
@@ -140,32 +145,14 @@ public class TTSEngineOnnx  implements TTSEngine {
 
     @Override
     public byte[] SpeakToPCM(String ipas) {
+        Log.i(LOG_TAG, "VITS voice generation");
         Instant startTime = Instant.now();
 
-        // squeeze out all spaces and replace §sp to space again
-        Log.v(LOG_TAG, "Vits phonemes: " + ipas);
-        // Python:
-        // phoneme_ids_array = np.expand_dims(np.array(phoneme_ids, dtype=np.int64), 0)
-        //        phoneme_ids_lengths = np.array([phoneme_ids_array.shape[1]], dtype=np.int64)
-        //        scales = np.array(
-        //            [noise_scale, length_scale, noise_w],
-        //            dtype=np.float32,
-        //        )
-        // "noise_scale": 0.667,
-        // "length_scale": 1,
-        // "noise_w": 0.8
+        long[] ipa2VecInput = mPhoneConverter.convertToPhonemeIds(ipas);
 
-        // append each character in variable ipas with a PAD_SYMBOL, independent of space, dot, comma, etc.
-        ipas = ipas.replaceAll("(.)", "$1" + '_');
-        // prepend with BOS and append with EOS
-        ipas = "^" + ipas + "$";
-
-        VitsPhoneConverter phoneConverter = new VitsPhoneConverter(mModelConfig.phonemeIdMap);
-        long[] ipa2VecInput = phoneConverter.convertToPhonemeIds(ipas);
         long[][] phoneIdsArray = new long[1][ipa2VecInput.length];
         System.arraycopy(ipa2VecInput, 0, phoneIdsArray[0], 0, ipa2VecInput.length);
         long[] phoneIdsLengths = new long[] {phoneIdsArray[0].length};
-        // these are fixed now, but should be used from the voice config file
         float noiseScale = mModelConfig.inference.noiseScale;
         float lengthScale = mModelConfig.inference.lengthScale;
         float noiseW = mModelConfig.inference.noiseW;
@@ -181,17 +168,22 @@ public class TTSEngineOnnx  implements TTSEngine {
             // inputMap.put("sid", OnnxTensor.createTensor(mOrtEnv, speakerIds));
             Result output = mOrtSession.run(inputMap);
 
-            // output 0: array of longs
+            // output 0: array of longs, TODO: maybe use OnnxTensor.getByteBuffer() instead ?
             Object outputTensor = output.get(0).getValue();
+            // TODO: what about speech mark timings ?
             if (outputTensor instanceof float[][][][]) {
                 float[][][][] tensor4D = (float[][][][]) outputTensor;
                 if (tensor4D.length == 1 && tensor4D[0].length == 1) {
                     float[] samples = tensor4D[0][0][0];
-                    byte[] bytes = AudioManager.pcmFloatTo16BitPCMWithDither(samples, 1.0f, true);
+
+                    // TODO optimization: dithering needs a lot of time, we should see, if we can
+                    //  conditionally switch it on/off
+                    //byte[] bytes = AudioManager.pcmFloatTo16BitPCMWithDither(samples, 1.0f, true);
+                    byte[] bytes = AudioManager.pcmFloatTo16BitPCM(samples);
                     Instant stopTime = Instant.now();
 
                     final long timeElapsed = Duration.between(startTime, stopTime).toMillis();
-                    Log.i(LOG_TAG, "Voice generation ran for " + timeElapsed / 1000.0F + " secs, " +
+                    Log.i(LOG_TAG, "VITS voice generation ran for " + timeElapsed / 1000.0F + " secs, " +
                             samples.length * 1000.0F / timeElapsed / GetNativeSampleRate() + " x real-time");
                     return bytes;
                 }
@@ -210,35 +202,118 @@ public class TTSEngineOnnx  implements TTSEngine {
     }
 
     public static class VitsPhoneConverter {
-        private Map<String, int[]> phonemeIdMap;
+        private final Map<String, Integer> phonemeIdMap;
+        private static final  String PunctuationSymbols = "[.,?!;:\"-]";
+        private final static String PAD_SYMBOL = "_";
+        private final long SPACE_PHONEME_ID;
 
-        public VitsPhoneConverter(Map<String, int[]> phonemeIdMap) {
+        public VitsPhoneConverter(Map<String, Integer> phonemeIdMap) {
             this.phonemeIdMap = phonemeIdMap;
+            SPACE_PHONEME_ID = phonemeIdMap.get(" ");
         }
 
         public long[] convertToPhonemeIds(String ipaString) {
+            // first get tokens
+            List<String> tokenList = new ArrayList<>();
+            Collections.addAll(tokenList, ipaString.split("\\s+"));
+
+            // iterate over all tokens in the list. Each token is split into phonemes by splitting
+            // at PAD_SYMBOL. The phoneme ids are then looked up in the phonemeIdMap and added
+            // to the phonemeIdList. Some symbols are atomic and do not have a PAD_SYMBOL, these
+            // are looked up directly in the phonemeIdMap.
+
             List<Long> phonemeIdList = new ArrayList<>();
+            addPhonemeIdToList("BOS", phonemeIdList);
 
-            for (int i = 0; i < ipaString.length(); i++) {
-                String symbol = String.valueOf(ipaString.charAt(i));
-                int[] idArray = phonemeIdMap.get(symbol);
+            // check if the first token is a space symbol, if so, remove it
+            if (tokenList.get(0).equals(" ")) {
+                tokenList.remove(0);
+            }
+            for (String token : tokenList) {
+                boolean space_removed = removeSpaceBeforePunctuation(phonemeIdList, token);
 
-                if (idArray != null && idArray.length > 0) {
-                    phonemeIdList.add((long) idArray[0]);
-                } else {
-                    // Log a warning with the symbol and its position
-                    Log.w(LOG_TAG+"::VitsPhoneConverter", "Unknown symbol '" + symbol + "' at position " + i);
-                    // Ignore the unknown symbol
+                // split token into phonemes via splitting at PAD_SYMBOL
+                List<String> phonemeList = new ArrayList<>();
+                Collections.addAll(phonemeList, token.split(PAD_SYMBOL));
+
+                // add phoneme ids
+                for (String phoneme : phonemeList) {
+                    addPhonemeIdToList(phoneme, phonemeIdList);
+                }
+                if (!space_removed && !token.matches(PunctuationSymbols)) {
+                    // before and after punctuation symbols, don't add a space symbol
+                    addPhonemeIdToList(" ", phonemeIdList);
                 }
             }
+            if (phonemeIdList.size() == 0) {
+                Log.w(LOG_TAG + "::VitsPhoneConverter", "Empty phonemeIdList, returning empty array");
+                return new long[0];
+            }
+            // remove the last two symbols, which are the ids for " " and 0
+            if (SPACE_PHONEME_ID == phonemeIdList.get(phonemeIdList.size() - 2)) {
+                phonemeIdList.remove(phonemeIdList.size() - 1);
+                phonemeIdList.remove(phonemeIdList.size() - 1);
+            }
 
-            // Convert the List<Long> to long[]
+            addPhonemeIdToList("EOS", phonemeIdList);
+            return toLongArray(phonemeIdList);
+        }
+
+        @NonNull
+        private static long[] toLongArray(List<Long> phonemeIdList) {
             long[] phonemeIds = new long[phonemeIdList.size()];
             for (int i = 0; i < phonemeIdList.size(); i++) {
                 phonemeIds[i] = phonemeIdList.get(i);
             }
-
             return phonemeIds;
+        }
+
+        // This method is a workaround for the phonemization of the VITS voice, where
+        //  punctuation symbols are not padded after a word with space, but added directly
+        //  after the non-punctuation character. Spaces are only used to separate words.
+        //  Remove previous SPACE symbol, if phonemeIdlist has size > 2 and token is
+        //  a punctuation symbol.
+        //
+        // @param phonemeIdList    The list of phoneme ids. This list is changed in place.
+        // @param token            The token to be checked
+        // @return                 True, if a SPACE symbol was removed, false otherwise
+        private boolean removeSpaceBeforePunctuation(List<Long> phonemeIdList, String token) {
+            boolean rv = false;
+            try {
+                if (token.matches(PunctuationSymbols)) {
+                    if ((phonemeIdList.size() >= 2)
+                            && (SPACE_PHONEME_ID == phonemeIdList.get(phonemeIdList.size() - 2))) {
+                        // remove the previous 2 phoneme ids, which are the corresponding ids for space
+                        phonemeIdList.remove(phonemeIdList.size() - 2);
+                        phonemeIdList.remove(phonemeIdList.size() - 1);
+                        rv = true;
+                    }
+                }
+            } catch (NullPointerException e) {
+                Log.e(LOG_TAG, "Accessing phonemeIdMap('<SPACE>') failed: ", e);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Exception: ", e);
+            }
+            return rv;
+        }
+
+        /**
+         * Add the phoneme id for the given symbol to the phonemeIdList. If the symbol is not
+         * found in the phonemeIdMap, a warning is logged and the symbol is ignored.
+         * <p>
+         * All symbols are padded with 0, which is because of how the model was trained.
+         *
+         * @param symbol        The symbol to be looked up in the phonemeIdMap
+         * @param phonemeIdList The list to which the phoneme id is added
+         */
+        private void addPhonemeIdToList(String symbol, List<Long> phonemeIdList) {
+            Integer symbolValue = phonemeIdMap.get(symbol);
+            if (symbolValue != null) {
+                phonemeIdList.add((long) symbolValue);
+                phonemeIdList.add(0L);
+            } else {
+                Log.w(LOG_TAG + "::VitsPhoneConverter", "Ignore unknown symbol (" + symbol + ") !");
+            }
         }
     }
 

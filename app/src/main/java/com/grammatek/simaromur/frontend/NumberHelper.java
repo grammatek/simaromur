@@ -102,8 +102,7 @@ public class NumberHelper {
         DIGIT_NUMBERS.put("9", " níu");
         //TODO: not sure about this, without context difficult to say if it should be "sil" or not
         // DIGIT_NUMBERS.put("\\-", " <sil>");
-        // deal with this at a later stage, don't want to delete it too early
-        //DIGIT_NUMBERS.put("\\-", "");
+        //DIGIT_NUMBERS.put("\\-", " #");
         DIGIT_NUMBERS.put("\\+", " plús");
         //TODO: if we have more sentences being normalized, this replaces end-of-sentence dot as well. We don't want that
         // DIGIT_NUMBERS.put("\\.", " punktur");
