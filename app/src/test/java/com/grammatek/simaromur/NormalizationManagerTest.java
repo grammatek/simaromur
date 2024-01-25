@@ -86,10 +86,11 @@ public class NormalizationManagerTest {
         digits.put("2.350.000", "tvær milljónir þrjú hundruð og fimmtíu þúsund .");
         digits.put("2.350.123", "tvær milljónir þrjú hundruð og fimmtíu þúsund eitt hundrað tuttugu og þrjú .");
         digits.put("2.357.895", "tvær milljónir þrjú hundruð fimmtíu og sjö þúsund átta hundruð níutíu og fimm .");
-        // TODO: now the difficult ones
         digits.put(" 10.000.005", "tíu milljónir og fimm .");
         digits.put(" 10.000.050", "tíu milljónir og fimmtíu .");
         digits.put(" 10.007.050", "tíu milljónir sjö þúsund og fimmtíu .");
+        digits.put(" 13.080.050", "þrettán milljónir áttatíu þúsund og fimmtíu .");
+        digits.put(" 13.005.025", "þrettán milljónir fimm þúsund tuttugu og fimm .");
         return digits;
     }
 
