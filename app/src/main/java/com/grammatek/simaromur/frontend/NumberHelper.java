@@ -67,8 +67,8 @@ public class NumberHelper {
 
     //1.234 or 1 or 12 or 123
     public static final String CARDINAL_THOUSAND_PTRN = "^([1-9]\\.?\\d{3}|[1-9]\\d{0,2})$";
-    //1.234 or 12.345 or 123.456
-    public static final String CARDINAL_MILLION_PTRN = "^[1-9]\\d{0,2}\\.\\d{3}$";
+    //1.234 or 12.345 or 123.456 or 123468
+    public static final String CARDINAL_MILLION_PTRN = "^[1-9]\\d{0,2}\\.?\\d{3}$";
     public static final String CARDINAL_BIG_PTRN = "^[1-9]\\d{0,2}(\\.\\d{3}){2,3}$";
 
     //1.123,4 or 1232,4 or 123,4 or 12,42345 or 1,489

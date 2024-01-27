@@ -33,13 +33,12 @@ public class TTSNormalizer {
                     CardinalThousandTuples.getTuples())
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
-    private final List<CategoryTuple> ThousandsMillionsTupleList = Stream.of(CardinalThousandTuples.getTuples(), CardinalMillionTuples.getTuples())
-            .flatMap(Collection::stream)
-            .collect(Collectors.toList());
-
     private final List<CategoryTuple> OnesThousandsCardinalTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples())
             .flatMap(Collection::stream)
                     .collect(Collectors.toList());
+    private final List<CategoryTuple> ThousandsMillionsTupleList = Stream.of(OnesThousandsCardinalTupleList, CardinalMillionTuples.getTuples())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
     private final List<CategoryTuple> DecimalThousandsTupleList = Stream.of(OnesThousandsCardinalTupleList, DecimalThousandTuples.getTuples())
             .flatMap(Collection::stream)
             .collect(Collectors.toList());

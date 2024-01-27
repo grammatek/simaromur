@@ -77,6 +77,14 @@ public class NormalizationManagerTest {
         Map<String, String> digits = new HashMap<>();
         // POS-tagger tags 'mínúta' as accusative, hence the wrong case for 32.
         // should be 'þrítugasta og önnur' (accusative is 'mínútu')
+        digits.put("7", "sjö .");
+        digits.put("77", "sjötíu og sjö .");
+        digits.put("777", "sjö hundruð sjötíu og sjö .");
+        digits.put("7777", "sjö þúsund sjö hundruð sjötíu og sjö .");
+        digits.put("77777", "sjötíu og sjö þúsund sjö hundruð sjötíu og sjö .");
+        digits.put("119273", "hundrað og nítján þúsund tvö hundruð sjötíu og þrjú .");
+        digits.put("77.777", "sjötíu og sjö þúsund sjö hundruð sjötíu og sjö .");
+        digits.put("119.273", "hundrað og nítján þúsund tvö hundruð sjötíu og þrjú .");
         digits.put("(32. mín)", "<sil> þrítugustu og aðra mínúta <sil> .");
         digits.put("(37. mín)", "<sil> þrítugustu og sjöundu mínúta <sil> .");
         digits.put("(24. mín)", "<sil> tuttugustu og fjórðu mínúta <sil> .");
