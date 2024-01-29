@@ -98,12 +98,16 @@ public class AppRepository {
      * @return    value for key or empty string if not found
      */
     public String getAssetConfigValueFor(String key) {
+        String rv = "";
         try {
-            return FileUtils.getAssetConfigProperty(App.getContext().getAssets(), key);
+            String value = FileUtils.getAssetConfigProperty(App.getContext().getAssets(), key);
+            if (value != null) {
+                rv = value;
+            }
         } catch (IOException e) {
             e.printStackTrace();
-            return "";
         }
+        return rv;
     }
 
     /**

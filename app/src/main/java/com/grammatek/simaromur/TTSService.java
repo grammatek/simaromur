@@ -248,7 +248,7 @@ public class TTSService extends TextToSpeechService {
     private void handleProcessingResult(SynthesisCallback callback, CacheItem item, TTSRequest ttsRequest, com.grammatek.simaromur.db.Voice voice) {
         Log.v(LOG_TAG, "handleProcessingResult for (" + item.getUuid() + ")");
         try {
-            // get the current time for caclulating the amount of time that we have waited
+            // get the current time for calculating the amount of time that we have waited
             long startTime = System.currentTimeMillis();
             boolean isCached = item.containsVoiceAudioEntries(UtteranceCacheManager.buildVoiceKey(voice.internalName, voice.version));
             // here we wait for the response of the speak request. The result is sent via the queue
@@ -380,6 +380,10 @@ public class TTSService extends TextToSpeechService {
      */
     private static void setSpeechMarksToBeginning(SynthesisCallback callback) {
         Log.v(LOG_TAG, "setSpeechMarksToBeginning()");
+        if (! callback.hasStarted()) {
+            Log.w(LOG_TAG, "setSpeechMarksToBeginning(): callback not started yet ?!");
+            return;
+        }
         callback.rangeStart(0, 0, 1);
         byte[] silenceData = new byte[callback.getMaxBufferSize()];
         callback.audioAvailable(silenceData, 0, silenceData.length);
@@ -501,13 +505,13 @@ public class TTSService extends TextToSpeechService {
             Set<String> features = new HashSet<>();
 
             if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_NETWORK)) {
-                latency = Voice.LATENCY_VERY_HIGH;
+                    latency = Voice.LATENCY_VERY_HIGH;
                 quality = Voice.QUALITY_HIGH;
-                features.add(TextToSpeech.Engine.KEY_FEATURE_NETWORK_RETRIES_COUNT);
-                needsNetwork = true;
+                    features.add(TextToSpeech.Engine.KEY_FEATURE_NETWORK_RETRIES_COUNT);
+                    needsNetwork = true;
             } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TORCH)) {
                 quality = Voice.QUALITY_VERY_HIGH;
-                latency = Voice.LATENCY_VERY_HIGH;
+                    latency = Voice.LATENCY_VERY_HIGH;
             }
             if (voice.needsDownload()) {
                 features.add(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED);
