@@ -193,19 +193,20 @@
     <Button
         android:id="@+id/speak_button"
         style="?attr/materialButtonOutlinedStyle"
-        app:strokeColor="@color/white"
-        app:strokeWidth="5dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="16dp"
+        android:contentDescription="@string/speak_button"
         android:text="@string/speak_voice_title"
         android:textAppearance="@android:style/TextAppearance.Large"
         android:textColor="@color/colorTextPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/speakable_text" />
+        app:layout_constraintTop_toBottomOf="@+id/speakable_text"
+        app:strokeColor="@color/white"
+        app:strokeWidth="5dp" />
 
     <ProgressBar
         android:id="@+id/progressBarPlay"
@@ -214,6 +215,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
+        android:contentDescription="@string/speak_progress"
         android:indeterminate="true"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/speak_button"

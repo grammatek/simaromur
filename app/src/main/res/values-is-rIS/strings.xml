@@ -13,6 +13,7 @@
     <string name="tts_settings_label">Stillingar fyrir talgervil</string>
     <string name="voice_list_update">Sækja lista af röddum</string>
     <string name="speak_button">Spila</string>
+    <string name="speak_progress">spilar</string>
     <string name="voice_lang_title">Tungumál</string>
     <string name="voice_name_title">Nafn</string>
     <string name="voice_gender_title">Kyn</string>
@@ -84,4 +85,5 @@
     <string name="voice_deletion_title">Eyða rödd</string>
     <string name="voice_deletion_q">Virkilega eyða rödd?</string>
     <string name="voice_deletion_not_possible">Þú getur ekki eytt röddinni sem er valin, vinsamlegast veldu aðra rödd og reyndu aftur</string>
+    <string name="no_email_client">Það er ekkert tölvupóstforrit uppsett</string>
 </resources>
