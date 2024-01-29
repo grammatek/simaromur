@@ -399,6 +399,7 @@ public class AppRepository {
      * @return true in case audio speech entry has been found and playback started, false otherwise
      */
     private boolean playIfAudioCacheHit(String voiceId, String voiceVersion, CacheItem item, TTSAudioControl.AudioFinishedObserver finishedObserver, TTSRequest ttsRequest) {
+        Log.v(LOG_TAG, "playIfAudioCacheHit(1)");
         UtteranceCacheManager ucm = App.getAppRepository().getUtteranceCache();
         final List<byte[]> audioBuffers =
                 ucm.getAudioForUtterance(item.getUtterance(), voiceId, voiceVersion);
@@ -426,7 +427,7 @@ public class AppRepository {
      * @return true in case audio speech entry has been found and playback started, false otherwise
      */
     private boolean playIfAudioCacheHit(String voiceId, String voiceVersion, CacheItem item, TTSObserver ttsObserver, TTSRequest ttsRequest) {
-        Log.v(LOG_TAG, "playIfAudioCacheHit()");
+        Log.v(LOG_TAG, "playIfAudioCacheHit(2)");
         UtteranceCacheManager ucm = App.getAppRepository().getUtteranceCache();
         final List<byte[]> audioBuffers =
                 ucm.getAudioForUtterance(item.getUtterance(), voiceId, voiceVersion);
@@ -853,7 +854,22 @@ public class AppRepository {
                 // this feeds audio data to the callback, which will then be comsumed by the TTS
                 // client. In case the current utterance is stopped(), all remaining audio data is
                 // consumed and discarded and afterwards TTSService.onStopped() is executed.
-                callback.audioAvailable(buffer, offset, bytesConsumed);
+                int cbStatus = callback.audioAvailable(buffer, offset, bytesConsumed);
+                switch(cbStatus) {
+                    case TextToSpeech.SUCCESS:
+                        // NOTHING TO DO
+                        break;
+                    case TextToSpeech.ERROR:
+                        // This is also called, if the user skips the current utterance
+                        Log.w(LOG_TAG, "TTSObserver: callback.audioAvailable() returned ERROR");
+                        return;
+                    case TextToSpeech.STOPPED:
+                        Log.w(LOG_TAG, "TTSObserver: callback.audioAvailable() returned STOPPED");
+                        return;
+                    default:
+                        Log.e(LOG_TAG, "TTSObserver: callback.audioAvailable() returned " + cbStatus);
+                        return;
+                }
             }
             offset += bytesConsumed;
         }
