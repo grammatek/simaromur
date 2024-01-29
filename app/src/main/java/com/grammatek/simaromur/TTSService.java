@@ -291,7 +291,9 @@ public class TTSService extends TextToSpeechService {
                                 mRepository.getUtteranceCache().deleteCacheItem(item.getUuid());
                             } else if (mRmCacheItemForFastVoices && !isCached) {
                                 // if the voice is fast, we can delete the cache item after playing
-                                if (rtf > 20.0f) {
+                                // TODO: something we should think about more carefully: we need
+                                //       much bigger RTF for not needing to cache the item
+                                if (rtf > 50.0f) {
                                     Log.v(LOG_TAG, "rm_cache_item_for_fast_voices: delete cache item "
                                             + rcvdTtsRequest.serialize());
                                     mRepository.getUtteranceCache().deleteCacheItem(item.getUuid());
@@ -499,19 +501,27 @@ public class TTSService extends TextToSpeechService {
         List<Voice> announcedVoiceList = new ArrayList<>();
 
         for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
-            int quality = Voice.QUALITY_VERY_LOW;
-            int latency = Voice.LATENCY_LOW;
+            int quality = Voice.QUALITY_NORMAL;
+            // TODO: experiment with this setting: which impact does it have ?
+            int latency = Voice.LATENCY_VERY_LOW;    // this is for latency < 20ms, which we can
+                                                     // barely reach for cached items
             boolean needsNetwork = false;
             Set<String> features = new HashSet<>();
 
-            if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_NETWORK)) {
+            switch(voice.type) {
+                case com.grammatek.simaromur.db.Voice.TYPE_NETWORK:
                     latency = Voice.LATENCY_VERY_HIGH;
-                quality = Voice.QUALITY_HIGH;
                     features.add(TextToSpeech.Engine.KEY_FEATURE_NETWORK_RETRIES_COUNT);
                     needsNetwork = true;
-            } else if (voice.type.equals(com.grammatek.simaromur.db.Voice.TYPE_TORCH)) {
-                quality = Voice.QUALITY_VERY_HIGH;
+                    break;
+                case com.grammatek.simaromur.db.Voice.TYPE_TORCH:
                     latency = Voice.LATENCY_VERY_HIGH;
+                    break;
+                case com.grammatek.simaromur.db.Voice.TYPE_ONNX:
+                    break;
+                default:
+                    latency = Voice.LATENCY_NORMAL;
+                    break;
             }
             if (voice.needsDownload()) {
                 features.add(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED);
