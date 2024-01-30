@@ -283,4 +283,12 @@ public class AudioManager {
         Log.v(LOG_TAG, "Done.");
         return outBuf;
     }
+
+    static public byte[] generatePcmSilence(float duration) {
+        final int nChannels = 1;
+        final int nBits = 16;
+        final int nSamples = (int) (duration * SAMPLE_RATE_WAV);
+        final int nBytes = nSamples * nChannels * nBits / 8;
+        return new byte[nBytes];
+    }
 }

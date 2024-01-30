@@ -472,7 +472,7 @@ public class TTSService extends TextToSpeechService {
         callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
                     AudioManager.N_CHANNELS);
         setSpeechMarksToBeginning(callback);
-        byte[] silenceData = new byte[callback.getMaxBufferSize()/2];
+        byte[] silenceData = AudioManager.generatePcmSilence(0.25f);
         callback.audioAvailable(silenceData, 0, silenceData.length);
         if (! callback.hasFinished() && callback.hasStarted()) {
             callback.done();

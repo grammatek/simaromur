@@ -17,6 +17,7 @@ import com.grammatek.simaromur.frontend.PronunciationVits;
 import com.grammatek.simaromur.utils.FileUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -147,7 +148,40 @@ public class TTSEngineOnnx  implements TTSEngine {
     public byte[] SpeakToPCM(String ipas) {
         Log.i(LOG_TAG, "VITS voice generation");
         Instant startTime = Instant.now();
+        // split ipas to sentences by splitting at ".", "!", "?", ";", but we need to also
+        // exactly know, which punctuation symbol was used, so we add it to the sentence
+        List<byte[]> pcmList = new ArrayList<>();
+        byte[] silence = AudioManager.generatePcmSilence(0.5f);
+        List<String> sentences = new ArrayList<>();
+        Collections.addAll(sentences, ipas.split("(?<=[.!?;])"));
+        for (String sentence : sentences) {
+            byte[] pcmSentence = speakSentenceToPCM(sentence.strip());
+            pcmList.add(pcmSentence);
+            pcmList.add(silence);
+        }
+        // remove the last silence
+        pcmList.remove(pcmList.size()-1);
+        // collect the size of all pcm buffers, create a new buffer with the size and copy all
+        // pcm buffers into the new buffer
+        int totalSize = 0;
+        for (byte[] pcmBuffer : pcmList) {
+            totalSize += pcmBuffer.length;
+        }
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[totalSize]);
+        for (byte[] pcmBuffer : pcmList) {
+            buffer.put(pcmBuffer);
+        }
+        byte[] pcm = buffer.array();
+        Instant stopTime = Instant.now();
 
+        final long timeElapsed = Duration.between(startTime, stopTime).toMillis();
+        Log.i(LOG_TAG, "VITS voice generation ran for " + timeElapsed / 1000.0F + " secs, " +
+                pcm.length * 1000.0F / timeElapsed / GetNativeSampleRate() + " x real-time");
+        return pcm;
+    }
+
+    @NonNull
+    private byte[] speakSentenceToPCM(String ipas) {
         long[] ipa2VecInput = mPhoneConverter.convertToPhonemeIds(ipas);
 
         long[][] phoneIdsArray = new long[1][ipa2VecInput.length];
@@ -179,13 +213,7 @@ public class TTSEngineOnnx  implements TTSEngine {
                     // TODO optimization: dithering needs a lot of time, we should see, if we can
                     //  conditionally switch it on/off
                     //byte[] bytes = AudioManager.pcmFloatTo16BitPCMWithDither(samples, 1.0f, true);
-                    byte[] bytes = AudioManager.pcmFloatTo16BitPCM(samples);
-                    Instant stopTime = Instant.now();
-
-                    final long timeElapsed = Duration.between(startTime, stopTime).toMillis();
-                    Log.i(LOG_TAG, "VITS voice generation ran for " + timeElapsed / 1000.0F + " secs, " +
-                            samples.length * 1000.0F / timeElapsed / GetNativeSampleRate() + " x real-time");
-                    return bytes;
+                    return AudioManager.pcmFloatTo16BitPCM(samples);
                 }
             } else {
                 Log.e(LOG_TAG, "Unexpected output tensor type: " + outputTensor.getClass().getName());
