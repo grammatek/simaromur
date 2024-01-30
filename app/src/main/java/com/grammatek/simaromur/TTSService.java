@@ -2,6 +2,7 @@ package com.grammatek.simaromur;
 
 import android.media.AudioFormat;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.provider.Settings;
 import android.speech.tts.SynthesisCallback;
 import android.speech.tts.SynthesisRequest;
@@ -41,6 +42,9 @@ public class TTSService extends TextToSpeechService {
     @Override
     public void onCreate() {
         Log.i(LOG_TAG, "onCreate()");
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder(StrictMode.getVmPolicy())
+                .detectLeakedClosableObjects()
+                .build());
 
         mRepository = App.getAppRepository();
         // This calls onIsLanguageAvailable() and must run after Initialization
