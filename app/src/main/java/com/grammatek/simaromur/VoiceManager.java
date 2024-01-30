@@ -32,7 +32,7 @@ public class VoiceManager extends AppCompatActivity {
 
         // Get a new or existing ViewModel from the ViewModelProvider.
         ViewModelProvider.Factory factory =
-                (ViewModelProvider.Factory) ViewModelProvider.AndroidViewModelFactory.getInstance(App.getApplication());
+                ViewModelProvider.AndroidViewModelFactory.getInstance(App.getApplication());
         VoiceViewModel voiceViewModel = new ViewModelProvider(this, factory).get(VoiceViewModel.class);
 
         // Add an observer on the LiveData returned by getAllVoices.

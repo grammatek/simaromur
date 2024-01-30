@@ -303,6 +303,7 @@ public class TTSService extends TextToSpeechService {
             e.printStackTrace();
         }
         if (callback.hasStarted() && ! callback.hasFinished()) {
+            Log.v(LOG_TAG, "onSynthesizeText: callback.done()");
             callback.done();
         }
     }

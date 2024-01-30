@@ -80,7 +80,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     private void checkDefaultEngine() {
         Log.v(LOG_TAG, "checkDefaultEngine()");
         if (mTtsClient == null) {
-            Log.v(LOG_TAG, "No TTS connection ?!");
+            Log.v(LOG_TAG, "No connection to Simarómur TTS service yet");
             return;
         }
         try {
