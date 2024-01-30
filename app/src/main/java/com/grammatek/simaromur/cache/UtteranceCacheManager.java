@@ -1005,6 +1005,7 @@ public class UtteranceCacheManager {
                         ByteArrayOutputStream outputStream = new ByteArrayOutputStream(vad.getFileSize());
                         FileUtils.copyFile(inStream, outputStream);
                         audioDataList.add(outputStream.toByteArray());
+                        inStream.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                         return new ArrayList<>();
