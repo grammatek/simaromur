@@ -577,6 +577,7 @@ public class UtteranceCacheManager {
         try {
             OutputStream outStream = new FileOutputStream(fileName);
             FileUtils.copyFile(new ByteArrayInputStream(data), outStream);
+            outStream.close();
         } catch (IOException e) {
             e.printStackTrace();
             return false;
