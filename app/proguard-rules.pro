@@ -29,6 +29,7 @@
 -keep class org.pytorch.** { *; }
 -keep class com.facebook.** { *; }
 -keep class org.kohsuke.github** { *; }
+-keep class ai.onnxruntime.** { *; }
 
 # warnings generated via kohsuke github api
 -dontwarn com.infradna.tool.bridge_method_injector.BridgeMethodsAdded
