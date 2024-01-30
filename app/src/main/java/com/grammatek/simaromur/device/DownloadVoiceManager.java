@@ -178,6 +178,9 @@ public class DownloadVoiceManager {
         Log.v(LOG_TAG, "readVoiceDescriptionFromServer: searching for voice files for " + androidArch);
         for (VoiceInfo voiceInfo : releaseInfo.voices) {
             for (VoiceFile file : voiceInfo.files) {
+                // TODO: hack ! We only support onnx files for now
+                if (! file.type.equals("onnx")) continue;
+
                 Log.v(LOG_TAG, "readVoiceDescriptionFromServer: " + file.toString());
                 // only add voice files that match the Phone's architecture
                 if (file.platform.equals(androidArch)

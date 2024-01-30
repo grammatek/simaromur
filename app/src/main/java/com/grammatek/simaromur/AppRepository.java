@@ -240,9 +240,8 @@ public class AppRepository {
 
         mMediaPlayer = new MediaPlayObserver();
         mScheduler = Executors.newSingleThreadScheduledExecutor();
-        mScheduler.scheduleAtFixedRate(networkVoicesUpdateRunnable, 0, 60, TimeUnit.SECONDS);
-        mScheduler.scheduleAtFixedRate(onDeviceVoicesUpdateRunnable, 1, 600, TimeUnit.SECONDS);
-        mScheduler.schedule(assetVoiceRunnable, 1, TimeUnit.SECONDS);
+        // only do this once at the beginning
+        mScheduler.schedule(assetVoiceRunnable, 0, TimeUnit.SECONDS);
     }
 
     /**
@@ -744,7 +743,7 @@ public class AppRepository {
         if (odVoice == null) return null;
         Voice dbVoiceOD = odVoice.convertToDbVoice();
         for (Voice voice : getCachedVoices()) {
-            if (voice == dbVoiceOD) {
+            if (voice.internalName.equals(dbVoiceOD.internalName)) {
                 return voice;
             }
         }
@@ -979,6 +978,7 @@ public class AppRepository {
         @Override
         public void run() {
             Log.v(LOG_TAG, "onDeviceVoicesUpdateRunnable()");
+
             // fetch on-device voice lists
             mDVM.readVoiceDescription(true);
 
@@ -1005,10 +1005,8 @@ public class AppRepository {
             // delete all voices
             final List<Voice> allDbVoices = mVoiceDao.getAnyVoices();
             for (Voice voice : allDbVoices) {
-                if (voice.url.equals("assets")) {
-                    Log.w(LOG_TAG, "assetVoiceRunnable Delete asset voice " + voice.name);
-                    mVoiceDao.deleteVoices(voice);
-                }
+                Log.w(LOG_TAG, "assetVoiceRunnable() Delete voice " + voice.name);
+                mVoiceDao.deleteVoices(voice);
             }
 
             final List<Voice> assetVoices = mAVM.getVoiceDbList();

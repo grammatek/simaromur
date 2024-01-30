@@ -45,7 +45,6 @@ public class TTSService extends TextToSpeechService {
         mRepository = App.getAppRepository();
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
-        mRepository.streamNetworkVoices("");
         applyCachePolicy();
     }
 
