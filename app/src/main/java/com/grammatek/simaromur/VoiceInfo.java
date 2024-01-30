@@ -366,12 +366,8 @@ public class VoiceInfo extends AppCompatActivity
                 return;
             }
             mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
-            toggleSpeakButton();
-        } else if (mVoice.type.equals(Voice.TYPE_TORCH)) {
-            toggleSpeakButton();
-        } else {
-            toggleSpeakButton();
         }
+        toggleSpeakButton();
 
         // execute frontend
         CacheItem item = appRepo.getUtteranceCache().addUtterance(text);

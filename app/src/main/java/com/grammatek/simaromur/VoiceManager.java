@@ -47,17 +47,10 @@ public class VoiceManager extends AppCompatActivity {
                 } else {
                     // we want to have the type sorted in the order of
                     // the following list:
-                    // 1. "flite"
-                    // 2. "torchscript"
+                    // 1. "vits"
                     // 3. "network"
-                    if (v1.type.equals("flite")) {
+                    if (v1.type.equals("vits")) {
                         return -1;
-                    } else if (v2.type.equals("flite")) {
-                        return 1;
-                    } else if (v1.type.equals("torchscript")) {
-                        return -1;
-                    } else if (v2.type.equals("torchscript")) {
-                        return 1;
                     } else {
                         return 0;
                     }

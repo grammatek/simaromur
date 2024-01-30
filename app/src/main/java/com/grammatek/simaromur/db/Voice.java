@@ -31,11 +31,9 @@ public class Voice {
     private final static String LOG_TAG = "Simaromur_Java_" + Voice.class.getSimpleName();
     public final static String TYPE_NETWORK_OLD = "tiro";
     public final static String TYPE_NETWORK = "network";
-    public final static String TYPE_TORCH = "torchscript";
-    public final static String TYPE_FLITE = "flite";
     public final static String TYPE_ONNX = "onnx";
 
-    public static final List<String> Types = Arrays.asList(TYPE_NETWORK, TYPE_NETWORK_OLD, TYPE_FLITE, TYPE_TORCH, TYPE_ONNX);
+    public static final List<String> Types = Arrays.asList(TYPE_NETWORK, TYPE_NETWORK_OLD, TYPE_ONNX);
     static final String SEP = "-";
 
     @PrimaryKey(autoGenerate = true)
@@ -362,6 +360,6 @@ public class Voice {
      * @return      true in case voice is fast, false otherwise
      */
     public boolean isFast() {
-        return (this.type.equals(Voice.TYPE_FLITE));
+        return (this.type.equals(Voice.TYPE_ONNX));
     }
 }

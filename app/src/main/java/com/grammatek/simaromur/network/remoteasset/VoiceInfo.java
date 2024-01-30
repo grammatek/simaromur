@@ -40,7 +40,7 @@ public class VoiceInfo {
      * @param description   The description of the asset.
      * @param language      The language of the asset.
      * @param gender        The gender of the voice
-     * @param type          The asset type, e.g. flite, torchscript, ...
+     * @param type          The asset type, e.g. vits
      * @param version       The version of the asset.
      * @param rtf           The real-time factor of the asset.
      * @param quality       The quality of the asset.

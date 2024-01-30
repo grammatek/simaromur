@@ -27,7 +27,6 @@ public class Pronunciation {
     private Map<String, PronDictEntry> mIpaPronDict;
     private final Map<String, Map<String, Map<String, String>>> mAlphabets;
 
-    private final static String FLITE = "flite";
     private final String beginEndPausePattern = "^§sp|§sp$";
 
     // Letters that need custom transcription when spoken in isolation (like when using the
@@ -73,15 +72,7 @@ public class Pronunciation {
         Log.v(LOG_TAG, "voice version => " + voiceVersion);
         // If we run into more special handling with different voice types and versions,
         // we might want to think of another approach to this.
-        // For FLITE and v02 check if 'text' is contained in the custom_char_transcripts map
-        // and return the respective custom transcript if true.
-        if (voiceType.equals(FLITE) && voiceVersion.equals("0.2") &&
-                CUSTOM_CHAR_TRANSCRIPTS.containsKey(text))
-            return CUSTOM_CHAR_TRANSCRIPTS.get(text);
-        else
-            transcript = transcribeString(text, voiceType.equals(FLITE) &&
-                    voiceVersion.equals("0.2"));
-
+        transcript = transcribeString(text);
         return processPauses(transcript, voiceType);
     }
 
@@ -137,14 +128,12 @@ public class Pronunciation {
     }
 
     @NonNull
-    private String transcribeString(String text, boolean isFlitev02) {
+    private String transcribeString(String text) {
         String[] tokens = text.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String tok : tokens) {
             String transcr = "";
-            if (isFlitev02 && CUSTOM_TRANSCRIPTS.containsKey(tok))
-                transcr = CUSTOM_TRANSCRIPTS.get(tok);
-            else if (mPronDict.containsKey(tok)) {
+            if (mPronDict.containsKey(tok)) {
                 transcr = mPronDict.get(tok).getTranscript().trim();
             }
             else if (tok.equals(SymbolsLvLIs.TagPause)){
@@ -153,14 +142,6 @@ public class Pronunciation {
             else {
                 transcr = mG2P.process(tok).trim();
             }
-            // for tokens like 'myllumerki', 'dollarmerki', 'spurningarmerki', etc.
-            // correct transcription does not sound right
-            if (isFlitev02 && transcr.matches(".*m E r_0 c I"))
-                transcr = transcr.replaceAll("m E r_0 c I", "m E r_0 r_0 c I");
-            // Very strange flaw for words ending with "sins", like "leiksins", "tímaritsins", etc.
-            // a very bright "s I n EE s" instead of "s I n s". Fix that with this hack
-            if (isFlitev02 && transcr.matches(".+s I n s"))
-                transcr = transcr.replaceAll("s I n s", "s I n n s");
 
             // bug in Thrax grammar, catch the error here: insert space before C if missing
             // like in 'Vilhjálmsdóttur' -> 'v I lC au l m s t ou h t Y r'
@@ -173,11 +154,7 @@ public class Pronunciation {
 
     // only Flite voices need pause symbols at the beginning and end of a transcript
     private String processPauses(String transcript, String voiceType) {
-        if (voiceType.equals(FLITE))
-            transcript = ensurePauses(transcript);
-        else
-            transcript = transcript.replaceAll(beginEndPausePattern, "");
-
+        transcript = transcript.replaceAll(beginEndPausePattern, "");
         return finalReplacements(transcript);
     }
 

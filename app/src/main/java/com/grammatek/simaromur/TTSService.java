@@ -216,18 +216,8 @@ public class TTSService extends TextToSpeechService {
                 setSpeechMarksToBeginning(callback);
                 mRepository.startNetworkTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
                 break;
-            case com.grammatek.simaromur.db.Voice.TYPE_TORCH:
-                startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_TORCH, false);
-                setSpeechMarksToBeginning(callback);
-                mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
-                break;
             case com.grammatek.simaromur.db.Voice.TYPE_ONNX:
                 startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_ONNX, false);
-                setSpeechMarksToBeginning(callback);
-                mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
-                break;
-            case com.grammatek.simaromur.db.Voice.TYPE_FLITE:
-                startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_FLITE, false);
                 setSpeechMarksToBeginning(callback);
                 mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
                 break;
@@ -513,9 +503,6 @@ public class TTSService extends TextToSpeechService {
                     latency = Voice.LATENCY_VERY_HIGH;
                     features.add(TextToSpeech.Engine.KEY_FEATURE_NETWORK_RETRIES_COUNT);
                     needsNetwork = true;
-                    break;
-                case com.grammatek.simaromur.db.Voice.TYPE_TORCH:
-                    latency = Voice.LATENCY_VERY_HIGH;
                     break;
                 case com.grammatek.simaromur.db.Voice.TYPE_ONNX:
                     break;

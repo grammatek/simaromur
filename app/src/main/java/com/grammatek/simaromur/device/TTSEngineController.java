@@ -43,7 +43,6 @@ public class TTSEngineController {
     final ExecutorService mExecutorService;
     Future<?> mTaskFuture;  // the currently enqueued task, might be executed by the executor service
     final TTSAudioControl mTTSAudioControl16khz;
-    final TTSAudioControl mTTSAudioControl22khz;
 
     /**
      * Constructor
@@ -57,9 +56,7 @@ public class TTSEngineController {
         mAVM = avm;
         mDVM = dvm;
         mCurrentVoice = null;
-        mTTSAudioControl16khz = new TTSAudioControl(AudioManager.SAMPLE_RATE_FLITE,
-                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
-        mTTSAudioControl22khz = new TTSAudioControl(AudioManager.SAMPLE_RATE_TORCH,
+        mTTSAudioControl16khz = new TTSAudioControl(AudioManager.SAMPLE_RATE_ONNX,
                 AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
         // we only need one thread per Audio setting
         mExecutorService = Executors.newSingleThreadExecutor();
@@ -79,17 +76,6 @@ public class TTSEngineController {
             case Voice.TYPE_NETWORK:
                 Log.v(LOG_TAG, "LoadEngine: Voice.TYPE_NETWORK not supported");
                 break;
-            case Voice.TYPE_TORCH:
-                devVoice = mAVM.getInfoForVoice(voice.name);
-                if (mEngine == null || devVoice != mCurrentVoice) {
-                    Log.v(LOG_TAG, "LoadEngine: " + devVoice.Type);
-                    mEngine = new TTSEnginePyTorch(App.getContext().getAssets(), devVoice);
-                    mCurrentVoice = devVoice;
-                }
-                else {
-                    Log.v(LOG_TAG, "LoadEngine: (cached)");
-                }
-                break;
             case Voice.TYPE_ONNX:
                 // use the asset voice manager to get the info for the voices, this assumes that
                 // the onnx model is only available inside the assets folder
@@ -98,22 +84,6 @@ public class TTSEngineController {
                     Log.v(LOG_TAG, "LoadEngine: " + devVoice.Type);
                     try {
                         mEngine = new TTSEngineOnnx(App.getContext().getAssets(), devVoice);
-                        mCurrentVoice = devVoice;
-                    } catch (IllegalArgumentException e) {
-                        Log.e(LOG_TAG, "LoadEngine: " + e.getMessage());
-                        throw e;
-                    }
-                }
-                else {
-                    Log.v(LOG_TAG, "LoadEngine: (cached)");
-                }
-                break;
-            case Voice.TYPE_FLITE:
-                devVoice = mDVM.getInfoForVoice(voice.internalName);
-                if (mEngine == null || devVoice != mCurrentVoice) {
-                    Log.v(LOG_TAG, "LoadEngine: " + devVoice.Type);
-                    try {
-                        mEngine = new TTSEngineFlite(voice, devVoice);
                         mCurrentVoice = devVoice;
                     } catch (IllegalArgumentException e) {
                         Log.e(LOG_TAG, "LoadEngine: " + e.getMessage());
@@ -190,7 +160,6 @@ public class TTSEngineController {
     synchronized
     public void StopSpeak(TTSEngineController.SpeakTask speakTask) {
         mTTSAudioControl16khz.stop();
-        mTTSAudioControl22khz.stop();
         if (speakTask != null) {
             speakTask.stopSynthesis();
         }
@@ -310,10 +279,8 @@ public class TTSEngineController {
                 // TODO: also the media players should stop, if item has changed:
                 //       - pass the cache item along
                 byte[] processedAudio = AudioManager.applyPitchAndSpeed(audioData, sampleRate, pitch, speed);
-                if (sampleRate == AudioManager.SAMPLE_RATE_FLITE) {
+                if (sampleRate == AudioManager.SAMPLE_RATE_ONNX) {
                     mTTSAudioControl16khz.play(new TTSAudioControl.AudioEntry(processedAudio, audioObserver));
-                } else {
-                    mTTSAudioControl22khz.play(new TTSAudioControl.AudioEntry(processedAudio, audioObserver));
                 }
             } else {
                 observer.update(audioData, ttsRequest);
