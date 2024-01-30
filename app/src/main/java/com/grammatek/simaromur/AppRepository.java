@@ -849,16 +849,15 @@ public class AppRepository {
             final int bytesLeft = buffer.length - offset;
             final int bytesConsumed = Math.min(maxBytes, bytesLeft);
             if (callback.hasStarted()) {
-                if (!rawText.isEmpty()) {
-                    updateSpeechMarks(callback, buffer.length, offset, rawText.length(), bytesConsumed);
-                }
-                // this feeds audio data to the callback, which will then be comsumed by the TTS
+                // this feeds audio data to the callback, which will then be consumed by the TTS
                 // client. In case the current utterance is stopped(), all remaining audio data is
                 // consumed and discarded and afterwards TTSService.onStopped() is executed.
                 int cbStatus = callback.audioAvailable(buffer, offset, bytesConsumed);
                 switch(cbStatus) {
                     case TextToSpeech.SUCCESS:
-                        // NOTHING TO DO
+                        if (!rawText.isEmpty()) {
+                            updateSpeechMarks(callback, buffer.length, offset, rawText.length(), bytesConsumed);
+                        }
                         break;
                     case TextToSpeech.ERROR:
                         // This is also called, if the user skips the current utterance
