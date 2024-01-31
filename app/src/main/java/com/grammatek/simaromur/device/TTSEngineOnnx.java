@@ -7,13 +7,10 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.grammatek.simaromur.App;
 import com.grammatek.simaromur.audio.AudioManager;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
 import com.grammatek.simaromur.device.pojo.DeviceVoiceFile;
 import com.grammatek.simaromur.device.pojo.VitsConfig;
-import com.grammatek.simaromur.frontend.Pronunciation;
-import com.grammatek.simaromur.frontend.PronunciationVits;
 import com.grammatek.simaromur.utils.FileUtils;
 
 import java.io.IOException;
@@ -39,16 +36,17 @@ import ai.onnxruntime.OrtSession.SessionOptions.OptLevel;
 public class TTSEngineOnnx  implements TTSEngine {
     private final static String LOG_TAG = "Simaromur_" + TTSEngineOnnx.class.getSimpleName();
     private final static int SAMPLE_RATE = 16000;
-    private static DeviceVoice mVoice = null;
+    private final static float SENTENCE_PAUSE = 0.5f;
+    private static DeviceVoice sVoice = null;
+    // matches a position preceded by any of the characters '.!?;' not followed by zero or
+    // more whitespace characters ([\\s]*) and then a double quote (\").
+    final static  String SplitPunctuationSymbols = "(?<=[.!?;])(?![\\s]*\")";;
 
     private OrtEnvironment mOrtEnv;
-    private OrtSession.SessionOptions mOrtOpts;
     private OrtSession mOrtSession;
-
-    private final Pronunciation mPronunciation;
-    private final PronunciationVits mPronunciationVits;
     private VitsConfig mModelConfig;
-    private VitsPhoneConverter mPhoneConverter;
+    private final VitsPhoneConverter mPhoneConverter;
+
 
     public TTSEngineOnnx(AssetManager asm, DeviceVoice voice) {
         assert (voice.Type.equals("onnx"));
@@ -78,16 +76,14 @@ public class TTSEngineOnnx  implements TTSEngine {
         }
 
         // In case of a new voice: unload all existing models
-        if (mVoice != voice) {
+        if (sVoice != voice) {
             readVitsModelConfig(asm, configPath);
             createVitsModel(asm, modelPath, configPath);
         }
-        mPronunciation = new Pronunciation(App.getContext());
-        mPronunciationVits = new PronunciationVits(mPronunciation);
         mPhoneConverter = new VitsPhoneConverter(mModelConfig.phonemeIdMap);
 
         Log.v(LOG_TAG, "Onnx model loaded from assets/" + modelPath);
-        mVoice = voice;
+        sVoice = voice;
     }
 
     /**
@@ -101,7 +97,7 @@ public class TTSEngineOnnx  implements TTSEngine {
 
     private void createVitsModel(AssetManager asm, String modelPath, String configPath) {
         mOrtEnv = OrtEnvironment.getEnvironment();
-        mOrtOpts = new SessionOptions();
+        SessionOptions mOrtOpts = new SessionOptions();
 
         try {
             if (false && isNnapiSupported()) {
@@ -148,19 +144,26 @@ public class TTSEngineOnnx  implements TTSEngine {
     public byte[] SpeakToPCM(String ipas) {
         Log.i(LOG_TAG, "VITS voice generation");
         Instant startTime = Instant.now();
-        // split ipas to sentences by splitting at ".", "!", "?", ";", but we need to also
-        // exactly know, which punctuation symbol was used, so we add it to the sentence
+
         List<byte[]> pcmList = new ArrayList<>();
-        byte[] silence = AudioManager.generatePcmSilence(0.5f);
+        byte[] silence = AudioManager.generatePcmSilence(SENTENCE_PAUSE);
         List<String> sentences = new ArrayList<>();
-        Collections.addAll(sentences, ipas.split("(?<=[.!?;])"));
+
+        // split ipa's to sentences by splitting at punctuation; we also need to
+        // add the punctuation symbol at the end of a split sentence
+        Collections.addAll(sentences, ipas.split(SplitPunctuationSymbols));
+        long generatedPcmLength = 0;
         for (String sentence : sentences) {
+            Log.v(LOG_TAG, "VITS sentence: " + sentence.strip());
             byte[] pcmSentence = speakSentenceToPCM(sentence.strip());
             pcmList.add(pcmSentence);
+            generatedPcmLength += pcmSentence.length;
+            // add silence after each sentence, as the voice doesn't have any pauses
             pcmList.add(silence);
         }
-        // remove the last silence
+        // remove the last silence again
         pcmList.remove(pcmList.size()-1);
+
         // collect the size of all pcm buffers, create a new buffer with the size and copy all
         // pcm buffers into the new buffer
         int totalSize = 0;
@@ -174,9 +177,11 @@ public class TTSEngineOnnx  implements TTSEngine {
         byte[] pcm = buffer.array();
         Instant stopTime = Instant.now();
 
-        final long timeElapsed = Duration.between(startTime, stopTime).toMillis();
-        Log.i(LOG_TAG, "VITS voice generation ran for " + timeElapsed / 1000.0F + " secs, " +
-                pcm.length * 1000.0F / timeElapsed / GetNativeSampleRate() + " x real-time");
+        final float timeElapsed = Duration.between(startTime, stopTime).toMillis() / 1000.0F;
+        final long sampleSize = 2;
+        final long nSamples = generatedPcmLength / GetNativeSampleRate() / sampleSize;
+        Log.i(LOG_TAG, "VITS voice generation ran for " + timeElapsed + " secs, " +
+                nSamples / timeElapsed + " x real-time");
         return pcm;
     }
 
