@@ -145,7 +145,7 @@ public class AppRepository {
      */
     public void downloadVoiceAsync(Voice voice, DownloadVoiceManager.Observer finishedObserver) {
         // when the download is successful, the voice is updated in the database. This happens
-        // asynchonously.
+        // asynchronously.
         mDVM.downloadVoiceAsync(voice, finishedObserver, mVoiceDao);
     }
 
@@ -466,10 +466,10 @@ public class AppRepository {
         Log.v(LOG_TAG, "startNetworkTTS: " + item.getUuid());
         // map given voice to voiceId
         if (voice != null) {
-            final TTSObserver ttsObserver = new TTSObserver(pitch, speed, AudioManager.SAMPLE_RATE_WAV);
+            final TTSObserver ttsObserver = new TTSObserver(pitch, speed, mNetworkSpeakController.getNativeSampleRate());
             if (playIfAudioCacheHit(voice.internalName, voice.version, item, ttsObserver, ttsRequest)) return;
 
-            final String SampleRate = "" + AudioManager.SAMPLE_RATE_WAV;
+            final String SampleRate = "" + mNetworkSpeakController.getNativeSampleRate();
             final String normalized = item.getUtterance().getNormalized();
             if (normalized.trim().isEmpty()) {
                 Log.w(LOG_TAG, "startNetworkTTS: given text is whitespace only ?!");
@@ -529,8 +529,7 @@ public class AppRepository {
             e.printStackTrace();
             return null;
         }
-        return mTTSEngineController.StartSpeak(item, speed, pitch,
-                mTTSEngineController.getEngine().GetNativeSampleRate(), observer, getCurrentTTsRequest());
+        return mTTSEngineController.StartSpeak(item, speed, pitch, observer, getCurrentTTsRequest());
     }
 
     /**
@@ -585,6 +584,10 @@ public class AppRepository {
             }
         }
         return null;
+    }
+
+    public int getVoiceNativeSampleRate() {
+        return mTTSEngineController.getEngine().GetNativeSampleRate();
     }
 
     /**
@@ -795,6 +798,7 @@ public class AppRepository {
      */
     public void speakAssetFile(SynthesisCallback callback, String assetFilename) {
         Log.v(LOG_TAG, "playAssetFile: " + assetFilename);
+        final int SAMPLE_RATE_ASSETS = 22050;
         try {
             InputStream inputStream = App.getContext().getAssets().open(assetFilename);
             int size = inputStream.available();
@@ -803,7 +807,7 @@ public class AppRepository {
                 Log.w(LOG_TAG, "playAssetFile: not enough bytes ?");
             }
             // don't provide rawText: there are no speech marks to update
-            callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
+            callback.start(SAMPLE_RATE_ASSETS, AudioFormat.ENCODING_PCM_16BIT,
                     AudioManager.N_CHANNELS);
             feedBytesToSynthesisCallback(callback, buffer, "");
             callback.done();
@@ -850,7 +854,7 @@ public class AppRepository {
             final int bytesConsumed = Math.min(maxBytes, bytesLeft);
             if (callback.hasStarted()) {
                 // this feeds audio data to the callback, which will then be consumed by the TTS
-                // client. In case the current utterance is stopped(), all remaining audio data is
+                // client. In case the current utterance is stopped, all remaining audio data is
                 // consumed and discarded and afterwards TTSService.onStopped() is executed.
                 int cbStatus = callback.audioAvailable(buffer, offset, bytesConsumed);
                 switch(cbStatus) {

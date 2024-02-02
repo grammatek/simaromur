@@ -20,7 +20,6 @@ import com.grammatek.simaromur.network.ConnectionCheck;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -109,7 +108,7 @@ public class TTSService extends TextToSpeechService {
      * waiting for a TTSProcessingResult inside onSynthesizeText(). If afterwards the audio processing is
      * finished, the processing result is received and discarded, because the current utterance is
      * already finished and has changed.
-     *
+     * <p>
      * Note:  mandatory, don't synchronize this method !
      */
     @Override
@@ -156,7 +155,7 @@ public class TTSService extends TextToSpeechService {
                 loadedVoiceName = mRepository.getLoadedVoiceName();
             } else {
                 Log.w(LOG_TAG, "onSynthesizeText: couldn't load voice ("+voiceNameToLoad+")");
-                callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
+                callback.start(mRepository.getVoiceNativeSampleRate(), AudioFormat.ENCODING_PCM_16BIT,
                         AudioManager.N_CHANNELS);
                 callback.error(TextToSpeech.ERROR_SERVICE);
                 if (callback.hasStarted() && ! callback.hasFinished()) {
@@ -215,12 +214,12 @@ public class TTSService extends TextToSpeechService {
                     Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
                     return;
                 }
-                startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_WAV, true);
+                startSynthesisCallback(callback, mRepository.getVoiceNativeSampleRate(), true);
                 setSpeechMarksToBeginning(callback);
                 mRepository.startNetworkTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
                 break;
             case com.grammatek.simaromur.db.Voice.TYPE_ONNX:
-                startSynthesisCallback(callback, AudioManager.SAMPLE_RATE_ONNX, false);
+                startSynthesisCallback(callback, mRepository.getVoiceNativeSampleRate(), false);
                 setSpeechMarksToBeginning(callback);
                 mRepository.startDeviceTTS(voice, item, ttsRequest, speechrate / 100.0f, pitch / 100.0f);
                 break;
@@ -251,7 +250,7 @@ public class TTSService extends TextToSpeechService {
                 // todo: we need to handle timeout errors here, e.g. processing
                 //       timeouts, some error, e.g. network timeouts are already taken care of
                 TTSProcessingResult elem = mRepository.dequeueTTSProcessingResult();
-                float rtf = estimateRTF(startTime, System.currentTimeMillis(), item, elem);
+                float rtf = estimateRTF(startTime, System.currentTimeMillis(), elem);
                 Log.v(LOG_TAG, "estimateRTF: rtf=" + rtf);
                 if (rtf > 500.0f && !isCached) {
                     Log.w(LOG_TAG, "handleProcessingResult: rtf > 500.0f, something went wrong for the estimation");
@@ -320,11 +319,10 @@ public class TTSService extends TextToSpeechService {
      *
      * @param startTimeMillis   time when the processing started
      * @param stopTimeMillis    time when the processing stopped
-     * @param item              cache item
      * @param elem              processing result
      * @return the real time factor
      */
-    private float estimateRTF(long startTimeMillis, long stopTimeMillis, CacheItem item, TTSProcessingResult elem) {
+    private float estimateRTF(long startTimeMillis, long stopTimeMillis, TTSProcessingResult elem) {
         String uuid = elem.getTTSRequest().getCacheItemUuid();
         Log.v(LOG_TAG, "estimateRTF for: " + uuid);
 
@@ -336,7 +334,7 @@ public class TTSService extends TextToSpeechService {
         // assume currently slowest used sample rate, i.e. 16kHz and 16 bit with 1 channel
         // TODO: we should use the real sample rate here, but this needs to be passed via the
         //       TTSProcessingResult
-        final int sampleRate = AudioManager.SAMPLE_RATE_WAV;
+        final int sampleRate = mRepository.getVoiceNativeSampleRate();
         final int bytesPerSample = 2;
         final int channels = 1;
 
@@ -445,7 +443,7 @@ public class TTSService extends TextToSpeechService {
 
     /**
      * Signal TTS client a TTS error with given error code.
-     *
+     * <p>
      * The sequence for signalling an error seems to be important: callback.start(),
      * callback.error(), callback.done(). Any callback.audioAvailable() call after a callback.error()
      * is ignored.
@@ -455,7 +453,7 @@ public class TTSService extends TextToSpeechService {
      */
     private void signalTtsError(SynthesisCallback callback, int errorCode) {
         Log.w(LOG_TAG, "signalTtsError(): errorCode = " + errorCode);
-        callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
+        callback.start(mRepository.getVoiceNativeSampleRate(), AudioFormat.ENCODING_PCM_16BIT,
                 AudioManager.N_CHANNELS);
         callback.error(errorCode);
         callback.done();
@@ -467,12 +465,12 @@ public class TTSService extends TextToSpeechService {
      *
      * @param callback  TTS callback provided in the onSynthesizeText() callback
      */
-    private static void playSilence(SynthesisCallback callback) {
+    private void playSilence(SynthesisCallback callback) {
         Log.v(LOG_TAG, "playSilence() ...");
-        callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
-                    AudioManager.N_CHANNELS);
+        int sampleRate = mRepository.getVoiceNativeSampleRate();
+        callback.start(sampleRate, AudioFormat.ENCODING_PCM_16BIT, AudioManager.N_CHANNELS);
         setSpeechMarksToBeginning(callback);
-        byte[] silenceData = AudioManager.generatePcmSilence(0.25f);
+        byte[] silenceData = AudioManager.generatePcmSilence(0.25f, sampleRate);
         callback.audioAvailable(silenceData, 0, silenceData.length);
         if (! callback.hasFinished() && callback.hasStarted()) {
             callback.done();

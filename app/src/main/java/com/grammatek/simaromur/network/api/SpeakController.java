@@ -8,15 +8,14 @@ import static com.grammatek.simaromur.cache.SampleRate.SAMPLE_RATE_11KHZ;
 import static com.grammatek.simaromur.cache.SampleRate.SAMPLE_RATE_16KHZ;
 import static com.grammatek.simaromur.cache.SampleRate.SAMPLE_RATE_22KHZ;
 import static com.grammatek.simaromur.cache.SampleRate.SAMPLE_RATE_44_1KHZ;
+import static com.grammatek.simaromur.cache.SampleRate.SAMPLE_RATE_48KHZ;
 
 import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import com.grammatek.simaromur.App;
 import com.grammatek.simaromur.AppRepository;
 import com.grammatek.simaromur.TTSRequest;
-import com.grammatek.simaromur.TTSService;
 import com.grammatek.simaromur.audio.AudioObserver;
 import com.grammatek.simaromur.cache.AudioFormat;
 import com.grammatek.simaromur.cache.CacheItem;
@@ -25,7 +24,6 @@ import com.grammatek.simaromur.cache.SampleRate;
 import com.grammatek.simaromur.cache.Utterance;
 import com.grammatek.simaromur.cache.UtteranceCacheManager;
 import com.grammatek.simaromur.cache.VoiceAudioDescription;
-import com.grammatek.simaromur.db.VoiceDao;
 import com.grammatek.simaromur.network.api.pojo.SpeakRequest;
 
 import org.jetbrains.annotations.NotNull;
@@ -103,15 +101,43 @@ public class SpeakController implements Callback<ResponseBody> {
         byte[] voiceAudio = null;
 
         if (response.isSuccessful()) {
-            ResponseBody body = response.body();
-            assert body != null;
-            voiceAudio = body.bytes();
-            Log.v(LOG_TAG, "API returned data of size: " + voiceAudio.length);
+            try  (ResponseBody body = response.body()) {
+                if (body != null) {
+                    voiceAudio = body.bytes();
+                    Log.v(LOG_TAG, "API returned data of size: " + voiceAudio.length);
+                } else {
+                    Log.e(LOG_TAG, "API Error: no audio data returned");
+                }
+            } catch (IOException e) {
+                Log.e(LOG_TAG, "Exception: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
         else {
-            Log.e(LOG_TAG, "API Error: " + response.errorBody());
+            String errMsg;
+            try (ResponseBody errorBody = response.errorBody()) {
+                if (errorBody != null) {
+                    errMsg = errorBody.string();
+                    Log.e(LOG_TAG, "speak(): API Error: " + errMsg);
+                } else {
+                    Log.e(LOG_TAG, "speak(): API Error: unknown error reason");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                errMsg = e.getMessage();
+                Log.e(LOG_TAG, "speak(): Error occurred: " + errMsg);
+            }
         }
         return voiceAudio;
+    }
+
+    /**
+     * Returns the native sample rate of the voice model used for the network speak request.
+     *
+     * @return  native sample rate of the voice model
+     */
+    public int getNativeSampleRate() {
+        return 22050;
     }
 
     /**
@@ -150,17 +176,20 @@ public class SpeakController implements Callback<ResponseBody> {
                 mAudioObserver.error("Cannot deduct TTSRequest from network response", dummyRequest);
                 return;
             }
-            ResponseBody body = response.body();
-            assert (body != null);
-            try {
-                // @note: body.bytes() loads the whole response into memory
-                byte[] audioData = body.bytes();
-                Log.v(LOG_TAG, "API returned: " + audioData.length + " bytes for "
-                        + ttsRequest.serialize());
-                if (saveSpeechDataToCache(audioData, ttsRequest.getCacheItemUuid())) {
-                    mAudioObserver.update(audioData, ttsRequest);
+            try  (ResponseBody body = response.body()) {
+                if (body != null) {
+                    // @note: body.bytes() blocks & loads the whole response into memory
+                    byte[] audioData = body.bytes();
+                    Log.v(LOG_TAG, "API returned: " + audioData.length + " bytes for "
+                            + ttsRequest.serialize());
+                    if (saveSpeechDataToCache(audioData, ttsRequest.getCacheItemUuid())) {
+                        mAudioObserver.update(audioData, ttsRequest);
+                    } else {
+                        mAudioObserver.error("failed to save speech data", ttsRequest);
+                    }
                 } else {
-                    mAudioObserver.error("failed to save speech data", ttsRequest);
+                    Log.e(LOG_TAG, "API Error: no audio data returned");
+                    mAudioObserver.error("no audio data returned", ttsRequest);
                 }
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Exception: " + e.getMessage());
@@ -169,10 +198,12 @@ public class SpeakController implements Callback<ResponseBody> {
             }
         } else {
             String errMsg = null;
-            try {
-                if (response.errorBody() != null) {
-                    errMsg = response.errorBody().string();
+            try (ResponseBody errorBody = response.errorBody()) {
+                if (errorBody != null) {
+                    errMsg = errorBody.string();
                     Log.e(LOG_TAG, "API Error: " + errMsg);
+                } else {
+                    Log.e(LOG_TAG, "API Error: unknown error reason");
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -181,7 +212,7 @@ public class SpeakController implements Callback<ResponseBody> {
             // we couldn't retrieve the corresponding uuid from the response header, therefore we
             // need to use a dummy cache item uuid
             TTSRequest dummyRequest = new TTSRequest(AudioObserver.DUMMY_CACHEITEM_UUID);
-            Log.e(LOG_TAG, "onResponse: error occured: " + errMsg);
+            Log.e(LOG_TAG, "onResponse: error occurred: " + errMsg);
             mAudioObserver.error(errMsg, dummyRequest);
         }
         mCall = null;
@@ -229,7 +260,6 @@ public class SpeakController implements Callback<ResponseBody> {
                             Log.e(LOG_TAG, "Couldn't add audio to cache item " + item.getUuid());
                         }
                     }
-
                 } else {
                     Log.e(LOG_TAG, "onResponse(): No phonemes found in cache item "
                             + uuid + " ?!");
@@ -264,6 +294,9 @@ public class SpeakController implements Callback<ResponseBody> {
     private SampleRate getSampleRate() {
         SampleRate sampleRate = INVALID_SAMPLE_RATE;
         switch (mRequest.SampleRate) {
+            case "48000":
+                sampleRate = SAMPLE_RATE_48KHZ;
+                break;
             case "44100":
                 sampleRate = SAMPLE_RATE_44_1KHZ;
                 break;

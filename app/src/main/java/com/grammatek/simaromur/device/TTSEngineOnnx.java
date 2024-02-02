@@ -35,13 +35,13 @@ import ai.onnxruntime.OrtSession.SessionOptions.OptLevel;
 
 public class TTSEngineOnnx  implements TTSEngine {
     private final static String LOG_TAG = "Simaromur_" + TTSEngineOnnx.class.getSimpleName();
-    private final static int SAMPLE_RATE = 16000;
     private final static float SENTENCE_PAUSE = 0.5f;
     private static DeviceVoice sVoice = null;
     // matches a position preceded by any of the characters '.!?;' not followed by zero or
     // more whitespace characters ([\\s]*) and then a double quote (\").
-    final static  String SplitPunctuationSymbols = "(?<=[.!?;])(?![\\s]*\")";;
+    final static  String SplitPunctuationSymbols = "(?<=[.!?;])(?![\\s]*\")";
 
+    final byte[] mPauseSilence;
     private OrtEnvironment mOrtEnv;
     private OrtSession mOrtSession;
     private VitsConfig mModelConfig;
@@ -81,6 +81,13 @@ public class TTSEngineOnnx  implements TTSEngine {
             createVitsModel(asm, modelPath, configPath);
         }
         mPhoneConverter = new VitsPhoneConverter(mModelConfig.phonemeIdMap);
+
+        // check if sample rate of model is in a valid range between 11kHz and 48kHz
+        if (mModelConfig.audio.sampleRate < 11025 || mModelConfig.audio.sampleRate > 48000) {
+            throw new RuntimeException("Voice " + voice.Name + ": invalid sample rate " +
+                    mModelConfig.audio.sampleRate + " Hz");
+        }
+        mPauseSilence = AudioManager.generatePcmSilence(SENTENCE_PAUSE, GetNativeSampleRate());
 
         Log.v(LOG_TAG, "Onnx model loaded from assets/" + modelPath);
         sVoice = voice;
@@ -146,7 +153,6 @@ public class TTSEngineOnnx  implements TTSEngine {
         Instant startTime = Instant.now();
 
         List<byte[]> pcmList = new ArrayList<>();
-        byte[] silence = AudioManager.generatePcmSilence(SENTENCE_PAUSE);
         List<String> sentences = new ArrayList<>();
 
         // split ipa's to sentences by splitting at punctuation; we also need to
@@ -159,7 +165,7 @@ public class TTSEngineOnnx  implements TTSEngine {
             pcmList.add(pcmSentence);
             generatedPcmLength += pcmSentence.length;
             // add silence after each sentence, as the voice doesn't have any pauses
-            pcmList.add(silence);
+            pcmList.add(mPauseSilence);
         }
         // remove the last silence again
         pcmList.remove(pcmList.size()-1);
@@ -231,7 +237,7 @@ public class TTSEngineOnnx  implements TTSEngine {
 
     @Override
     public int GetNativeSampleRate() {
-        return SAMPLE_RATE;
+        return mModelConfig.audio.sampleRate;
     }
 
     public static class VitsPhoneConverter {
