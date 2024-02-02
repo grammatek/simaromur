@@ -2,6 +2,7 @@ package com.grammatek.simaromur.frontend;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * This class contains:
@@ -61,31 +62,30 @@ public class NumberHelper {
     public static final String[] TIME_SPORT_COLS = new String[] {FIRST_TEN, FIRST_ONE, BETWEEN_TEAMS, SECOND_TEN, SECOND_ONE};
 
     //1.234. or 1. or 12. or 123.
-    public static final String ORDINAL_THOUSAND_PTRN = "^([1-9]\\.?\\d{3}|[1-9]\\d{0,2})\\.$";
+    public static final Pattern ORDINAL_THOUSAND_PTRN = Pattern.compile("^([1-9]\\.?\\d{3}|[1-9]\\d{0,2})\\.$");
     public static final String ORDINAL_MILLION_PTRN = "^[1-9]\\d{0,2}\\.\\d{3}\\.$";
     public static final String ORDINAL_BIG_PTRN = "^[1-9]\\d{0,2}(\\.\\d{3}){2,3}\\.$";
 
     //1.234 or 1 or 12 or 123
-    public static final String CARDINAL_THOUSAND_PTRN = "^([1-9]\\.?\\d{3}|[1-9]\\d{0,2})$";
+    public static final Pattern CARDINAL_THOUSAND_PTRN = Pattern.compile("^([1-9]\\.?\\d{3}|[1-9]\\d{0,2})$");
     //1.234 or 12.345 or 123.456 or 123468
-    public static final String CARDINAL_MILLION_PTRN = "^[1-9]\\d{0,2}\\.?\\d{3}$";
-    public static final String CARDINAL_BIG_PTRN = "^[1-9]\\d{0,2}(\\.\\d{3}){2,3}$";
+    public static final Pattern CARDINAL_MILLION_PTRN = Pattern.compile("^[1-9]\\d{0,2}\\.?\\d{3}$");
+    public static final Pattern CARDINAL_BIG_PTRN = Pattern.compile("^[1-9]\\d{0,2}(\\.\\d{3}){2,3}$");
 
     //1.123,4 or 1232,4 or 123,4 or 12,42345 or 1,489
-    public static final String DECIMAL_THOUSAND_PTRN = "^([1-9]\\.?\\d{3}|[1-9]\\d{0,2}),\\d+$";
+    public static final Pattern DECIMAL_THOUSAND_PTRN = Pattern.compile("^([1-9]\\.?\\d{3}|[1-9]\\d{0,2}),\\d+$");
     public static final String DECIMAL_BIG_PTRN = "^[1-9]\\d{0,2}\\.?(\\d{3}){1,3},\\d+$";
 
     // 4/8 or ⅓ , etc.
-    public static final String FRACTION_PTRN = "^([1-9]\\d{0,2} ?)?([1-9]\\d*\\/([2-9]|[1-9]\\d+)|(½|⅓|⅔|¼|¾))$";
+    public static final Pattern FRACTION_PTRN = Pattern.compile("^([1-9]\\d{0,2} ?)?([1-9]\\d*\\/([2-9]|[1-9]\\d+)|(½|⅓|⅔|¼|¾))$");
     // 01:55 or 01.55
-    public static final String TIME_PTRN = "^(([01]?\\d|2[0-4])[:\\.][0-5]|0)\\d$";
+    public static final Pattern TIME_PTRN = Pattern.compile("^(([01]?\\d|2[0-4])[:\\.][0-5]|0)\\d$");
     public static final String SPORT_PTRN = "^(?!1\\/2)([1-9]\\d?\\/[1-9]\\d?)$";
 
-    public static final String LETTERS_PTRN = "^(?!^(RÚV|SPRON|\\-|\\.)$)[\\-\\.A-ZÁÐÉÍÓÚÝÞÆÖ_]+$";
+    public static final Pattern LETTERS_PTRN = Pattern.compile("^(?!^(RÚV|SPRON|\\-|\\.)$)[\\-\\.A-ZÁÐÉÍÓÚÝÞÆÖ_]+$");
     // original pattern, keep the line until we have tested that the above pattern works as expected
     //public static final String LETTERS_PTRN = "^(?!^(RÚV|SPRON|\\-|\\.)$)[\\-\\.A-ZÁÐÉÍÓÚÝÞÆÖ]{1,5}$";
     public static final String ROMAN_LETTERS_PTRN = "[IVXLCDM]{5,20}";
-
     public static final String SYMBOL_PTRN = "^[^A-ZÁÐÉÍÓÚÝÞÆÖa-záðéíóúýþæö\\d]$";
 
     public static final Map<String, String> DIGIT_NUMBERS = new HashMap<>();

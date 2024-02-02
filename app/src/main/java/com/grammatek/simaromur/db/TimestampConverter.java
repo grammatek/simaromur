@@ -24,7 +24,7 @@ public class TimestampConverter {
             try {
                 return df.parse(value);
             } catch (Exception e) {
-                e.printStackTrace();
+                // e.printStackTrace();
             }
         }
         // return current date, in case no valid date string has been provided

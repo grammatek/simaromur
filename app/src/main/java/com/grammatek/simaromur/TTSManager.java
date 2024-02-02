@@ -68,7 +68,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
      */
     @Override
     public void onInit(final int status) {
-        Log.v(LOG_TAG, "onInit: status: " + status);
+        Log.i(LOG_TAG, "onInit: status: " + status);
         if (status == TextToSpeech.SUCCESS) {
             mTtsClient.setLanguage(new Locale("isl", "ISL"));
         }

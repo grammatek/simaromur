@@ -49,6 +49,7 @@ public class TTSService extends TextToSpeechService {
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
         applyCachePolicy();
+        Log.i(LOG_TAG, "onCreate() finished");
     }
 
     private void applyCachePolicy() {
@@ -65,7 +66,7 @@ public class TTSService extends TextToSpeechService {
     // mandatory
     @Override
     protected int onIsLanguageAvailable(String language, String country, String variant) {
-        Log.v(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+")");
+        Log.i(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+")");
         if (variant.endsWith(ApiDbUtil.NET_VOICE_SUFFIX)) {
             if (!ConnectionCheck.isTTSServiceReachable()) {
                 Log.v(LOG_TAG, "onIsLanguageAvailable: TTS API NOT reachable");
@@ -73,7 +74,7 @@ public class TTSService extends TextToSpeechService {
             }
         }
         int rv = mRepository.isLanguageAvailable(language, country, variant);
-        Log.v(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+"): " + rv);
+        Log.i(LOG_TAG, "onIsLanguageAvailable("+language+","+country+","+variant+"): " + rv);
         return rv;
     }
 
@@ -81,7 +82,7 @@ public class TTSService extends TextToSpeechService {
     @Override
     protected String[] onGetLanguage() {
         // @todo: return currently set language as selected from the settings menu
-        Log.e(LOG_TAG, "onGetLanguage()");
+        Log.i(LOG_TAG, "onGetLanguage()");
         return new String[] {"isl", "ISL", ""};
     }
 
@@ -141,7 +142,7 @@ public class TTSService extends TextToSpeechService {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        Log.v(LOG_TAG, "onSynthesizeText: " + text);
+        Log.i(LOG_TAG, "onSynthesizeText: " + text);
         Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/" + country + "/" + variant
                 + "), callerUid: " + callerUid + " speed: " + speechrate + " pitch: " + pitch
                 + " bundle: " + params);
@@ -181,9 +182,9 @@ public class TTSService extends TextToSpeechService {
             return;
         }
         if (text.isEmpty()) {
-            Log.i(LOG_TAG, "onSynthesizeText: End of TTS session");
-            playSilence(callback);
+            //playSilence(callback);
             mShouldPlayNetworkError = true;
+            Log.i(LOG_TAG, "onSynthesizeText: End of TTS session");
             return;
         }
         // if cache item for text already exists: retrieve it, otherwise create a new cache
@@ -228,7 +229,7 @@ public class TTSService extends TextToSpeechService {
                 break;
         }
         handleProcessingResult(callback, item, ttsRequest, voice);
-        Log.v(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
+        Log.i(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
     }
 
     /**
@@ -475,6 +476,7 @@ public class TTSService extends TextToSpeechService {
         if (! callback.hasFinished() && callback.hasStarted()) {
             callback.done();
         }
+        Log.v(LOG_TAG, "playSilence() finished");
     }
 
     @Override
@@ -518,8 +520,8 @@ public class TTSService extends TextToSpeechService {
             Voice ttsVoice = new Voice(voice.name, voice.getLocale(), quality, latency,
                     needsNetwork, features);
             announcedVoiceList.add(ttsVoice);
-            Log.v(LOG_TAG, "onGetVoices: " + ttsVoice);
         }
+        Log.i(LOG_TAG, "onGetVoices: " + announcedVoiceList);
         return announcedVoiceList;
     }
 
@@ -529,7 +531,7 @@ public class TTSService extends TextToSpeechService {
         Log.i(LOG_TAG, "onIsValidVoiceName("+name+")");
         for (final com.grammatek.simaromur.db.Voice voice : mRepository.getCachedVoices()) {
             if (voice.name.equals(name)) {
-                Log.v(LOG_TAG, "voice name is valid");
+                Log.i(LOG_TAG, "onIsValidVoiceName: successful");
                 return TextToSpeech.SUCCESS;
             }
         }
@@ -550,7 +552,7 @@ public class TTSService extends TextToSpeechService {
         Log.i(LOG_TAG, "onLoadVoice("+name+")");
         if (onIsValidVoiceName(name) == TextToSpeech.SUCCESS) {
             if (TextToSpeech.SUCCESS == mRepository.loadVoice(name)) {
-                Log.v(LOG_TAG, "voice loading successful");
+                Log.i(LOG_TAG, "onLoadVoice successful");
                 return TextToSpeech.SUCCESS;
             }
         }

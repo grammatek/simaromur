@@ -277,6 +277,9 @@ public class TTSEngineOnnx  implements TTSEngine {
 
                 // add phoneme ids
                 for (String phoneme : phonemeList) {
+                    if (phoneme.isEmpty()) {
+                        continue;
+                    }
                     addPhonemeIdToList(phoneme, phonemeIdList);
                 }
                 if (!space_removed && !token.matches(PunctuationSymbols)) {
