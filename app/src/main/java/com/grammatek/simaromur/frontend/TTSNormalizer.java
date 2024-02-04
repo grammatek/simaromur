@@ -519,7 +519,7 @@ public class TTSNormalizer {
      * Initializes a map to hold the digit positions for a token, e.g.:
      * {token: {thousands: "", hundreds: "", dozens: "", ones: ""}}
      */
-    private Map<String, Map<String, String>> makeDict(String token, String[] columns) {
+    private Map<String, Map<String, String>> makeDict(String token, final String[] columns) {
         Map<String, Map<String, String>> valueDict = new HashMap<>();
         Map<String, String> innerMap = new HashMap<>();
         for (String s : columns)
@@ -528,33 +528,42 @@ public class TTSNormalizer {
         return valueDict;
     }
 
-    /*
+    /**
      * Fills a map that holds the digit positions for a token, e.g.:
-     * {"1983": {thousands: "", hundreds: "nítján hundruð", dozens: " áttatíu og", ones: "þrjú"}}
+     *      {"1983": {thousands: "", hundreds: "nítján hundruð", dozens: " áttatíu og", ones: "þrjú"}}
      * Returns a string combined of the values, e.g.: "nítján hundruð áttatíu og þrjú"
+     *
+     * @param token     the token to fill the dictionary for
+     * @param tag       the tag to fill the dictionary for
+     * @param tuples    the list of tuples to use for filling the dictionary
+     * @param typeDict  the dictionary to fill
+     * @param columns   the columns to fill in the dictionary
+     * @return         the string combined of the values
      */
-    private String fillDict(String token, String tag, List<CategoryTuple> tuples, Map<String, Map<String, String>> typeDict, String[] columns) {
+    private String fillDict(String token, String tag, final List<CategoryTuple> tuples, Map<String, Map<String, String>> typeDict, final String[] columns) {
         StringBuilder result = new StringBuilder();
 
-        for (int i = 0; i < tuples.size(); i++) {
-            String numberPattern = tuples.get(i).getNumberPattern();
-            String rule = tuples.get(i).getRule();
-            if (token.matches(".*" + numberPattern + ".*") && tag.matches(".*" + rule)) {
-                if (typeDict.containsKey(token)) {
-                    final String category = tuples.get(i).getCategory();
-                    if (typeDict.get(token).containsKey(category)) {
-                        Map<String, String> tmp = typeDict.get(token);
-                        tmp.put(category, tuples.get(i).getExpansion());
-                        // not really necessary, since the previous assignment updates the map in
-                        // typeDict, but this is more clear
-                        typeDict.put(token, tmp);
-                    }
-                }
+        Map<String, String> tokenMap = typeDict.get(token);
+        if (tokenMap == null) {
+            // this must have been done inside makeDict(), which needs to be called right before
+            // this method
+            throw new IllegalArgumentException("Token " + token + " not found in typeDict");
+        }
+
+        for (final CategoryTuple tuple : tuples) {
+            final Pattern numberPattern = tuple.getNumberPattern();
+            final Pattern rule = tuple.getRule();
+            if (numberPattern.matcher(token).matches() && rule.matcher(tag).matches()) {
+                tokenMap.put(tuple.getCategory(), tuple.getExpansion());
             }
         }
-        for (String s : columns)
-            result.append(typeDict.get(token).get(s));
 
+        for (final String column : columns) {
+            final String value = tokenMap.get(column);
+            if (value != null) {
+                result.append(value);
+            }
+        }
         return result.toString();
     }
 
