@@ -35,4 +35,23 @@ public class TokenizerTest {
         assertEquals("Leikurinn var annar leikur Njarðvíkur í 2. deild karla í knattspyrnu í sumar .", tokenized.get(0));
         assertEquals("Verkin hefur hún steypt úr lituðum pappírsmassa , sem hefur gert henni kleyft að nýta sýningarrými - og rými almennt - með nýjum hætti .", tokenized.get(1));
     }
+
+    @Test
+    public void tokenizerPercentTest() {
+        Tokenizer tok = new Tokenizer(context);
+        String input = "útvarpsgjald hækki um 3,5%.";
+        List<String> tokenized = tok.detectSentences(input);
+        assertEquals("útvarpsgjald hækki um 3,5 % .", tokenized.get(0));
+    }
+
+    @Test
+    public void tokenizerCommaSepTest() {
+        Tokenizer tok = new Tokenizer(context);
+        String input = "sjö ,p,k,r,s";
+        List<String> tokenized = tok.detectSentences(input);
+        assertEquals("sjö , p , k , r , s .", tokenized.get(0));
+        input = "14,1% íbúa";
+        tokenized = tok.detectSentences(input);
+        assertEquals("14,1 % íbúa .", tokenized.get(0));
+    }
 }

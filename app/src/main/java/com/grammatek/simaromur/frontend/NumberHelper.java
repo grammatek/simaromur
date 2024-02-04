@@ -82,7 +82,7 @@ public class NumberHelper {
     public static final Pattern TIME_PTRN = Pattern.compile("^(([01]?\\d|2[0-4])[:\\.][0-5]|0)\\d$");
     public static final String SPORT_PTRN = "^(?!1\\/2)([1-9]\\d?\\/[1-9]\\d?)$";
 
-    public static final Pattern LETTERS_PTRN = Pattern.compile("^(?!^(RÚV|SPRON|\\-|\\.)$)[\\-\\.A-ZÁÐÉÍÓÚÝÞÆÖ_]+$");
+    public static final Pattern LETTERS_PTRN = Pattern.compile("^(?!^(RÚV|SPRON|NATO|-|\\.)$)[\\-.A-ZÁÐÉÍÓÚÝÞÆÖ_]+$");
     // original pattern, keep the line until we have tested that the above pattern works as expected
     //public static final String LETTERS_PTRN = "^(?!^(RÚV|SPRON|\\-|\\.)$)[\\-\\.A-ZÁÐÉÍÓÚÝÞÆÖ]{1,5}$";
     public static final String ROMAN_LETTERS_PTRN = "[IVXLCDM]{5,20}";
@@ -105,7 +105,7 @@ public class NumberHelper {
         //DIGIT_NUMBERS.put("\\-", " #");
         DIGIT_NUMBERS.put("\\+", " plús");
         //TODO: if we have more sentences being normalized, this replaces end-of-sentence dot as well. We don't want that
-        // DIGIT_NUMBERS.put("\\.", " punktur");
+        DIGIT_NUMBERS.put("\\.", " punktur");
         DIGIT_NUMBERS.put(":", " tvípunktur");
         //TODO: converts normal sentence commas, ask what this is supposed to do
         //DIGIT_NUMBERS.put(",", " komma");

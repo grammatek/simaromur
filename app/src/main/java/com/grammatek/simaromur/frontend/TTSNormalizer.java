@@ -45,10 +45,10 @@ public class TTSNormalizer {
     public static String VOWELS = "[AEIOUYÁÉÍÓÚÝÖaeiouyáéíóúýö]";
     private static final Pattern DIGITS_PTRN = Pattern.compile(".*\\d.*", 0);
     private static final Pattern DIST_PTRN = Pattern.compile(".*\\b([pnµmcsdkN]?m|ft)(?![²2³3])\\.?\\b.*", 0);
-    private static final Pattern AREA_PTRN = Pattern.compile(".*(\\bha\\.?\\b).*|([pnµmcsdkf]?m\\b\\.?)|([pnµmcsdk]?m[²2³3]).*", 0);
+    private static final Pattern AREA_PTRN = Pattern.compile("(\\bha\\.?\\b.*)|([pnµmcsdkf\\s\\d]m\\.?\\b)|([pnµmcsdk]?m[²2³3])", 0);
     private static final Pattern VOL_PTRN = Pattern.compile(".*\\b[dcmµ]?[Ll]\\.?\\b.*", 0);
     private static final Pattern TIME_PTRN = Pattern.compile(".*\\b(klst|mín|m?s(ek)?)\\b.*", 0);
-    private static final Pattern CURRENCY_PTRN = Pattern.compile(".*(\\W|^)((ma?\\.?)?[Kk]r\\.?-?|C(HF|AD|ZK)|(DK|SE|NO)K|EUR|GBP|I[NS]K|JPY|PTE|(AU|US)D|mlj[óa]\\.?)((\\W|$)|[$£¥])(.*)", 0);
+    private static final Pattern CURRENCY_PTRN = Pattern.compile(".*(((ma?\\.?)?[Kk]r\\.?-?)|(C(HF|AD|ZK)|(DK|SE|NO)K|EUR|GBP|I(NR|SK)|JPY|PTE|(AU|US)D|mlj[óa]\\.?)|([$£¥€₹₤])).*", 0);
     private static final Pattern ELECTRONIC_PTRN = Pattern.compile(".*\\b([kMGT]?(V|Hz|B|W|W\\.?(st|h)))\\.?\\b.*", 0);
     private static final Pattern REST_PTRN = Pattern.compile(".*(%|\\b(stk|[Kk][Cc]al)\\.?\\b).*", 0);
     private static final Pattern HYPHEN_PTRN = Pattern.compile(".*-.*", 0);
@@ -105,7 +105,7 @@ public class TTSNormalizer {
         if (DIST_PTRN.matcher(normalized).matches()) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.getDistanceDict());
         }
-        if (AREA_PTRN.matcher(normalized).matches()) {
+        if (AREA_PTRN.matcher(normalized).find()) {
             normalized = replaceFromDict(normalized, NormalizationDictionaries.getAreaDict());
         }
         if (VOL_PTRN.matcher(normalized).matches()) {

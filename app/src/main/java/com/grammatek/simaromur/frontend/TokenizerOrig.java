@@ -3,10 +3,8 @@ package com.grammatek.simaromur.frontend;
 import android.content.Context;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * The Tokenizer is a basic white space tokenizer, that takes abbreviations and digits into account,
@@ -17,61 +15,17 @@ import java.util.regex.Pattern;
  * c. determine end of sentence (EOS) with the help of context (see detectSentences)
  * d. collect sentences in a list to return
  */
-public class Tokenizer {
+public class TokenizerOrig {
     public static final String EOS_SYMBOLS = "[.:?!;]";
 
     private final Set<String> mAbbreviations;
     private final Set<String> mAbbreviationsNonending;
 
-    private final String mAlphabeticRaw = "[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ]+";
-    private final Pattern mAlphabetic = Pattern.compile(mAlphabeticRaw);
-    private final Pattern mAlphabeticExt = Pattern.compile(".*[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ]+.*|.*\\d+.*");
-    private final Pattern mUpperCase = Pattern.compile("[A-ZÁÉÍÓÚÝÐÞÆÖ]");
-    private final Pattern mLowerCase = Pattern.compile("[a-záéíóúýðþæö]");
-    private final String mWordChars = "[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ\\d.µ]";
-    private final Pattern mWordChar = Pattern.compile(mWordChars);
-    private final Pattern mEOS = Pattern.compile("[.:?!;]");
+    private final String mAlphabetic = "[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ]+";
+    private final String mUpperCase = "[A-ZÁÉÍÓÚÝÐÞÆÖ]";
 
-    private final Pattern mFinalDot = Pattern.compile("[^\\s]\\.");
-    private final Pattern mEnclosingParenthesis = Pattern.compile("(\\()(.+)(\\))");
-    private final Pattern mOpenParenthesis = Pattern.compile("(\\()");
-    private final Pattern mClosingParenthesis = Pattern.compile("(?<=[^:;])(\\))");
 
-    private final Pattern mInsertSpaceAfterAnywhere = Pattern.compile("([(\\[{\\-/_+]|[.]{2,})");
-    private final Pattern mInsertSpaceBeforeAnywhere = Pattern.compile("([)\\]}\\-/_%+!?]|[.]{2,})");
-    private final Pattern mInsertSpaceAround = Pattern.compile("(\")");
-    private final Pattern mInsertSpaceIfDigit = Pattern.compile("(.*)(')(\\d+)");
-    private final Pattern mInsertSpaceIfChar = Pattern.compile("(,)(\\D)");
-    private final Pattern mInsertSpaceBeforeIfEnd = Pattern.compile("(.+)([\":;,.!?])$");
-    private final Pattern mInsertSpaceBeforeIfEndAndPunct = Pattern.compile("(.+)([\":;,.!?)])(\\s[\":;,.!?)])$");
-
-    private final Pattern mYearAtEOS = Pattern.compile("(1\\d{3})|(20\\d{2})\\.");
-    private final Pattern mSimpleCardinalOrdinal = Pattern.compile("\\d+\\.?");
-    private final Pattern mComplexDigitsPunct = Pattern.compile("(\\d+[.,:]\\d+)+[,.%]?");
-
-    private final Pattern mTelephone = Pattern.compile("\\d{3}-\\d{4}[,.?:;]?");
-    private final Pattern mKennitala = Pattern.compile("\\d{6}-\\d{4}[,.?:;]?");
-
-    private final Pattern mNegativeNumber = Pattern.compile("-\\d+.*");
-    private final Pattern mDigitsMultipleHyphens = Pattern.compile("(\\d+-){2,}\\d+");
-    private final Pattern mHyphenAlphabetic = Pattern.compile("[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ]{1,2}-[A-Za-záéíóúýðþæöÁÉÍÓÚÝÐÞÆÖ]+");
-    private final Pattern mSlashDates = Pattern.compile("([0-9]|[0-2][0-9]|3[01])/(0?[1-9]|1[0-2])/\\d{2,4}");
-    private final Pattern mSlashSmallNumbers = Pattern.compile(mWordChars + "{1,3}/" + mWordChars + "{1,3}");
-    private final Pattern mSpecialCases = Pattern.compile("(millj./)|(.+/klst)|(.+/kwst)|" +
-            "(.+/gwst)|(.+/gw\\.st)|(.+/mwst)|(.+/twst)|(.+/m²)|(.+/m³)|(.+/mm²)|(.+/mm³)|(.+/cm²)|(.+/cm³)|(.+/ferm)");
-    private final Pattern mSmileys = Pattern.compile("(:\\))|(:\\()|(;\\))");
-    private final Pattern mWebPattern = Pattern.compile("(www)|(http)|@");
-    private final Pattern mHTMLEntities = Pattern.compile("&.+;");
-    private final Pattern mClosingTags = Pattern.compile("</.+>");
-    private final Pattern mUppercaseAbbrev = Pattern.compile("([A-ZÁÉÍÓÚÝÐÞÆÖ]\\.)+");
-
-    private final Pattern mDate = Pattern.compile("([0-9]|[0-2][0-9]|3[01])\\. (Jan.*|Feb.*|Mar.*|Apr.*|Maí|Jún.*|Júl.*|Ág.*|Sep.*|Okt.*|Nóv.*|Des.*)");
-
-    private final Pattern mMultipleSpaces = Pattern.compile("\\s{2,}");
-
-    private final List<Character> mDetachAtEnd = Arrays.asList(',', '\"');
-
-    public Tokenizer(Context context) {
+    public TokenizerOrig(Context context) {
         Abbreviations abbr = new Abbreviations(context);
         mAbbreviations = abbr.getAbbreviations();
         mAbbreviationsNonending = abbr.getNonEndingAbbr();
@@ -99,7 +53,7 @@ public class Tokenizer {
                 continue;
             String tokenized = t;
             // we don't need to do anything with alphabetic-only tokens
-            if (!mAlphabetic.matcher(t).matches()) {
+            if (!t.matches(mAlphabetic)) {
                 tokenized = processSpecialCharacters(t.trim());
             }
             sb = checkLastToken(sentences, sb, lastToken, tokenized);
@@ -123,7 +77,6 @@ public class Tokenizer {
         // we might still have a dangling last token
         if (!lastToken.isEmpty()) {
             String sent = ensureFullStop(sb, lastToken);
-            sent = mMultipleSpaces.matcher(sent).replaceAll(" ");
             sentences.add(sent);
             sb = new StringBuilder();
         }
@@ -131,7 +84,6 @@ public class Tokenizer {
         // collect the last tokens into a sentence and return
         if (!sb.toString().trim().isEmpty()) {
             String lastSentence = sb.toString().trim();
-            lastSentence = mMultipleSpaces.matcher(lastSentence).replaceAll(" ");
             if (!lastSentence.matches(".*" + mAlphabetic + ".*|.*\\d+.*") && !sentences.isEmpty()) {
                 // we don't want to add a sentence only consisting of symbols, do we?
                 // rather add to last sentence, was probably a mistake to finish that one
@@ -139,9 +91,9 @@ public class Tokenizer {
                 sent = sent + " " + lastSentence;
                 sentences.set(sentences.size() - 1, sent);
             } else if (!Character.toString(lastSentence.charAt(lastSentence.length() - 1)).matches(EOS_SYMBOLS))
-                sentences.add(lastSentence + " .");
+                sentences.add(sb.toString().trim() + " .");
             else
-                sentences.add(lastSentence.trim());
+                sentences.add(sb.toString().trim());
         }
     }
 
@@ -229,13 +181,8 @@ public class Tokenizer {
 
         // first, check if we need to process the token, several categories do not need
         // further processing, just return the token as is:
-        if (!shouldProcess(token)) {
-            token = mOpenParenthesis.matcher(token).replaceAll("$1 ");
-            token = mClosingParenthesis.matcher(token).replaceAll(" $1");
-            token = token.replaceAll("%", " %");
-            token = separateFinalSymbols(token);
+        if (!shouldProcess(token))
             return token;
-        }
 
         // for all kinds of punctuation we need to insert spaces at the correct positions
         // Patterns
@@ -245,41 +192,24 @@ public class Tokenizer {
         final String swapDotDoubleQuote = "(\\.)\"";
         // Matches a comma followed by a double quote
         final String swapCommaDoubleQuote = "(,)\"";
+        // Matches all kinds of opening parentheses and some punctuation
+        // Example: "text in (parenthesis)" "a,b,c"
+        final String insertSpaceAfterAnywhere = "([(\\[{\\-_,\"?!])";
+        // Matches all kinds of closing parentheses and some punctuation
+        // Example: "text in (parenthesis)" "a,b,c"
+        final String insertSpaceBeforeAnywhere = "([)\\]}\\-_,\"?!])";
+        // Matches a token ending with ':' or '.'. We don't want to interfere with tokens
+        // containing these chars within, that is the task of the normalizer, e.g. urls, etc.
+        final String insertSpaceBeforeIfEnd = "(.+)([:.])$";
 
         // replacements
         processedToken = processedToken.replaceAll(swapDotDoubleQuote, "\".");
         processedToken = processedToken.replaceAll(swapCommaDoubleQuote, "\",");
-        processedToken = mInsertSpaceAfterAnywhere.matcher(processedToken).replaceAll("$1 ");
-        processedToken = mInsertSpaceBeforeAnywhere.matcher(processedToken).replaceAll(" $1");
-        processedToken = mInsertSpaceBeforeIfEnd.matcher(processedToken).replaceAll("$1 $2");
-        processedToken = mInsertSpaceBeforeIfEndAndPunct.matcher(processedToken).replaceAll("$1 $2$3");
-        processedToken = mInsertSpaceAround.matcher(processedToken).replaceAll(" $1 ");
-        processedToken = mInsertSpaceIfDigit.matcher(processedToken).replaceAll("$1 $2 $3");
-        processedToken = mInsertSpaceIfChar.matcher(processedToken).replaceAll(" $1 $2 ");
+        processedToken = processedToken.replaceAll(insertSpaceAfterAnywhere, "$1 ");
+        processedToken = processedToken.replaceAll(insertSpaceBeforeAnywhere, " $1");
+        processedToken = processedToken.replaceAll(insertSpaceBeforeIfEnd, "$1" + " " + "$2");
 
         return processedToken.replaceAll("\\s+", " ").trim();
-    }
-
-    private String separateFinalSymbols(String token) {
-        // Make sure we insert a space between the symbols in DETACH_AT_END if one or more of them are
-        // at the end of a token.
-
-        String resToken = token;
-        int counter = token.length() - 1;
-        boolean lastChar = true;
-        for (int i = counter; i >= 0; i--) {
-            if (!mDetachAtEnd.contains(token.charAt(i)))
-                break;
-            else {
-                String tmpTok = resToken.substring(0, counter) + " " + token.charAt(i);
-                if (!lastChar)
-                    tmpTok = tmpTok + resToken.substring(counter + 1);
-                lastChar = false;
-                resToken = tmpTok;
-                counter--;
-            }
-        }
-        return resToken;
     }
 
     /* We assume 'token' contains some non-alphabetic characters and we test
@@ -291,33 +221,16 @@ public class Tokenizer {
         if (token.length() <= 1)
             return false;
         // a simple cardinal or ordinal number
-        if (mSimpleCardinalOrdinal.matcher(token).matches())
+        if (token.matches("\\d+\\.?"))
             return false;
         // a more complex combination of digits and punctuations, e.g. dates and large numbers
-        if (mComplexDigitsPunct.matcher(token).matches())
+        if (token.matches("(\\d+[.,:]\\d+)+[,.]?%?"))
             return false;
         // telephone number, don't split on hyphen
-        if (mTelephone.matcher(token).matches())
+        if (token.matches("\\d{3}-?\\d{4}"))
             return false;
-        if (mKennitala.matcher(token).matches())
-            return false;
-        if (mNegativeNumber.matcher(token).matches())
-            return false;
-        if (mDigitsMultipleHyphens.matcher(token).matches())
-            return false;
-        if (mHyphenAlphabetic.matcher(token).matches())
-            return false;
-        if (token.equals("og/eða"))
-            return true;
-        if (mSlashSmallNumbers.matcher(token).matches())
-            return false;
-        if (mSpecialCases.matcher(token).matches())
-            return false;
-        if (mSmileys.matcher(token).matches())
-            return false;
-        if (mWebPattern.matcher(token).matches())
-            return false;
-        if (mHTMLEntities.matcher(token).matches())
+        // don't touch urls, they might contain '-' which we otherwise split on
+        if (token.startsWith("http") || token.startsWith("www"))
             return false;
         if (isAbbreviation(token))
             return false;
@@ -334,4 +247,3 @@ public class Tokenizer {
         return mAbbreviationsNonending.contains(token.toLowerCase());
     }
 }
-
