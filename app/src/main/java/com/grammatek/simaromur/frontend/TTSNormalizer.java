@@ -375,14 +375,13 @@ public class TTSNormalizer {
         return String.join(" ", normalizedItems);
     }
 
-    private List<String> insertSymbols(String[] items, String token) {
-        /*
+    /*
         Insert the symbols again that were used to split on.
         Approach: for each item in list, extract the next char from the original text. If we encounter an empty
         item after the first one, ignore (multiple symbols in a row cause the split string to contain
         empty elements.) We check the first one, since a pattern might start with a symbol (e.g. #hashtag)
-         */
-
+     */
+    private List<String> insertSymbols(String[] items, String token) {
         List<String> linkItems = new ArrayList<>();
         int currInd = 0;
         for (String item : items) {
@@ -398,15 +397,13 @@ public class TTSNormalizer {
         }
         return linkItems;
     }
-
+    /*
+      Normalize the items in the items list, skip 'http(s)' and 'www' and the following symbols, spell out
+      tokens that do not contain a vowel, replace digits one by one, replace symbols with their names.
+      Returns a list of normalized items.
+     */
     List<String> normalizeWlinkItems(List<String> items) {
-        /*
-        Normalize the items in the items list, skip 'http(s)' and 'www' and the following symbols, spell out
-        tokens that do not contain a vowel, replace digits one by one, replace symbols with their names.
-        Returns a list of normalized items.
-         */
         List<String> normalizedItems = new ArrayList<>();
-
         boolean skipNext = false;
         for (String item : items) {
             if (skipNext) {
