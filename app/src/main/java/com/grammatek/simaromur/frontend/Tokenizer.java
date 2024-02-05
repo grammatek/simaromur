@@ -315,7 +315,7 @@ public class Tokenizer {
             return false;
         if (mSmileys.matcher(token).matches())
             return false;
-        if (mWebPattern.matcher(token).matches())
+        if (mWebPattern.matcher(token).find())
             return false;
         if (mHTMLEntities.matcher(token).matches())
             return false;

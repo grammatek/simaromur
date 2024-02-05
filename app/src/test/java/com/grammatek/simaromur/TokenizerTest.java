@@ -54,4 +54,12 @@ public class TokenizerTest {
         tokenized = tok.detectSentences(input);
         assertEquals("14,1 % íbúa .", tokenized.get(0));
     }
+
+    @Test
+    public void tokenizerURLTest() {
+        Tokenizer tok = new Tokenizer(context);
+        String input = "https://www.mbl.is/frettir/ .";
+        List<String> tokenized = tok.detectSentences(input);
+        assertEquals(input, tokenized.get(0));
+    }
 }

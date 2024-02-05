@@ -42,7 +42,7 @@ public class TTSNormalizer {
     private final List<CategoryTuple> DecimalThousandsTupleList = Stream.of(OnesThousandsCardinalTupleList, DecimalThousandTuples.getTuples())
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
-    public static String VOWELS = "[AEIOUYÁÉÍÓÚÝÖaeiouyáéíóúýö]";
+    public static final Pattern VOWELS = Pattern.compile("[AEIOUYÁÉÍÓÚÝÖaeiouyáéíóúýö]");
     private static final Pattern DIGITS_PTRN = Pattern.compile(".*\\d.*", 0);
     private static final Pattern DIST_PTRN = Pattern.compile(".*\\b([pnµmcsdkN]?m|ft)(?![²2³3])\\.?\\b.*", 0);
     private static final Pattern AREA_PTRN = Pattern.compile("(\\bha\\.?\\b.*)|([pnµmcsdkf\\s\\d]m\\.?\\b)|([pnµmcsdk]?m[²2³3])", 0);
@@ -63,7 +63,8 @@ public class TTSNormalizer {
     private static final Pattern DIGIT_LEAD_ZERO_PTRN = Pattern.compile("^0\\d\\.$");
     private static final Pattern URL_PTRN = Pattern.compile("https?://.+");
 
-
+    private static final List<String> SEPARATORS = Arrays.asList("", ".", "/", ":");
+    private static final List<String> LINK_ELEMS = Arrays.asList("http", "https", "www");
     // Max length of a token that should be spelled out, even if it contains a vowel.
     // Do we have examples of longer tokens?
     public static final Integer MAX_SPELLED_OUT = 4;
@@ -368,23 +369,69 @@ public class TTSNormalizer {
      *  - twitter and instagram handles (containing '@')
      */
     private String normalizeURL(String token) {
-        String normalized = "";
-        // analyse a URL or e-mail pattern
-        if (token.indexOf('.') > 0) {
-            normalized = processTokenWithDots(token);
+        String[] linkItemsTmp = token.split("[:./_\\-@#]");
+        List<String> linkItems = insertSymbols(linkItemsTmp, token);
+        List<String> normalizedItems = normalizeWlinkItems(linkItems);
+        return String.join(" ", normalizedItems);
+    }
+
+    private List<String> insertSymbols(String[] items, String token) {
+        /*
+        Insert the symbols again that were used to split on.
+        Approach: for each item in list, extract the next char from the original text. If we encounter an empty
+        item after the first one, ignore (multiple symbols in a row cause the split string to contain
+        empty elements.) We check the first one, since a pattern might start with a symbol (e.g. #hashtag)
+         */
+
+        List<String> linkItems = new ArrayList<>();
+        int currInd = 0;
+        for (String item : items) {
+            if (item.isEmpty() && currInd > 0)
+                continue;
+            int itemInd = token.indexOf(item, currInd);
+            linkItems.add(item);
+            if (token.length() > itemInd + item.length() + 1) {
+                String symbol = token.substring(itemInd + item.length(), itemInd + item.length() + 1);
+                linkItems.add(symbol);
+            }
+            currInd += item.length();
         }
-        else
-            normalized = token;
-        // don't pronounce the last "slash" at the end of a URL
-        // "mbl.is/frettir/" becomes "m b l punktur is skástrik fréttir"
-        if (normalized.endsWith("/"))
-            normalized = normalized.substring(0, normalized.length() - 1);
-        // replace symbols that might be left in the normalized string
+        return linkItems;
+    }
+
+    List<String> normalizeWlinkItems(List<String> items) {
+        /*
+        Normalize the items in the items list, skip 'http(s)' and 'www' and the following symbols, spell out
+        tokens that do not contain a vowel, replace digits one by one, replace symbols with their names.
+        Returns a list of normalized items.
+         */
+        List<String> normalizedItems = new ArrayList<>();
+
+        boolean skipNext = false;
+        for (String item : items) {
+            if (skipNext) {
+                if (SEPARATORS.contains(item))
+                    continue;
+                else
+                    skipNext = false;
+            }
+            if (LINK_ELEMS.contains(item)) {
+                skipNext = true;
+                continue;
+            }
+            String normalized = replaceWlinkSymbols(item);
+            // check if the item should be spelled out or spoken as a word, process and add to items
+            normalizedItems.add(processLettersPattern(normalized));
+        }
+        return normalizedItems;
+    }
+
+    private String replaceWlinkSymbols(String item) {
         for (String symbol : NumberHelper.WLINK_NUMBERS.keySet()) {
-            normalized = normalized.replaceAll(symbol,
+            item = item.replaceAll(symbol,
                     " " + NumberHelper.WLINK_NUMBERS.get(symbol) + " ");
         }
-        return normalized;
+        return item;
     }
 
     @NonNull
@@ -460,11 +507,13 @@ public class TTSNormalizer {
      * spoken as a word, otherwise spelled out
      */
     private boolean pronounceAsWord(String token) {
-        Pattern vowelPattern = Pattern.compile(VOWELS);
-        Matcher matcher = vowelPattern.matcher(token);
         double count = 0.0;
-        while (matcher.find())
+        List<String> matches = new ArrayList<>();
+        Matcher matcher = VOWELS.matcher(token);
+        while (matcher.find()) {
+            matches.add(matcher.group());
             count++;
+        }
 
         // Somewhat arbitrary ratio, we have an example like 'Busch' with a vowel-consonant
         // ratio of 0.2 where we definitely want to keep the token as is.

@@ -28,12 +28,12 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "íbúðin er 145 fm";
+        String input = "www.mbl.is/frettir";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
 
-        assertEquals("íbúðin er hundrað fjörutíu og fimm fermetrar .",
+        assertEquals("m b l punktur is skástrik frettir .",
                 processed);
     }
 
@@ -144,15 +144,15 @@ public class NormalizationManagerTest {
 
     private Map<String, String> getNewTestSentences() {
         Map<String, String> sent = new HashMap<>();
-        //sent.put("https://www.mbl.is/frettir/", "m b l punktur is skástrik fréttir .");
+        sent.put("https://www.mbl.is/frettir/", "m b l punktur is skástrik frettir .");
         sent.put("www.karfan.is", "karfan punktur is .");
-        sent.put("www.visir.is", "vísir punktur is .");
-        //sent.put("https://vedur.is/skjalftar-og-eldgos/jardskjalftar", "veður punktur is skástrik skjálftar og eldgos skástrik jarðskjálftar .");
+        sent.put("www.visir.is", "visir punktur is .");
+        sent.put("https://vedur.is/skjalftar-og-eldgos/jardskjalftar", "vedur punktur is skástrik skjalftar bandstrik og bandstrik eldgos skástrik jardskjalftar .");
         sent.put("anna@grammatek.com", "anna hjá grammatek punktur com .");
         sent.put("renna út úr dölunum.ELDFJALLAFRÆÐI OG NÁTTÚRUVÁRHÓPUR HÍ", "renna út úr " +
                 "dölunum punktur eldfjallafræði og náttúruvárhópur h í .");
         sent.put("kynnast því á dögunum.INSTAGRAM/@anniethorisdottir", "kynnast því á dögunum " +
-                "punktur instagram skástrik hjá anniethorisdottir .");
+                "punktur instagram skástrik anniethorisdottir .");
         sent.put("Mörk Ómars á EM:", "mörk ómars á e m :");
         sent.put("til áramóta 2021/2022", "til áramóta tvö þúsund tuttugu og eitt skástrik tvö þúsund tuttugu og tvö .");
         sent.put("© grammatek", "höfundarréttur grammatek .");
@@ -169,6 +169,7 @@ public class NormalizationManagerTest {
     private Map<String, String> getV14TestSentences() {
         // test sentences added for the deployment of v1.4
         Map<String, String> sent = new HashMap<>();
+        sent.put("íbúðin er 145 fm", "íbúðin er hundrað fjörutíu og fimm fermetrar .");
         sent.put("margir með ADHD", "margir með a d h d .");
         sent.put("Má áætla að þriðji stóri íþróttaviðburðurinn sem horft hafi verið til sé EM " +
                         "í handbolta sem fór fram nú í janúar.",
@@ -285,12 +286,12 @@ public class NormalizationManagerTest {
                 "Hollenska fjárfestingafyrirtækið EsBro hyggst reisa fimmtán hektarar <sil> hundrað og fimmtíu þúsund fermetrar <sil> gróðurhús til framleiðslu á tómötum .".toLowerCase());
         //testSentences.put("Við Lindarhvamm í Hafnarfirði er að finna 134 fm efri sérhæð og ris í snyrtilegu tvíbýlishúsi sem reist var árið 1963.",
         //        "við lindarhvamm í hafnarfirði er að finna hundrað þrjátíu og fjögur fermetrar efri sérhæð og ris í snyrtilegu tvíbýlishúsi sem reist var árið nítján hundruð sextíu og þrjú .".toLowerCase());
-        testSentences.put("Mynd / elg@vf.is", "Mynd skástrik elg hjá v f punktur is .".toLowerCase());
+        testSentences.put("Mynd / elg@vf.is", "Mynd skástrik e l g hjá v f punktur is .".toLowerCase());
         testSentences.put("hefur leikið sjö leiki með U-21 árs liðinu.", "hefur leikið sjö leiki með U - tuttugu og eins árs liðinu .".toLowerCase());
         testSentences.put("er þetta í 23. skiptið sem mótið er haldið .", "er þetta í tuttugasta og þriðja skiptið sem mótið er haldið .".toLowerCase());
-        //testSentences.put("Skráning er hafin á http://keflavik.is/fimleikar/ og ef eitthvað er óljóst er hægt að hafa samband í síma 421-6368 eða á fimleikar@keflavik.is",
-        //        "Skráning er hafin á keflavík punktur is skástrik ".toLowerCase()  +
-        //                "fimleikar og ef eitthvað er óljóst er hægt að hafa samband í síma fjórir tveir einn- sex þrír sex átta eða á fimleikar hjá keflavík punktur is .".toLowerCase());
+        testSentences.put("Skráning er hafin á http://keflavik.is/fimleikar/ og ef eitthvað er óljóst er hægt að hafa samband í síma 421-6368 eða á fimleikar@keflavik.is",
+                "Skráning er hafin á keflavik punktur is skástrik ".toLowerCase()  +
+                        "fimleikar og ef eitthvað er óljóst er hægt að hafa samband í síma fjórir tveir einn- sex þrír sex átta eða á fimleikar hjá keflavik punktur is .".toLowerCase());
         testSentences.put("Austlæg átt, 5-13 m/s síðdegis.", "Austlæg átt , fimm til þrettán metrar á sekúndu síðdegis .".toLowerCase());
         testSentences.put("hlutfallið á Vestfjörðum þar sem 14,1% íbúa eru innflytjendur",
                 "hlutfallið á Vestfjörðum þar sem fjórtán komma eitt prósent íbúa eru innflytjendur .".toLowerCase());
