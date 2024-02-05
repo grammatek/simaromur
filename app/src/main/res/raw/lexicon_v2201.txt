@@ -49,7 +49,6 @@ addi
 address
 adds
 adebayor
-adhd
 adidas
 adolf
 adolfs
@@ -7848,7 +7847,6 @@ elísabetar
 elísabetu
 elísdóttir
 elísson
-em
 embla
 embætta
 embætti

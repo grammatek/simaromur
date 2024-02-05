@@ -3,8 +3,6 @@ package com.grammatek.simaromur.frontend;
 import android.content.Context;
 import android.util.Log;
 
-import com.grammatek.simaromur.device.SymbolsLvLIs;
-
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 
@@ -76,7 +74,7 @@ public class NormalizationManager {
             String[] tags = tagText(preNormalized);
             // preNormalized is tokenized as string, so we know splitting on whitespace will give
             // us the correct tokens according to the tokenizer
-            String postNormalized = mTTSNormalizer.postNormalize(preNormalized.split(" "), tags);
+            String postNormalized = mTTSNormalizer.postNormalize(preNormalized.split("\\s+"), tags);
             normalized.add(postNormalized);
         }
 
@@ -101,7 +99,7 @@ public class NormalizationManager {
      */
     private String[] tagText(final String text) {
         String[] tags;
-        String[] tokens = text.split(" ");
+        String[] tokens = text.split("\\s+");
 
         // optimization: if there are no numbers in the text, we can skip the pos-tagging
         // and return a list of dummy tags that just contain "§" for each token

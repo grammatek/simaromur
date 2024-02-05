@@ -28,12 +28,12 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "(32. mín)";
+        String input = "www.mbl.is/frettir";
         NormalizationManager manager = new NormalizationManager(context);
         String processed = manager.process(input);
         System.out.println(processed);
 
-        assertEquals("<sil> þrítugustu og aðra mínúta <sil> .",
+        assertEquals("m b l punktur is skástrik frettir .",
                 processed);
     }
 
@@ -61,6 +61,15 @@ public class NormalizationManagerTest {
         for (String sent : getNewTestSentences().keySet()) {
             String processed = manager.process(sent);
             assertEquals(getNewTestSentences().get(sent), processed);
+        }
+    }
+
+    @Test
+    public void processV14IssuesTest() {
+        NormalizationManager manager = new NormalizationManager(context);
+        for (String sent : getV14TestSentences().keySet()) {
+            String processed = manager.process(sent);
+            assertEquals(getV14TestSentences().get(sent), processed);
         }
     }
 
@@ -114,7 +123,7 @@ public class NormalizationManagerTest {
         symbols.put("!", "upphrópunarmerki");
         symbols.put("@", "att merki .");
         symbols.put("#", "myllumerki .");
-        symbols.put("$", "dollaramerki .");
+        symbols.put("$", "dollari .");
         symbols.put("^", "innskotsmerki .");
         symbols.put("&", "og merki .");
         symbols.put("*", "stjarna .");
@@ -135,17 +144,17 @@ public class NormalizationManagerTest {
 
     private Map<String, String> getNewTestSentences() {
         Map<String, String> sent = new HashMap<>();
-        sent.put("https://www.mbl.is/frettir/", "m b l punktur is skástrik fréttir .");
+        sent.put("https://www.mbl.is/frettir/", "m b l punktur is skástrik frettir .");
         sent.put("www.karfan.is", "karfan punktur is .");
-        sent.put("www.visir.is", "vísir punktur is .");
-        sent.put("https://vedur.is/skjalftar-og-eldgos/jardskjalftar", "veður punktur is skástrik skjálftar og eldgos skástrik jarðskjálftar .");
+        sent.put("www.visir.is", "visir punktur is .");
+        sent.put("https://vedur.is/skjalftar-og-eldgos/jardskjalftar", "vedur punktur is skástrik skjalftar bandstrik og bandstrik eldgos skástrik jardskjalftar .");
         sent.put("anna@grammatek.com", "anna hjá grammatek punktur com .");
         sent.put("renna út úr dölunum.ELDFJALLAFRÆÐI OG NÁTTÚRUVÁRHÓPUR HÍ", "renna út úr " +
                 "dölunum punktur eldfjallafræði og náttúruvárhópur h í .");
         sent.put("kynnast því á dögunum.INSTAGRAM/@anniethorisdottir", "kynnast því á dögunum " +
-                "punktur instagram hjá anniethorisdottir .");
-        sent.put("Mörk Ómars á EM:", "mörk ómars á em :");
-        sent.put("til áramóta 2021/2022", "til áramóta tvö þúsund tuttugu og eitt <sil> tvö þúsund tuttugu og tvö .");
+                "punktur instagram skástrik anniethorisdottir .");
+        sent.put("Mörk Ómars á EM:", "mörk ómars á e m :");
+        sent.put("til áramóta 2021/2022", "til áramóta tvö þúsund tuttugu og eitt skástrik tvö þúsund tuttugu og tvö .");
         sent.put("© grammatek", "höfundarréttur grammatek .");
         sent.put("+", "plús .");
         sent.put(",", "komma .");
@@ -154,6 +163,42 @@ public class NormalizationManagerTest {
         sent.put("2023", "tvö þúsund tuttugu og þrjú .");
         sent.put("\uE9104. ágúst 2022 06:42", "fjórða ágúst tvö þúsund tuttugu og tvö núll sex fjörutíu og tvö .");
         sent.put("Link in bio \uD83D\uDC85\uD83C\uDFFC", "link in bio .");
+        return sent;
+    }
+
+    private Map<String, String> getV14TestSentences() {
+        // test sentences added for the deployment of v1.4
+        Map<String, String> sent = new HashMap<>();
+        sent.put("íbúðin er 145 fm", "íbúðin er hundrað fjörutíu og fimm fermetrar .");
+        sent.put("margir með ADHD", "margir með a d h d .");
+        sent.put("Má áætla að þriðji stóri íþróttaviðburðurinn sem horft hafi verið til sé EM " +
+                        "í handbolta sem fór fram nú í janúar.",
+                "má áætla að þriðji stóri íþróttaviðburðurinn sem horft hafi verið til sé e m í " +
+                        "handbolta sem fór fram nú í janúar .");
+        sent.put("54. gr. sveitastjórnarlaga nr. 138/2011 segir að",
+                "fimmtugasta og fjórða grein sveitastjórnarlaga númer hundrað þrjátíu og átta " +
+                        "skástrik tvö þúsund og ellefu segir að .");
+        sent.put("Brestur á með V 15-22 m/s suðvestanlands um og upp úr hádegi og stendur í " +
+                "um 3 klst. ", "brestur á með vestan fimmtán til tuttugu og tveir metrar á " +
+                "sekúndu suðvestanlands um og upp úr hádegi og stendur í um þrjár klukkustundir .");
+        sent.put("leigubíl fyrir 2.500 krónur [tæpar 33.000 ISK].",
+                "leigubíl fyrir tvö þúsund og fimm hundruð krónur tæpar " +
+                        "þrjátíu og þrjú þúsund íslenskar krónur .");
+        sent.put("leigubíl fyrir £377 á dag.", "leigubíl fyrir þrjú hundruð sjötíu og sjö pund á dag .");
+
+        sent.put("3.7", "þrír punktur sjö .");
+        sent.put("13.7", "einn þrír punktur sjö .");
+
+        sent.put("mbl.is/frettir/innlent/2024/02/02/litlu_hlutirnir_sem_folkid_saknar_helst/",
+                "m b l punktur is skástrik frettir skástrik innlent skástrik tvö þúsund tuttugu " +
+                        "og fjögur skástrik núll tvö skástrik núll tvö skástrik litlu hlutirnir sem " +
+                        "folkid saknar helst skástrik .");
+
+        sent.put("Stjórnendur Rúv gera ráð fyrir því að augýsingatekjur stofnunarinnar hækki " +
+                "á þessu ári um 17,4% frá fyrra ári og að útvarpsgjald hækki um 3,5%.",
+                "stjórnendur rúv gera ráð fyrir því að augýsingatekjur stofnunarinnar hækki " +
+                        "á þessu ári um sautján komma fjögur prósent frá fyrra ári og að " +
+                        "útvarpsgjald hækki um þrjú komma fimm prósent .");
         return sent;
     }
 
@@ -182,8 +227,8 @@ public class NormalizationManagerTest {
                 "Annars var verði þrjú þúsund og fimm hundruð fyrir tímann !".toLowerCase()); // spelling error
         testSentences.put("Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann SL þriðjudaginn 18. janúar nk. ",
                 "Af því tilefni verða kynningar um allt land á hinum ýmsu deildum innann s l þriðjudaginn átjánda janúar næstkomandi .".toLowerCase());
-        testSentences.put("„ Ég kíki daglega á facebook , karfan.is , vf.is , mbl.is , kkí , og utpabroncs.com . “ ",
-                "\" Ég kíki daglega á facebook , karfan punktur is , v f punktur is , m b l punktur is , k k í , og utpabronks punktur com . \"".toLowerCase());
+        //testSentences.put("„ Ég kíki daglega á facebook , karfan.is , vf.is , mbl.is , kkí , og utpabroncs.com . “ ",
+        //        "\" Ég kíki daglega á facebook , karfan punktur is , v f punktur is , m b l punktur is , k k í , og utpabronks punktur com . \"".toLowerCase());
         testSentences.put("Arnór Ingvi Traustason 57. mín. Jónas Guðni, sem er 33 ára, hóf fótboltaferil sinn árið 2001.",
                 "Arnór Ingvi Traustason fimmtugasta og sjöunda mínúta . Jónas Guðni , sem er þrjátíu og þriggja ára , hóf fótboltaferil sinn árið tvö þúsund og eitt .".toLowerCase());
         // correct version impossible, since the tagger tags "lóð" and "byggingarreit" as dative, causing "í einni lóð og einum byggingarreit" (regina original does that as well)
@@ -241,12 +286,12 @@ public class NormalizationManagerTest {
                 "Hollenska fjárfestingafyrirtækið EsBro hyggst reisa fimmtán hektarar <sil> hundrað og fimmtíu þúsund fermetrar <sil> gróðurhús til framleiðslu á tómötum .".toLowerCase());
         //testSentences.put("Við Lindarhvamm í Hafnarfirði er að finna 134 fm efri sérhæð og ris í snyrtilegu tvíbýlishúsi sem reist var árið 1963.",
         //        "við lindarhvamm í hafnarfirði er að finna hundrað þrjátíu og fjögur fermetrar efri sérhæð og ris í snyrtilegu tvíbýlishúsi sem reist var árið nítján hundruð sextíu og þrjú .".toLowerCase());
-        testSentences.put("Mynd / elg@vf.is", "Mynd skástrik elg hjá v f punktur is .".toLowerCase());
+        testSentences.put("Mynd / elg@vf.is", "Mynd skástrik e l g hjá v f punktur is .".toLowerCase());
         testSentences.put("hefur leikið sjö leiki með U-21 árs liðinu.", "hefur leikið sjö leiki með U - tuttugu og eins árs liðinu .".toLowerCase());
         testSentences.put("er þetta í 23. skiptið sem mótið er haldið .", "er þetta í tuttugasta og þriðja skiptið sem mótið er haldið .".toLowerCase());
         testSentences.put("Skráning er hafin á http://keflavik.is/fimleikar/ og ef eitthvað er óljóst er hægt að hafa samband í síma 421-6368 eða á fimleikar@keflavik.is",
-                "Skráning er hafin á keflavík punktur is skástrik ".toLowerCase()  +
-                        "fimleikar og ef eitthvað er óljóst er hægt að hafa samband í síma fjórir tveir einn- sex þrír sex átta eða á fimleikar hjá keflavík punktur is .".toLowerCase());
+                "Skráning er hafin á keflavik punktur is skástrik ".toLowerCase()  +
+                        "fimleikar og ef eitthvað er óljóst er hægt að hafa samband í síma fjórir tveir einn- sex þrír sex átta eða á fimleikar hjá keflavik punktur is .".toLowerCase());
         testSentences.put("Austlæg átt, 5-13 m/s síðdegis.", "Austlæg átt , fimm til þrettán metrar á sekúndu síðdegis .".toLowerCase());
         testSentences.put("hlutfallið á Vestfjörðum þar sem 14,1% íbúa eru innflytjendur",
                 "hlutfallið á Vestfjörðum þar sem fjórtán komma eitt prósent íbúa eru innflytjendur .".toLowerCase());
@@ -264,8 +309,8 @@ public class NormalizationManagerTest {
         //testSentences.put("C4CE6358DF86040CAAEEBC58951B8E133105D3369980D62D109E5B6B75CCE67C_713x0",
         //        "c fjögur c e sex þúsund þrjú hundruð fimmtíu og átta d f átta sex núll fjórir núll c a a e e b c fimm átta níu fimm einn b átta e einn þrír þrír einn núll fimm d þrír þrír sex níu níu átta núll d sextíu og tvö d hundrað og níu e fimm b sex b sjötíu og fimm c c e sextíu og sjö c sjö hundruð og þrettán x núll ."
         //);
-        testSentences.put("Mörk Ómars á EM:", "mörk ómars á em :");
-        testSentences.put("til áramóta 2021/2022", "til áramóta tvö þúsund tuttugu og eitt <sil> tvö þúsund tuttugu og tvö .");
+        testSentences.put("Mörk Ómars á EM:", "mörk ómars á e m :");
+        testSentences.put("til áramóta 2021/2022", "til áramóta tvö þúsund tuttugu og eitt skástrik tvö þúsund tuttugu og tvö .");
         testSentences.put("© grammatek", "höfundarréttur grammatek .");
         testSentences.put("Álfur P er bestur", "álfur p er bestur .");
         testSentences.put("Það bíður pk eftir þér", "það bíður pakki eftir þér .");

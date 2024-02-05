@@ -269,7 +269,7 @@ public class NormalizationDictionaries {
         abbreviationDict.put(Pattern.compile(BOS + "([Rr]slm" + DOT_ONE_NONE + ")" + EOS, flags), "$1rannsóknarlögreglumaður$3");
         abbreviationDict.put(Pattern.compile(BOS + "([Rr]ví?k|RVÍ?K)" + EOS, flags), "$1Reykjavík$3");
 
-        abbreviationDict.put(Pattern.compile(BOS + "(([Ss]íma)?nr" + DOT_ONE_NONE + ")", flags), "$13xnúmer ");
+        abbreviationDict.put(Pattern.compile(BOS + "(([Ss]íma)?nr" + DOT_ONE_NONE + ")", flags), "$1númer ");
         abbreviationDict.put(Pattern.compile(BOS + "([Ss]"+ DOT_ONE_NONE + ")(:| \\d{3}\\-?\\d{4}|\\d{7})" + EOS, flags), "$1sími$3$4");
         abbreviationDict.put(Pattern.compile(BOS + "([Ss]br" + DOT_ONE_NONE + ")" + EOS, flags), "$1samanber$3");
         abbreviationDict.put(Pattern.compile(BOS + "([Ss]" + DOT_ONE_NONE + "l" + DOT_ONE_NONE + "|SL" + DOT + ")" + EOS, flags), "síðastliðinn");
@@ -352,6 +352,14 @@ public class NormalizationDictionaries {
         directionDict.put(Pattern.compile(BOS + "(S-(:?(til|lands|átt|verðu|vert)))" + EOS, flags), "$1sunnan$4");
         directionDict.put(Pattern.compile(BOS + "(V-(:?(til|lands|átt|verðu|vert)))" + EOS, flags), "$1vestan$4");
         directionDict.put(Pattern.compile(BOS + "(N-(:?(til|lands|átt|verðu|vert)))" + EOS, flags), "$1norðan$4");
+        directionDict.put(Pattern.compile(BOS + "(SV)( \\d\\d?)" + EOS, flags), "$1suðvestan$3$4");
+        directionDict.put(Pattern.compile(BOS + "(NV)( \\d\\d?)" + EOS, flags), "$1norðvestan$3$4");
+        directionDict.put(Pattern.compile(BOS + "(NA)( \\d\\d?)" + EOS, flags), "$1norðaustan$3$4");
+        directionDict.put(Pattern.compile(BOS + "(SA)( \\d\\d?)" + EOS, flags), "$1suðaustan$3$4");
+        directionDict.put(Pattern.compile(BOS + "(A)( \\d\\d?)" + EOS, flags), "$1austan$3$4");
+        directionDict.put(Pattern.compile(BOS + "(S)( \\d\\d?)" + EOS, flags), "$1sunnan$3$4");
+        directionDict.put(Pattern.compile(BOS + "(V)( \\d\\d?)" + EOS, flags), "$1vestan$3$4");
+        directionDict.put(Pattern.compile(BOS + "(N)( \\d\\d?)" + EOS, flags), "$1norðan$3$4");
     }
 
     public static final Map<Pattern, String> denominatorDict = new HashMap<>();
@@ -455,6 +463,12 @@ public class NormalizationDictionaries {
         // put("3", "rúm");
     }};
 
+    private static final Map<String, String> dimensionBefore = new HashMap<>() {{
+        put("f", "fer");
+        put("fer", "fer");
+        put("rúm", "rúm");
+    }};
+
     public static final Map<Pattern, String> areaDict = new HashMap<>();
     // TODO: missing explicit tests !!
     public static Map<Pattern, String> getAreaDict() {
@@ -476,6 +490,7 @@ public class NormalizationDictionaries {
             put("d", "desi");
             put("k", "kíló");
             put("f", "fer");
+            put("rúm", "rúm");
             //TODO: also píkó, nanó, míkró, njúton, in original regina
         }};
 
@@ -495,6 +510,23 @@ public class NormalizationDictionaries {
                 areaDict.put(Pattern.compile("([02-9] )" + letter + "m" + superscript + "(\\W|$)", flags), "$1" + dimensionAfter.get(superscript) + prefixMeterDimension.get(letter) + "metrar$2");
                 areaDict.put(Pattern.compile("([02-9]|" + patternSelection.get(AMOUNT) + ") " + letter + "m" + superscript + "(\\W|$)", flags), "$1 " + dimensionAfter.get(superscript) + prefixMeterDimension.get(letter) + "metrar $3");
             }
+        }
+        for (String letter : prefixMeterDimension.keySet()) {
+
+                areaDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_DAT_GEN_COMB) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1)) " + letter + "m" + EOS + ")", flags),
+                        "$1 " + prefixMeterDimension.get(letter) + "metra$14");
+                areaDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_GEN) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) " + letter + "m" + EOS, flags),
+                        "$1 " + prefixMeterDimension.get(letter) + "metra$12");
+                areaDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_GEN) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)?) " + patternSelection.get(AMOUNT) + " " + letter + "m" + EOS, flags),
+                        "$1 $13 " + prefixMeterDimension.get(letter) + "metra$16");
+                areaDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) " + letter + "m" + EOS, flags),
+                        "$1 " + prefixMeterDimension.get(letter) + "metrum$10");
+                areaDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)?) " + patternSelection.get(AMOUNT) + " " + letter + "m" + EOS, flags),
+                        "$1 1$1 " + prefixMeterDimension.get(letter) + "metrum$14");
+                areaDict.put(Pattern.compile("(1 )" + letter + "m" + EOS, flags), "$1" + prefixMeterDimension.get(letter) + "metri$2");
+                areaDict.put(Pattern.compile("([02-9] )" + letter + "m" + EOS, flags), "$1" + prefixMeterDimension.get(letter) + "metrar$2");
+                areaDict.put(Pattern.compile("([02-9]|" + patternSelection.get(AMOUNT) + ") " + letter + "m" + EOS, flags), "$1 " + prefixMeterDimension.get(letter) + "metrar $3");
+
         }
         return areaDict;
 
@@ -568,7 +600,7 @@ public class NormalizationDictionaries {
         timeDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) klst\\.?(\\W|$)", flags), "$1 klukkustunda$10");
         timeDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)?) " + patternSelection.get(AMOUNT) + " klst\\.?(\\W|$)", flags), "$1 1$1 klukkustunda$14");
         timeDict.put(Pattern.compile("(1 )klst\\.?(\\W|$)", flags), "$1 klukkustund$2");
-        timeDict.put(Pattern.compile("(\\W|^)klst\\.?(\\W|$)", flags), "$1klukkustundir$2x");
+        timeDict.put(Pattern.compile("(\\W|^)klst\\.?(\\W|$)", flags), "$1klukkustundir$2");
 
         final Map<String, String> prefixTime = new HashMap<>() {{
             put("mín()?", "mínút");
@@ -602,24 +634,106 @@ public class NormalizationDictionaries {
             return currencyDict;
         int flags = 0;
         // krónur:
-        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) kr\\.?\\-? ?((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 6x krónum$15");
-        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ")) kr\\.?\\-? ?((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 6xkróna$15");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) kr\\.?-? ?((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 6x krónum$15");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ")) kr\\.?-? ?((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 6xkróna$15");
         currencyDict.put(Pattern.compile("(\\W|^)[Kk]r\\.? ?((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 2x krónur$11");
-        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_DAT_GEN_COMB) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))) ?kr\\.?\\-?" + EOS, flags), "$1 krónu$14");
-        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_DAT_GEN_COMB) + ")) kr\\.?\\-? ?((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))" + EOS, flags), "$1 10x krónu$14");
-        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) kr\\.?\\-?" + EOS, flags), "$1 krónum$10");
-        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ") kr\\.?\\-?" + EOS, flags), "$1 8xkrónum$14");
-        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) kr\\.?\\-? ?((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1 9x krónum$10");
-        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) kr\\.?\\-?" + EOS, flags), "$1 króna$10");
-        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ") kr\\.?\\-?" + EOS, flags), "$1 8xkróna$14");
-        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ")) kr\\.?\\-? ?((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1 9x króna$10");
-        currencyDict.put(Pattern.compile("(1 ?)kr\\.?\\-?(\\W|$)", flags), "$1króna$2");
-        currencyDict.put(Pattern.compile("([02-9]|" + patternSelection.get(AMOUNT) + ") ?kr\\.?\\-?(\\W|$)", flags), "$1 krónur $3");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_DAT_GEN_COMB) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))) ?kr\\.?-?" + EOS, flags), "$1 krónu$14");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_DAT_GEN_COMB) + ")) kr\\.?-? ?((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))" + EOS, flags), "$1 10x krónu$14");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) kr\\.?-?" + EOS, flags), "$1 krónum$10");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ") kr\\.?-?" + EOS, flags), "$1 8xkrónum$14");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) kr\\.?-? ?((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1 9x krónum$10");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) kr\\.?-?" + EOS, flags), "$1 króna$10");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ") kr\\.?-?" + EOS, flags), "$1 8xkróna$14");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ")) kr\\.?-? ?((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1 9x króna$10");
+        currencyDict.put(Pattern.compile("(1 ?)kr\\.?-?(\\W|$)", flags), "$1króna$2");
+        currencyDict.put(Pattern.compile("([02-9]|" + patternSelection.get(AMOUNT) + ") ?kr\\.?-?" + EOS, flags), "$1 krónur $3");
         // is this an error? (2 times group 2)
         //currencyDict.put(Pattern.compile("(\\W|^)[Kk]r\\.? ?(\\d)", flags), "$12x krónur$2");
         currencyDict.put(Pattern.compile("(\\W|^)[Kk]r\\.? ?(\\d)", flags), "$1krónur $2");
 
-        //TODO: MUCH more here! other currencies, etc.
+
+        // dollars ($)
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_GEN) + ")) \\$((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $8 dollara$17");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) \\$((((\\d{1,2}\\.)?(\\d{3}\\.?)*|}\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $6 dollurum$15");
+        currencyDict.put(Pattern.compile("(\\W|^)\\$((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $2 dollarar$11");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_DAT_GEN_COMB) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))) ?\\$" + EOS, flags), "$1 dollara$14");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_DAT_GEN_COMB) + ")) \\$((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))" + EOS, flags), "$1 $10 dollara$14");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_GEN) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) ?\\$" + EOS, flags), "$1 dollara$12");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_GEN) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)?) " + patternSelection.get(AMOUNT) + " ?\\$" + EOS, flags), "$1 $13 dollara$16");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_GEN) + ")) \\$((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1 $11 dollara$12");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) ?\\$" + EOS, flags), "$1 dollurum$10");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)?) " + patternSelection.get(AMOUNT) + " ?\\$" + EOS, flags), "$1 $11 dollurum$14");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) \\$((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1 $9 dollurum$10");
+        currencyDict.put(Pattern.compile("(1 ?)\\$" + EOS, flags), "$1 dollari$2");
+        currencyDict.put(Pattern.compile("([02-9]|" + patternSelection.get(AMOUNT) + ") ?\\$" + EOS, flags), "$1 dollarar$2");
+        currencyDict.put(Pattern.compile("(\\W|^) ?\\$((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))" + EOS, flags), "$1$2 dollari$6");
+        currencyDict.put(Pattern.compile("(\\W|^) ?\\$((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1$2 dollarar$6");
+        currencyDict.put(Pattern.compile("(\\W|^)\\$" + EOS, flags), "$1dollari$2");
+
+        // pounds (£)
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) £((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $6 pundum$15");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ")) £((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $6 punda$15");
+        currencyDict.put(Pattern.compile("(\\W|^)£((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + "?)" + EOS, flags), "$1 $2 pund$11");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))) ?£" + EOS, flags), "$1 pundi$10");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) £((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))" + EOS, flags), "$1 $6 pundi$10");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))) ?£" + EOS, flags), "$1 punds$10");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ")) £((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))" + EOS, flags), "$1 $6 punds$10");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) ?£" + EOS, flags), "$1 pundum$10");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ") ?£" + EOS, flags), "$1 $8pundum$14");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) £((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1 $9 pundum$10");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) ?£" + EOS, flags), "$1 punda$10");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ") ?£" + EOS, flags), "$1 $8punda$14");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ")) £((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1 $9 punda$10");
+        currencyDict.put(Pattern.compile("(\\W|^) ?£(((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)" + EOS, flags), "$1$2 pund$7");
+        currencyDict.put(Pattern.compile("(\\W|^)£" + EOS, flags), "$1pund$2");
+
+        // Yen (¥) - TODO
+
+        // Euro (€), ( add later if needed: Ruble and Turkish lira : ₹ and ₤ )
+        Map<String, String> currencyList = new HashMap<>();
+        currencyList.put("evr", "€");
+        //currencyList.put("rúpí", "₹");
+        //currencyList.put("lír", "₤");
+        for (String word : currencyList.keySet()) {
+            currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) " + currencyList.get(word) + "((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $6 " + word + "um$15");
+            currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ")) " + currencyList.get(word) + "((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $6 " + word + "a$15");
+            currencyDict.put(Pattern.compile("(\\W|^)" + currencyList.get(word) + "((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $2 " + word + "ur$11");
+            currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_DAT_GEN_COMB) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))) ?" + currencyList.get(word) + EOS, flags), "$1 " + word + "u$14");
+            currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_DAT_GEN_COMB) + ")) " + currencyList.get(word) + "((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))" + EOS, flags), "$1 $10 " + word + "u$14");
+            currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) ?" + currencyList.get(word) + EOS, flags), "$1 " + word + "um$10");
+            currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ") ?" + currencyList.get(word) + EOS, flags), "$1 $8" + word + "um$14");
+            currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) " + currencyList.get(word) + "((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1 $9 " + word + "um$10");
+            currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))) ?" + currencyList.get(word) + EOS, flags), "$1 " + word + "a$10");
+            currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ") (((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ") ?" + currencyList.get(word) + EOS, flags), "$1 $8" + word + "a$14");
+            currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(GEN) + ")) " + currencyList.get(word) + "((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1 $9 " + word + "a$10");
+            currencyDict.put(Pattern.compile("(1 ?)" + currencyList.get(word) + EOS, flags), "$1 " + word + "a$2");
+            currencyDict.put(Pattern.compile("([02-9]|" + patternSelection.get(AMOUNT) + ") ?" + currencyList.get(word) + EOS, flags), "$1 " + word + "ur$2");
+            currencyDict.put(Pattern.compile("(\\W|^) ?" + currencyList.get(word) + "((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))" + EOS, flags), "$1$2 " + word + "a$6");
+            currencyDict.put(Pattern.compile("(\\W|^) ?" + currencyList.get(word) + "((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*[02-9]|\\d,\\d*[02-9]))" + EOS, flags), "$1$2 " + word + "a$6");
+            currencyDict.put(Pattern.compile("(\\W|^)" + currencyList.get(word) + EOS, flags), "$1" + word + "ur$2");
+        }
+
+        Map<String, String> currencyLetters = new HashMap<>();
+        currencyLetters.put("ISK", "íslenskar krónur");
+        currencyLetters.put("GBP", "sterlingspund");
+        currencyLetters.put("EUR", "evrur");
+        currencyLetters.put("USD", "bandaríkjadalir");
+        currencyLetters.put("DKK", "danskar krónur");
+        currencyLetters.put("AUD", "ástralskir dalir");
+        currencyLetters.put("JPY", "japanskt jen");
+        currencyLetters.put("CHF", "svissneskir frankar");
+        currencyLetters.put("CAD", "kanadískir dalir");
+        currencyLetters.put("CZK", "tékkneskar krónur");
+        currencyLetters.put("INR", "indverskar rúpíur");
+        currencyLetters.put("SEK", "sænskar krónur");
+        currencyLetters.put("NOK", "norskar krónur");
+        currencyLetters.put("PTE", "portúgalskir skútar");
+
+        for (String letters : currencyLetters.keySet()) {
+            currencyDict.put(Pattern.compile("(\\W|^)" + letters + EOS, flags), "$1 " + currencyLetters.get(letters) + "$2");
+        }
+
+        // TODO: million-list and billion-list
 
         return currencyDict;
     }
@@ -664,15 +778,15 @@ public class NormalizationDictionaries {
     public static final Map<Pattern, String> restDict = new HashMap<>();
     static {
         int flags = 0;
-        restDict.put(Pattern.compile("(" + BOS + "(" + prepositions.get(DAT) + ") (" + NUMBER_EOS_1 + ")) ?\\%" + EOS, flags), "$1 prósenti$9"); // changed from group 10 to 9 ( in the next entries as well)
-        restDict.put(Pattern.compile("(" + BOS + "(" + prepositions.get(GEN) + ") (" + NUMBER_EOS_1 + ")) ?\\%" + EOS, flags), "$1 prósents$9");
-        restDict.put(Pattern.compile("(" + BOS + "(" + prepositions.get(DAT) + ") (" + NUMBER_EOS_NOT_1 + ") ?\\%" + EOS, flags), "$1 prósentum$9");
+        restDict.put(Pattern.compile("(" + BOS + "(" + prepositions.get(DAT) + ") (" + NUMBER_EOS_1 + ")) ?%" + EOS, flags), "$1 prósenti$9"); // changed from group 10 to 9 ( in the next entries as well)
+        restDict.put(Pattern.compile("(" + BOS + "(" + prepositions.get(GEN) + ") (" + NUMBER_EOS_1 + ")) ?%" + EOS, flags), "$1 prósents$9");
+        restDict.put(Pattern.compile("(" + BOS + "(" + prepositions.get(DAT) + ") (" + NUMBER_EOS_NOT_1 + ") ?%" + EOS, flags), "$1 prósentum$9");
         restDict.put(Pattern.compile("(" + BOS + "(" + prepositions.get(DAT) + ") (" + NUMBER_ANY + ") " + patternSelection.get(AMOUNT)
-                + ")\\%" + EOS, flags), "$1 1$1 prósentum$14");
-        restDict.put(Pattern.compile("(" + BOS + "(" + prepositions.get(GEN) + ") (" + NUMBER_EOS_NOT_1 + ") ?\\%" + EOS, flags), "$1 prósenta$8"); // changed from 10 to 8
+                + ")%" + EOS, flags), "$1 1$1 prósentum$14");
+        restDict.put(Pattern.compile("(" + BOS + "(" + prepositions.get(GEN) + ") (" + NUMBER_EOS_NOT_1 + ") ?%" + EOS, flags), "$1 prósenta$8"); // changed from 10 to 8
         restDict.put(Pattern.compile("(" + BOS + "(" + prepositions.get(GEN) + ") (" + NUMBER_ANY + ") " + patternSelection.get(AMOUNT)
-                + ")\\%" + EOS, flags), "$1 1$1 prósenta$14");
-        restDict.put(Pattern.compile("\\%", flags), " prósent");
+                + ")%" + EOS, flags), "$1 1$1 prósenta$14");
+        restDict.put(Pattern.compile("%", flags), "prósent");
     }
 
     // TODO: unused !! missing explicit tests !!
