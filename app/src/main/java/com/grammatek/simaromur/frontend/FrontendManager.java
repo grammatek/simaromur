@@ -24,9 +24,9 @@ public class FrontendManager {
     private PronunciationVits mPronunciationVits = null;
 
     public FrontendManager(Context context) {
-        mNormalizationManager = new NormalizationManager(context);
         mPronunciation = new Pronunciation(context);
         mPronunciationVits = new PronunciationVits(mPronunciation);
+        mNormalizationManager = new NormalizationManager(context, mPronunciation.GetIpaPronDict());
     }
 
     /**

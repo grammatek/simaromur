@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The NormalizationManager controls the normalization process from raw input text to
@@ -33,9 +34,9 @@ public class NormalizationManager {
     private final Tokenizer mTokenizer;
     private final TTSNormalizer mTTSNormalizer;
 
-    public NormalizationManager(Context context) {
+    public NormalizationManager(Context context, Map<String, PronDictEntry> pronDict) {
         mContext = context;
-        mUnicodeNormalizer = new TTSUnicodeNormalizer(context);
+        mUnicodeNormalizer = new TTSUnicodeNormalizer(context, pronDict);
         mTokenizer = new Tokenizer(context);
         mTTSNormalizer = new TTSNormalizer();
         mPosTagger = initPOSTagger();
