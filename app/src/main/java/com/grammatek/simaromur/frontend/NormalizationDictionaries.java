@@ -654,7 +654,7 @@ public class NormalizationDictionaries {
 
         // dollars ($)
         currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_GEN) + ")) \\$((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $8 dollara$17");
-        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) \\$((((\\d{1,2}\\.)?(\\d{3}\\.?)*|}\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $6 dollurum$15");
+        currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(DAT) + ")) \\$((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $6 dollurum$15");
         currencyDict.put(Pattern.compile("(\\W|^)\\$((((\\d{1,2}\\.)?(\\d{3}\\.?)*|\\d+)(,\\d+)?)? " + patternSelection.get(AMOUNT) + ")" + EOS, flags), "$1 $2 dollarar$11");
         currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_DAT_GEN_COMB) + ") ((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))) ?\\$" + EOS, flags), "$1 dollara$14");
         currencyDict.put(Pattern.compile("((\\W|^)(" + prepositions.get(ACC_DAT_GEN_COMB) + ")) \\$((\\d{1,2}\\.)?(\\d{3}\\.?)*(\\d*1|\\d,\\d*1))" + EOS, flags), "$1 $10 dollara$14");
