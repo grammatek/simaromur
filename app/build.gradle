@@ -125,7 +125,7 @@ android {
             shrinkResources true
 
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
-                    'proguard-rules.pro', 'okio.pro', 'retrofit2.pro', 'gson.pro'
+                    'proguard-rules.pro', 'okio.pro', 'retrofit2.pro', 'gson.pro', 'okhttp3.pro'
             ndk {
                 debugSymbolLevel 'full'
             }

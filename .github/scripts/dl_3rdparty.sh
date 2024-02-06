@@ -7,7 +7,7 @@
 #
 # These are downloaded from their corresponding Github Release pages according to the following
 # environment variables:
-#   OPENFST_TAG, THRAX_TAG, FLITE_THRAX_TAG
+#   OPENFST_TAG, THRAX_TAG
 
 set -o pipefail
 #set -x
