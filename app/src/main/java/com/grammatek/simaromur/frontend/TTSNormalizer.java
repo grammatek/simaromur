@@ -602,6 +602,8 @@ public class TTSNormalizer {
             final Pattern numberPattern = tuple.getNumberPattern();
             final Pattern rule = tuple.getRule();
             if (numberPattern.matcher(token).matches() && rule.matcher(tag).matches()) {
+                if (tuple.getCategory().equals("thousands"))
+                    System.out.println(numberPattern);
                 tokenMap.put(tuple.getCategory(), tuple.getExpansion());
             }
         }

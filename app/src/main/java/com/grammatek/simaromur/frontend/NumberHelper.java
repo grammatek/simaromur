@@ -105,7 +105,7 @@ public class NumberHelper {
         //DIGIT_NUMBERS.put("\\-", " #");
         DIGIT_NUMBERS.put("\\+", " plús");
         DIGIT_NUMBERS.put("\\.", " punktur");
-        DIGIT_NUMBERS.put(":", " tvípunktur");
+        DIGIT_NUMBERS.put(":", " :");
         DIGIT_NUMBERS.put(",", " komma");
         DIGIT_NUMBERS.put("\\/", " skástrik");
         // when a semicolon occurs, we need the voice to pause

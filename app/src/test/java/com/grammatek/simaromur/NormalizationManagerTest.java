@@ -32,12 +32,12 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Space-X";
+        String input = "99.200.000";
         NormalizationManager manager = new NormalizationManager(context, pronDict);
         String processed = manager.process(input);
         System.out.println(processed);
 
-        assertEquals("space - x .",
+        assertEquals("níutíu og níu milljónir og tvö hundruð þúsund .",
                 processed);
     }
 
@@ -173,6 +173,9 @@ public class NormalizationManagerTest {
     private Map<String, String> getV14TestSentences() {
         // test sentences added for the deployment of v1.4
         Map<String, String> sent = new HashMap<>();
+        sent.put("99.200.000", "níutíu og níu milljónir og tvö hundruð þúsund .");
+        sent.put("9.200.000", "níu milljónir og tvö hundruð þúsund .");
+        sent.put("H&M", "h og m .");
         sent.put("láta skoðanir sínar í ljós í athugasemdum.“, segir hún.",
                 "láta skoðanir sínar í ljós í athugasemdum \" . , segir hún .");
         sent.put("Ôlafsson, framkvæmdastjóri Stakka víkur ehf., segir",
