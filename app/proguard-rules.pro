@@ -30,6 +30,11 @@
 -keep class com.facebook.** { *; }
 -keep class org.kohsuke.github** { *; }
 -keep class ai.onnxruntime.** { *; }
+-keep class io.jsonwebtoken.** { *; }
+-keep class okhttp3.** { *; }
+-keep class javax.naming.NamingException.** { *; }
+-keep class javax.naming.directory.Attributes.** { *; }
+-keep class androidx.appcompat.view.ContextThemeWrapper.** { *; }
 
 # warnings generated via kohsuke github api
 -dontwarn com.infradna.tool.bridge_method_injector.BridgeMethodsAdded
