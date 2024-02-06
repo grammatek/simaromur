@@ -53,6 +53,9 @@ public class TokenizerTest {
         input = "14,1% íbúa";
         tokenized = tok.detectSentences(input);
         assertEquals("14,1 % íbúa .", tokenized.get(0));
+        input = "kaupsamningi er 0,8% af heildarfasteignamati";
+        tokenized = tok.detectSentences(input);
+        assertEquals("kaupsamningi er 0,8 % af heildarfasteignamati .", tokenized.get(0));
     }
 
     @Test

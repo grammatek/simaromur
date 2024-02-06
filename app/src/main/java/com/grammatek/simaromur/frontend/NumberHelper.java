@@ -104,12 +104,12 @@ public class NumberHelper {
         // DIGIT_NUMBERS.put("\\-", " <sil>");
         //DIGIT_NUMBERS.put("\\-", " #");
         DIGIT_NUMBERS.put("\\+", " plús");
-        //TODO: if we have more sentences being normalized, this replaces end-of-sentence dot as well. We don't want that
         DIGIT_NUMBERS.put("\\.", " punktur");
         DIGIT_NUMBERS.put(":", " tvípunktur");
-        //TODO: converts normal sentence commas, ask what this is supposed to do
-        //DIGIT_NUMBERS.put(",", " komma");
+        DIGIT_NUMBERS.put(",", " komma");
         DIGIT_NUMBERS.put("\\/", " skástrik");
+        // when a semicolon occurs, we need the voice to pause
+        DIGIT_NUMBERS.put(";", ",");
     }
 
     public static final Map<String, String> DIGITS_ORD = new HashMap<>();

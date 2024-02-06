@@ -9,8 +9,10 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -21,7 +23,7 @@ import java.util.Set;
  */
 public class TTSUnicodeNormalizer {
 
-    public static Set<String> mLexicon = new HashSet<>();
+    public static Map<String, PronDictEntry> mLexicon = new HashMap<>();
 
     // The Icelandic alphabet, the grapheme set valid for automatic g2p
     private final static Set<Character> CHAR_SET = new HashSet<>();
@@ -64,8 +66,8 @@ public class TTSUnicodeNormalizer {
     // string, but delete the unknown character otherwise
     private final String DONT_DELETE = "[.,\":?!-]";
 
-    public TTSUnicodeNormalizer(Context context) {
-        mLexicon = initLexicon(context);
+    public TTSUnicodeNormalizer(Context context, Map<String, PronDictEntry> pronDict) {
+        mLexicon = pronDict;
     }
 
     /**
@@ -170,7 +172,7 @@ public class TTSUnicodeNormalizer {
     }
 
     public static boolean inDictionary(String wrd) {
-        return mLexicon.contains(wrd.toLowerCase());
+        return mLexicon.containsKey(wrd.toLowerCase());
     }
 
     private boolean isTag(String wrd) {
@@ -205,23 +207,5 @@ public class TTSUnicodeNormalizer {
             return UnicodeMaps.postDictLookupMap.get(c);
 
         return "";
-    }
-
-    private Set<String> initLexicon(Context context) {
-        Set<String> lexicon = new HashSet<>();
-        Resources res = context.getResources();
-        String line;
-        try {
-            InputStream is = res.openRawResource(R.raw.lexicon_v2201);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            if (is != null) {
-                while ((line = reader.readLine()) != null) {
-                    lexicon.add(line.trim());
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return lexicon;
     }
 }

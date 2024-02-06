@@ -6,6 +6,8 @@ import android.os.Build;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.grammatek.simaromur.frontend.NormalizationManager;
+import com.grammatek.simaromur.frontend.PronDictEntry;
+import com.grammatek.simaromur.frontend.Pronunciation;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,21 +27,23 @@ import static org.junit.Assert.*;
 public class NormalizationManagerTest {
 
     private final static Context context = ApplicationProvider.getApplicationContext();
+    private final static Pronunciation pron = new Pronunciation(context);
+    private final static Map<String, PronDictEntry> pronDict = pron.GetIpaPronDict();
 
     @Test
     public void processTest() {
-        String input = "www.mbl.is/frettir";
-        NormalizationManager manager = new NormalizationManager(context);
+        String input = "Space-X";
+        NormalizationManager manager = new NormalizationManager(context, pronDict);
         String processed = manager.process(input);
         System.out.println(processed);
 
-        assertEquals("m b l punktur is skástrik frettir .",
+        assertEquals("space - x .",
                 processed);
     }
 
     @Test
     public void processDigitsTest() {
-        NormalizationManager manager = new NormalizationManager(context);
+        NormalizationManager manager = new NormalizationManager(context, pronDict);
         for (String sent : getDigits().keySet()) {
             String processed = manager.process(sent);
             assertEquals(getDigits().get(sent), processed);
@@ -48,7 +52,7 @@ public class NormalizationManagerTest {
 
     @Test
     public void processSymbolsTest() {
-        NormalizationManager manager = new NormalizationManager(context);
+        NormalizationManager manager = new NormalizationManager(context, pronDict);
         for (String sent : getSymbols().keySet()) {
             String processed = manager.process(sent);
             assertEquals(getSymbols().get(sent), processed);
@@ -57,7 +61,7 @@ public class NormalizationManagerTest {
 
     @Test
     public void processNewIssuesTest() {
-        NormalizationManager manager = new NormalizationManager(context);
+        NormalizationManager manager = new NormalizationManager(context, pronDict);
         for (String sent : getNewTestSentences().keySet()) {
             String processed = manager.process(sent);
             assertEquals(getNewTestSentences().get(sent), processed);
@@ -66,7 +70,7 @@ public class NormalizationManagerTest {
 
     @Test
     public void processV14IssuesTest() {
-        NormalizationManager manager = new NormalizationManager(context);
+        NormalizationManager manager = new NormalizationManager(context, pronDict);
         for (String sent : getV14TestSentences().keySet()) {
             String processed = manager.process(sent);
             assertEquals(getV14TestSentences().get(sent), processed);
@@ -75,7 +79,7 @@ public class NormalizationManagerTest {
 
     @Test
     public void processListTest() {
-        NormalizationManager manager = new NormalizationManager(context);
+        NormalizationManager manager = new NormalizationManager(context, pronDict);
         for (String sent : getTestSentences().keySet()) {
             String processed = manager.process(sent);
             assertEquals(getTestSentences().get(sent), processed);
@@ -169,6 +173,12 @@ public class NormalizationManagerTest {
     private Map<String, String> getV14TestSentences() {
         // test sentences added for the deployment of v1.4
         Map<String, String> sent = new HashMap<>();
+        sent.put("láta skoðanir sínar í ljós í athugasemdum.“, segir hún.",
+                "láta skoðanir sínar í ljós í athugasemdum \" . , segir hún .");
+        sent.put("Ôlafsson, framkvæmdastjóri Stakka víkur ehf., segir",
+                "ólafsson , framkvæmdastjóri stakka víkur e h f . , segir .");
+        sent.put("Stimpilgjald af kaupsamningi er 0,8% af heildarfasteignamati hjá einstaklingum.",
+                "stimpilgjald af kaupsamningi er núll komma átta prósent af heildarfasteignamati hjá einstaklingum .");
         sent.put("íbúðin er 145 fm", "íbúðin er hundrað fjörutíu og fimm fermetrar .");
         sent.put("margir með ADHD", "margir með a d h d .");
         sent.put("Má áætla að þriðji stóri íþróttaviðburðurinn sem horft hafi verið til sé EM " +
@@ -185,15 +195,12 @@ public class NormalizationManagerTest {
                 "leigubíl fyrir tvö þúsund og fimm hundruð krónur tæpar " +
                         "þrjátíu og þrjú þúsund íslenskar krónur .");
         sent.put("leigubíl fyrir £377 á dag.", "leigubíl fyrir þrjú hundruð sjötíu og sjö pund á dag .");
-
         sent.put("3.7", "þrír punktur sjö .");
         sent.put("13.7", "einn þrír punktur sjö .");
-
         sent.put("mbl.is/frettir/innlent/2024/02/02/litlu_hlutirnir_sem_folkid_saknar_helst/",
                 "m b l punktur is skástrik frettir skástrik innlent skástrik tvö þúsund tuttugu " +
                         "og fjögur skástrik núll tvö skástrik núll tvö skástrik litlu hlutirnir sem " +
                         "folkid saknar helst skástrik .");
-
         sent.put("Stjórnendur Rúv gera ráð fyrir því að augýsingatekjur stofnunarinnar hækki " +
                 "á þessu ári um 17,4% frá fyrra ári og að útvarpsgjald hækki um 3,5%.",
                 "stjórnendur rúv gera ráð fyrir því að augýsingatekjur stofnunarinnar hækki " +
@@ -246,7 +253,7 @@ public class NormalizationManagerTest {
         //testSentences.put("Stelpurnar Carmen Diljá Guðbjarnardóttir og Elenora Rós Georgsdóttir söfnuðu 7.046 kr.",
         //        "Stelpurnar Carmen Diljá Guðbjarnardóttir og Elenora Rós Georgsdóttir söfnuðu sjö þúsund fjörutíu og sex krónum .");
         testSentences.put("Stelpurnar Carmen Diljá Guðbjarnardóttir og Elenora Rós Georgsdóttir söfnuðu 7.046 kr.",
-                "Stelpurnar Karmen Diljá Guðbjarnardóttir og Elenora Rós Georgsdóttir söfnuðu sjö þúsund fjörutíu og sex krónur .".toLowerCase());
+                "Stelpurnar Carmen Diljá Guðbjarnardóttir og Elenora Rós Georgsdóttir söfnuðu sjö þúsund fjörutíu og sex krónur .".toLowerCase());
         testSentences.put("Hann skoraði 21 stig og tók 12 fráköst.", "Hann skoraði tuttugu og eitt stig og tók tólf fráköst .".toLowerCase());
         testSentences.put("Opna Suðurnesjamótið í pílu fer fram þann 4. desember nk. kl. 13:00 í píluaðstöðu Pílufélags Reykjanesbæjar að Hrannargötu 6. ",
                 "Opna Suðurnesjamótið í pílu fer fram þann fjórða desember næstkomandi klukkan þrettán núll núll ".toLowerCase() +
@@ -286,7 +293,7 @@ public class NormalizationManagerTest {
                 "Hollenska fjárfestingafyrirtækið EsBro hyggst reisa fimmtán hektarar <sil> hundrað og fimmtíu þúsund fermetrar <sil> gróðurhús til framleiðslu á tómötum .".toLowerCase());
         //testSentences.put("Við Lindarhvamm í Hafnarfirði er að finna 134 fm efri sérhæð og ris í snyrtilegu tvíbýlishúsi sem reist var árið 1963.",
         //        "við lindarhvamm í hafnarfirði er að finna hundrað þrjátíu og fjögur fermetrar efri sérhæð og ris í snyrtilegu tvíbýlishúsi sem reist var árið nítján hundruð sextíu og þrjú .".toLowerCase());
-        testSentences.put("Mynd / elg@vf.is", "Mynd skástrik e l g hjá v f punktur is .".toLowerCase());
+        testSentences.put("Mynd / elg@vf.is", "Mynd skástrik elg hjá v f punktur is .".toLowerCase());
         testSentences.put("hefur leikið sjö leiki með U-21 árs liðinu.", "hefur leikið sjö leiki með U - tuttugu og eins árs liðinu .".toLowerCase());
         testSentences.put("er þetta í 23. skiptið sem mótið er haldið .", "er þetta í tuttugasta og þriðja skiptið sem mótið er haldið .".toLowerCase());
         testSentences.put("Skráning er hafin á http://keflavik.is/fimleikar/ og ef eitthvað er óljóst er hægt að hafa samband í síma 421-6368 eða á fimleikar@keflavik.is",

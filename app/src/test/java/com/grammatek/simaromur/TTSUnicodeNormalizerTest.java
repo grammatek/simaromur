@@ -3,6 +3,8 @@ package com.grammatek.simaromur;
 import android.content.Context;
 import android.os.Build;
 
+import com.grammatek.simaromur.frontend.PronDictEntry;
+import com.grammatek.simaromur.frontend.Pronunciation;
 import com.grammatek.simaromur.frontend.TTSUnicodeNormalizer;
 
 import org.junit.Test;
@@ -27,10 +29,12 @@ import static org.junit.Assert.*;
 public class TTSUnicodeNormalizerTest {
 
     private final static Context context = ApplicationProvider.getApplicationContext();
+    private final static Pronunciation pron = new Pronunciation(context);
+    private final static Map<String, PronDictEntry> pronDict = pron.GetIpaPronDict();
 
     @Test
     public void unicodeNormalizingTest() {
-        TTSUnicodeNormalizer normalizer = new TTSUnicodeNormalizer(context);
+        TTSUnicodeNormalizer normalizer = new TTSUnicodeNormalizer(context, pronDict);
         String input = "„ Við vorum samheldnir og þéttir og það er gott að innbyrða sigur á útivelli gegn öflugu liði eins og Breiðabliki , “ sagði Willum Þór Þórsson";
         String normalized = normalizer.normalizeEncoding(input);
         assertEquals("\" Við vorum samheldnir og þéttir og það er gott að innbyrða sigur á útivelli gegn öflugu liði eins og Breiðabliki , \" sagði Willum Þór Þórsson", normalized);
@@ -42,7 +46,7 @@ public class TTSUnicodeNormalizerTest {
 
     @Test
     public void alphabetNormalizingTest() {
-        TTSUnicodeNormalizer normalizer = new TTSUnicodeNormalizer(context);
+        TTSUnicodeNormalizer normalizer = new TTSUnicodeNormalizer(context, pronDict);
         for (String sent : getTestSentences().keySet()) {
             List<String> processed = normalizer.normalizeAlphabet(Arrays.asList(sent));
             assertEquals(getTestSentences().get(sent), processed.get(0));

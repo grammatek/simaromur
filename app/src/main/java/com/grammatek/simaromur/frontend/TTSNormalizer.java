@@ -57,6 +57,7 @@ public class TTSNormalizer {
     //       This matches also inside strings for valid email addresses
     private static final Pattern EMAIL_PTRN = Pattern.compile(".+@.+");
     private static final Pattern EOS_PTRN = Pattern.compile("[.:?!;]");
+    private static final Pattern PUNCTUATION_TO_KEEP = Pattern.compile("[.:?!,\"]");
     private static final Pattern NUM_OPT_DOT_PTRN = Pattern.compile("\\d+\\.?(\\d+)?");
     private static final Pattern ANY_DIGIT_PTRN = Pattern.compile("\\d");
     private static final Pattern SPORT_RES_PTRN = Pattern.compile("^\\d{1,2}/\\d{1,2}$");
@@ -170,7 +171,8 @@ public class TTSNormalizer {
                     token = normalizeURL(token);
                 else if (token.length() > 1 && token.charAt(0) == token.charAt(1))
                     token = insertSpaces(token);
-                else if (NormalizationDictionaries.NOT_LETTER.matcher(token).matches())
+                else if ((token.length() > 1 && NormalizationDictionaries.NOT_LETTER.matcher(token).matches())
+                || !PUNCTUATION_TO_KEEP.matcher(token).matches())
                     token = normalizeDigits(token);
             }
 
