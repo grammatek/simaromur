@@ -146,6 +146,7 @@ public class TTSService extends TextToSpeechService {
         Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/" + country + "/" + variant
                 + "), callerUid: " + callerUid + " speed: " + speechrate + " pitch: " + pitch
                 + " bundle: " + params);
+        speechrate = adaptSpeechRate(speechrate);
 
         String loadedVoiceName = mRepository.getLoadedVoiceName();
         if (loadedVoiceName.equals("")) {
@@ -230,6 +231,32 @@ public class TTSService extends TextToSpeechService {
         }
         handleProcessingResult(callback, item, ttsRequest, voice);
         Log.i(LOG_TAG, "onSynthesizeText: finished (" + item.getUuid() + ")");
+    }
+
+    /**
+     * Adapt speechrate to feasible values.
+     * The possible values retrievable for speechrate are from 10 - 600 (i.e. 0.1x - 6.0x).
+     * We reduce these to values between 50 and 300 (0.5x - 3.0x). A speechrate of 100 still
+     * should be 100. We adapt all values != 100 to the above range proportionally
+     *
+     * @param speechrate    The speechrate to adapt
+     * @return            The adapted speechrate
+     */
+    private static int adaptSpeechRate(int speechrate) {
+        // cap the speechrate to expected limits
+        if (speechrate > 600) {
+            speechrate = 600;
+        } else if (speechrate < 10) {
+            speechrate = 10;
+        }
+        // adapt the speechrate to a range between 50 and 300
+        if (speechrate > 100) {
+            speechrate = (int) (100 + (speechrate - 100) * 0.4f);
+        } else if (speechrate < 100) {
+            speechrate = (int) (100 - (100 - speechrate) * 0.5f);
+        }
+        Log.v(LOG_TAG, "onSynthesizeText: adapted speechrate: " + speechrate);
+        return speechrate;
     }
 
     /**
