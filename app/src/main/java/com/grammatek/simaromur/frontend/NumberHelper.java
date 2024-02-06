@@ -103,6 +103,7 @@ public class NumberHelper {
         //TODO: not sure about this, without context difficult to say if it should be "sil" or not
         // DIGIT_NUMBERS.put("\\-", " <sil>");
         //DIGIT_NUMBERS.put("\\-", " #");
+        DIGIT_NUMBERS.put("\\-", " - ");
         DIGIT_NUMBERS.put("\\+", " plús");
         DIGIT_NUMBERS.put("\\.", " punktur");
         DIGIT_NUMBERS.put(":", " :");

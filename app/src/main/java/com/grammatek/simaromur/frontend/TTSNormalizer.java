@@ -172,7 +172,7 @@ public class TTSNormalizer {
                 else if (token.length() > 1 && token.charAt(0) == token.charAt(1))
                     token = insertSpaces(token);
                 else if ((token.length() > 1 && NormalizationDictionaries.NOT_LETTER.matcher(token).matches())
-                || !PUNCTUATION_TO_KEEP.matcher(token).matches())
+                || (token.length() == 1 && !PUNCTUATION_TO_KEEP.matcher(token).matches()))
                     token = normalizeDigits(token);
             }
 
@@ -602,8 +602,6 @@ public class TTSNormalizer {
             final Pattern numberPattern = tuple.getNumberPattern();
             final Pattern rule = tuple.getRule();
             if (numberPattern.matcher(token).matches() && rule.matcher(tag).matches()) {
-                if (tuple.getCategory().equals("thousands"))
-                    System.out.println(numberPattern);
                 tokenMap.put(tuple.getCategory(), tuple.getExpansion());
             }
         }
