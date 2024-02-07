@@ -98,12 +98,16 @@ public class AppRepository {
      * @return    value for key or empty string if not found
      */
     public String getAssetConfigValueFor(String key) {
+        String rv = "";
         try {
-            return FileUtils.getAssetConfigProperty(App.getContext().getAssets(), key);
+            String value = FileUtils.getAssetConfigProperty(App.getContext().getAssets(), key);
+            if (value != null) {
+                rv = value;
+            }
         } catch (IOException e) {
             e.printStackTrace();
-            return "";
         }
+        return rv;
     }
 
     /**
@@ -141,7 +145,7 @@ public class AppRepository {
      */
     public void downloadVoiceAsync(Voice voice, DownloadVoiceManager.Observer finishedObserver) {
         // when the download is successful, the voice is updated in the database. This happens
-        // asynchonously.
+        // asynchronously.
         mDVM.downloadVoiceAsync(voice, finishedObserver, mVoiceDao);
     }
 
@@ -236,9 +240,8 @@ public class AppRepository {
 
         mMediaPlayer = new MediaPlayObserver();
         mScheduler = Executors.newSingleThreadScheduledExecutor();
-        mScheduler.scheduleAtFixedRate(networkVoicesUpdateRunnable, 0, 60, TimeUnit.SECONDS);
-        mScheduler.scheduleAtFixedRate(onDeviceVoicesUpdateRunnable, 1, 600, TimeUnit.SECONDS);
-        mScheduler.schedule(assetVoiceRunnable, 1, TimeUnit.SECONDS);
+        // only do this once at the beginning
+        mScheduler.schedule(assetVoiceRunnable, 0, TimeUnit.SECONDS);
     }
 
     /**
@@ -399,6 +402,7 @@ public class AppRepository {
      * @return true in case audio speech entry has been found and playback started, false otherwise
      */
     private boolean playIfAudioCacheHit(String voiceId, String voiceVersion, CacheItem item, TTSAudioControl.AudioFinishedObserver finishedObserver, TTSRequest ttsRequest) {
+        Log.v(LOG_TAG, "playIfAudioCacheHit(1)");
         UtteranceCacheManager ucm = App.getAppRepository().getUtteranceCache();
         final List<byte[]> audioBuffers =
                 ucm.getAudioForUtterance(item.getUtterance(), voiceId, voiceVersion);
@@ -426,7 +430,7 @@ public class AppRepository {
      * @return true in case audio speech entry has been found and playback started, false otherwise
      */
     private boolean playIfAudioCacheHit(String voiceId, String voiceVersion, CacheItem item, TTSObserver ttsObserver, TTSRequest ttsRequest) {
-        Log.v(LOG_TAG, "playIfAudioCacheHit()");
+        Log.v(LOG_TAG, "playIfAudioCacheHit(2)");
         UtteranceCacheManager ucm = App.getAppRepository().getUtteranceCache();
         final List<byte[]> audioBuffers =
                 ucm.getAudioForUtterance(item.getUtterance(), voiceId, voiceVersion);
@@ -462,10 +466,10 @@ public class AppRepository {
         Log.v(LOG_TAG, "startNetworkTTS: " + item.getUuid());
         // map given voice to voiceId
         if (voice != null) {
-            final TTSObserver ttsObserver = new TTSObserver(pitch, speed, AudioManager.SAMPLE_RATE_WAV);
+            final TTSObserver ttsObserver = new TTSObserver(pitch, speed, mNetworkSpeakController.getNativeSampleRate());
             if (playIfAudioCacheHit(voice.internalName, voice.version, item, ttsObserver, ttsRequest)) return;
 
-            final String SampleRate = "" + AudioManager.SAMPLE_RATE_WAV;
+            final String SampleRate = "" + mNetworkSpeakController.getNativeSampleRate();
             final String normalized = item.getUtterance().getNormalized();
             if (normalized.trim().isEmpty()) {
                 Log.w(LOG_TAG, "startNetworkTTS: given text is whitespace only ?!");
@@ -525,8 +529,7 @@ public class AppRepository {
             e.printStackTrace();
             return null;
         }
-        return mTTSEngineController.StartSpeak(item, speed, pitch,
-                mTTSEngineController.getEngine().GetNativeSampleRate(), observer, getCurrentTTsRequest());
+        return mTTSEngineController.StartSpeak(item, speed, pitch, observer, getCurrentTTsRequest());
     }
 
     /**
@@ -549,7 +552,7 @@ public class AppRepository {
         List<Voice> voices = mVoiceDao.getAnyVoices();
         for (final Voice voice : voices) {
             if (voice.name.equals(voiceName)) {
-                if (voice.type.equals(Voice.TYPE_TORCH) || voice.type.equals(Voice.TYPE_FLITE)) {
+                if (voice.type.equals(Voice.TYPE_ONNX)) {
                     try {
                         mTTSEngineController.LoadEngine(voice);
                     } catch (IOException e) {
@@ -581,6 +584,10 @@ public class AppRepository {
             }
         }
         return null;
+    }
+
+    public int getVoiceNativeSampleRate() {
+        return mTTSEngineController.getEngine().GetNativeSampleRate();
     }
 
     /**
@@ -739,7 +746,7 @@ public class AppRepository {
         if (odVoice == null) return null;
         Voice dbVoiceOD = odVoice.convertToDbVoice();
         for (Voice voice : getCachedVoices()) {
-            if (voice == dbVoiceOD) {
+            if (voice.internalName.equals(dbVoiceOD.internalName)) {
                 return voice;
             }
         }
@@ -791,6 +798,7 @@ public class AppRepository {
      */
     public void speakAssetFile(SynthesisCallback callback, String assetFilename) {
         Log.v(LOG_TAG, "playAssetFile: " + assetFilename);
+        final int SAMPLE_RATE_ASSETS = 22050;
         try {
             InputStream inputStream = App.getContext().getAssets().open(assetFilename);
             int size = inputStream.available();
@@ -799,7 +807,7 @@ public class AppRepository {
                 Log.w(LOG_TAG, "playAssetFile: not enough bytes ?");
             }
             // don't provide rawText: there are no speech marks to update
-            callback.start(AudioManager.SAMPLE_RATE_WAV, AudioFormat.ENCODING_PCM_16BIT,
+            callback.start(SAMPLE_RATE_ASSETS, AudioFormat.ENCODING_PCM_16BIT,
                     AudioManager.N_CHANNELS);
             feedBytesToSynthesisCallback(callback, buffer, "");
             callback.done();
@@ -845,13 +853,27 @@ public class AppRepository {
             final int bytesLeft = buffer.length - offset;
             final int bytesConsumed = Math.min(maxBytes, bytesLeft);
             if (callback.hasStarted()) {
-                if (!rawText.isEmpty()) {
-                    updateSpeechMarks(callback, buffer.length, offset, rawText.length(), bytesConsumed);
-                }
-                // this feeds audio data to the callback, which will then be comsumed by the TTS
-                // client. In case the current utterance is stopped(), all remaining audio data is
+                // this feeds audio data to the callback, which will then be consumed by the TTS
+                // client. In case the current utterance is stopped, all remaining audio data is
                 // consumed and discarded and afterwards TTSService.onStopped() is executed.
-                callback.audioAvailable(buffer, offset, bytesConsumed);
+                int cbStatus = callback.audioAvailable(buffer, offset, bytesConsumed);
+                switch(cbStatus) {
+                    case TextToSpeech.SUCCESS:
+                        if (!rawText.isEmpty()) {
+                            updateSpeechMarks(callback, buffer.length, offset, rawText.length(), bytesConsumed);
+                        }
+                        break;
+                    case TextToSpeech.ERROR:
+                        // This is also called, if the user skips the current utterance
+                        Log.w(LOG_TAG, "TTSObserver: callback.audioAvailable() returned ERROR");
+                        return;
+                    case TextToSpeech.STOPPED:
+                        Log.w(LOG_TAG, "TTSObserver: callback.audioAvailable() returned STOPPED");
+                        return;
+                    default:
+                        Log.e(LOG_TAG, "TTSObserver: callback.audioAvailable() returned " + cbStatus);
+                        return;
+                }
             }
             offset += bytesConsumed;
         }
@@ -898,25 +920,27 @@ public class AppRepository {
      */
     synchronized
     public CacheItem executeFrontendAndSaveIntoCache(String text, CacheItem item, com.grammatek.simaromur.db.Voice voice) {
+        String phonemes = "";
         if (item.getUtterance().getNormalized().isEmpty()) {
             // we always need to normalize the text, but it doesn't hurt, if we always do G2P as well
-            // for network voices, this is currently all that is needed. But there is an audible
-            // problem with trailing "." though, so we remove it
-            String normalizedText = mFrontend.getNormalizationManager().process(text).replaceAll("\\.+$", "");
-            final String phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
-            // prevent the network voices from pronouncing 'sil'
-            normalizedText = normalizedText.replaceAll(SymbolsLvLIs.TagPause, ",");
+            // for network voices, this is currently all that is needed.
+            String normalizedText = mFrontend.getNormalizationManager().process(text);
+            phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
             Log.v(LOG_TAG, "onSynthesizeText: original (\"" + text + "\"), normalized (\"" + normalizedText + "\"), phonemes (\"" + phonemes + "\")");
-            Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
-            item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
-            Log.v(LOG_TAG, "... normalization/G2P saved into cache");
+            if (!phonemes.isEmpty()) {
+                Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
+                item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
+                Log.v(LOG_TAG, "... normalization/G2P saved into cache");
+            }
         } else if (item.getUtterance().getPhonemesCount() == 0) {
             final String normalizedText = item.getUtterance().getNormalized();
-            final String phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
+            phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
             Log.v(LOG_TAG, "onSynthesizeText: normalized (\"" + normalizedText + "\"), phonemes (\"" + phonemes + "\")");
-            Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
-            item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
-            Log.v(LOG_TAG, "... G2P saved into cache");
+            if (!phonemes.isEmpty()) {
+                Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
+                item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
+                Log.v(LOG_TAG, "... G2P saved into cache");
+            }
         } else {
             Log.v(LOG_TAG, "normalization/G2P skipped (hot cache)");
         }
@@ -957,6 +981,7 @@ public class AppRepository {
         @Override
         public void run() {
             Log.v(LOG_TAG, "onDeviceVoicesUpdateRunnable()");
+
             // fetch on-device voice lists
             mDVM.readVoiceDescription(true);
 
@@ -983,10 +1008,8 @@ public class AppRepository {
             // delete all voices
             final List<Voice> allDbVoices = mVoiceDao.getAnyVoices();
             for (Voice voice : allDbVoices) {
-                if (voice.url.equals("assets")) {
-                    Log.w(LOG_TAG, "assetVoiceRunnable Delete asset voice " + voice.name);
-                    mVoiceDao.deleteVoices(voice);
-                }
+                Log.w(LOG_TAG, "assetVoiceRunnable() Delete voice " + voice.name);
+                mVoiceDao.deleteVoices(voice);
             }
 
             final List<Voice> assetVoices = mAVM.getVoiceDbList();

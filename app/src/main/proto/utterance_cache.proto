@@ -27,6 +27,7 @@ enum SampleRate {
     SAMPLE_RATE_16KHZ = 2;
     SAMPLE_RATE_22KHZ = 3;
     SAMPLE_RATE_44_1KHZ = 4;
+    SAMPLE_RATE_48KHZ = 5;
 }
 
 // Describes the voice audio for a specific phoneme

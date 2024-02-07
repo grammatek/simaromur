@@ -68,7 +68,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
      */
     @Override
     public void onInit(final int status) {
-        Log.v(LOG_TAG, "onInit: status: " + status);
+        Log.i(LOG_TAG, "onInit: status: " + status);
         if (status == TextToSpeech.SUCCESS) {
             mTtsClient.setLanguage(new Locale("isl", "ISL"));
         }
@@ -80,7 +80,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     private void checkDefaultEngine() {
         Log.v(LOG_TAG, "checkDefaultEngine()");
         if (mTtsClient == null) {
-            Log.v(LOG_TAG, "No TTS connection ?!");
+            Log.v(LOG_TAG, "No connection to Simarómur TTS service yet");
             return;
         }
         try {

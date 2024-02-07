@@ -68,8 +68,7 @@ public class VoiceViewModel extends AndroidViewModel {
             case Voice.TYPE_NETWORK:
                 mRepository.startNetworkSpeak(voice.internalName, voice.version, item, voice.languageCode, finishedObserver);
                 break;
-            case Voice.TYPE_TORCH:
-            case Voice.TYPE_FLITE:  // FALLTHROUGH
+            case Voice.TYPE_ONNX:
                 mDevSpeakTask = mRepository.startDeviceSpeak(voice, item, speed, pitch, finishedObserver);
                 break;
             default:
@@ -87,8 +86,6 @@ public class VoiceViewModel extends AndroidViewModel {
         }
         if (voice.type.equals(Voice.TYPE_NETWORK)) {
             mRepository.stopNetworkSpeak();
-        } else if (voice.type.equals(Voice.TYPE_TORCH)) {
-            mRepository.stopDeviceSpeak(mDevSpeakTask);
         } else {
             mRepository.stopDeviceSpeak(mDevSpeakTask);
         }

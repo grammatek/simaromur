@@ -1,5 +1,7 @@
 package com.grammatek.simaromur.frontend;
 
+import java.util.regex.Pattern;
+
 /**
  * A CategoryTuple typically holds information on the expansion of a certain regex pattern
  * belonging to a certain category, according to a rule (pos-tag pattern)
@@ -17,22 +19,22 @@ package com.grammatek.simaromur.frontend;
 
 public class CategoryTuple {
 
-    private final String numberPattern;
-    private final String rule;
+    private final Pattern numberPattern;
+    private final Pattern rule;
     private final String category;
     private final String expansion;
 
     public CategoryTuple(String pattern, String rule, String category, String expansion) {
-        this.numberPattern = pattern;
-        this.rule = rule;
+        this.numberPattern = Pattern.compile(pattern);
+        this.rule = Pattern.compile(".*" + rule);
         this.category = category;
         this.expansion = expansion;
     }
 
-    public String getNumberPattern() {
+    public Pattern getNumberPattern() {
         return this.numberPattern;
     }
-    public  String getRule() {
+    public  Pattern getRule() {
         return this.rule;
     }
     public String getCategory() {

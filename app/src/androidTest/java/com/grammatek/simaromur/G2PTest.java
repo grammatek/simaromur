@@ -19,7 +19,6 @@ public class G2PTest {
 
     private final String INPUT_TEXT = "hlíðin er pökkuð";
     private final String SAMPA_TRANSCRIPT = "l_0 i: D I n E r p_h 9 h k Y D";
-    private final String FLITE_TRANSCRIPT = "lz ii D I n E r ph oe h k Y D";
     private final String IPA_TRANSCRIPT = "l̥ iː ð ɪ n ɛ r pʰ œ h k ʏ ð";
 
     @Test
@@ -33,10 +32,6 @@ public class G2PTest {
     public void convertTest() {
         Pronunciation transcriber = new Pronunciation(context);
         String converted = transcriber.convert(SAMPA_TRANSCRIPT,
-                "SAMPA", "FLITE", true);
-        assertEquals(FLITE_TRANSCRIPT, converted);
-
-        converted = transcriber.convert(SAMPA_TRANSCRIPT,
                 "SAMPA", "IPA", false);
         assertEquals(IPA_TRANSCRIPT, converted);
 

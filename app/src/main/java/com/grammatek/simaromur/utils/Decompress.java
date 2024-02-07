@@ -45,11 +45,12 @@ public class Decompress {
      */
     public boolean unzip() {
         try  {
+            Log.v(LOG_TAG, "Decompress: ");
+            byte[] buffer = new byte[1024*1024];
+
             FileInputStream inputStream = new FileInputStream(mZipfile);
             ZipInputStream zipInputStream = new ZipInputStream(inputStream);
             ZipEntry zipEntry;
-            byte[] buffer = new byte[1024*1024];
-            Log.v(LOG_TAG, "Decompress: ");
             while ((zipEntry = zipInputStream.getNextEntry()) != null) {
                 Log.v(LOG_TAG, "Unzipping " + zipEntry.getName());
                 if (zipEntry.isDirectory()) {
@@ -64,13 +65,14 @@ public class Decompress {
                     while ((count = zipInputStream.read(buffer)) != -1) {
                         outputStream.write(buffer, 0, count);
                     }
-                    zipInputStream.closeEntry();
                     outputStream.close();
                     mLastEntry = mLocation + zipEntry.getName();
                     mLastFileSize = zipEntry.getSize();
+                    zipInputStream.closeEntry();
                 }
             }
             zipInputStream.close();
+            inputStream.close();
             return true;
         } catch(Exception e) {
             Log.e(LOG_TAG, "unzip: ", e);
@@ -96,10 +98,11 @@ public class Decompress {
                     Log.v(LOG_TAG, "Ignoring " + zipEntry.getName());
                 } else {
                     entries.add(mLocation + zipEntry.getName());
-                    zipInputStream.closeEntry();
                 }
+                zipInputStream.closeEntry();
             }
             zipInputStream.close();
+            inputStream.close();
         } catch(Exception e) {
             Log.e(LOG_TAG, "getEntries: ", e);
         }

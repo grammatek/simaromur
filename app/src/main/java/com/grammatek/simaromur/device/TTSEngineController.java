@@ -1,8 +1,11 @@
 package com.grammatek.simaromur.device;
 
 import static com.grammatek.simaromur.cache.AudioFormat.AUDIO_FMT_PCM;
+import static com.grammatek.simaromur.cache.SampleRate.SAMPLE_RATE_11KHZ;
 import static com.grammatek.simaromur.cache.SampleRate.SAMPLE_RATE_16KHZ;
 import static com.grammatek.simaromur.cache.SampleRate.SAMPLE_RATE_22KHZ;
+import static com.grammatek.simaromur.cache.SampleRate.SAMPLE_RATE_44_1KHZ;
+import static com.grammatek.simaromur.cache.SampleRate.SAMPLE_RATE_48KHZ;
 
 import android.media.AudioFormat;
 import android.util.Log;
@@ -42,8 +45,7 @@ public class TTSEngineController {
     TTSEngine mEngine;
     final ExecutorService mExecutorService;
     Future<?> mTaskFuture;  // the currently enqueued task, might be executed by the executor service
-    final TTSAudioControl mTTSAudioControl16khz;
-    final TTSAudioControl mTTSAudioControl22khz;
+    TTSAudioControl mTTSAudioControl;
 
     /**
      * Constructor
@@ -57,10 +59,6 @@ public class TTSEngineController {
         mAVM = avm;
         mDVM = dvm;
         mCurrentVoice = null;
-        mTTSAudioControl16khz = new TTSAudioControl(AudioManager.SAMPLE_RATE_FLITE,
-                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
-        mTTSAudioControl22khz = new TTSAudioControl(AudioManager.SAMPLE_RATE_TORCH,
-                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
         // we only need one thread per Audio setting
         mExecutorService = Executors.newSingleThreadExecutor();
     }
@@ -79,23 +77,16 @@ public class TTSEngineController {
             case Voice.TYPE_NETWORK:
                 Log.v(LOG_TAG, "LoadEngine: Voice.TYPE_NETWORK not supported");
                 break;
-            case Voice.TYPE_TORCH:
+            case Voice.TYPE_ONNX:
+                // use the asset voice manager to get the info for the voices, this assumes that
+                // the onnx model is only available inside the assets folder
                 devVoice = mAVM.getInfoForVoice(voice.name);
                 if (mEngine == null || devVoice != mCurrentVoice) {
                     Log.v(LOG_TAG, "LoadEngine: " + devVoice.Type);
-                    mEngine = new TTSEnginePyTorch(App.getContext().getAssets(), devVoice);
-                    mCurrentVoice = devVoice;
-                }
-                else {
-                    Log.v(LOG_TAG, "LoadEngine: (cached)");
-                }
-                break;
-            case Voice.TYPE_FLITE:
-                devVoice = mDVM.getInfoForVoice(voice.internalName);
-                if (mEngine == null || devVoice != mCurrentVoice) {
-                    Log.v(LOG_TAG, "LoadEngine: " + devVoice.Type);
                     try {
-                        mEngine = new TTSEngineFlite(voice, devVoice);
+                        mEngine = new TTSEngineOnnx(App.getContext().getAssets(), devVoice);
+                        mTTSAudioControl = new TTSAudioControl(mEngine.GetNativeSampleRate(),
+                                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
                         mCurrentVoice = devVoice;
                     } catch (IllegalArgumentException e) {
                         Log.e(LOG_TAG, "LoadEngine: " + e.getMessage());
@@ -127,9 +118,9 @@ public class TTSEngineController {
      * Start to speak given text with given voice.
      */
     synchronized
-    public SpeakTask StartSpeak(CacheItem item, float speed, float pitch, int sampleRate,
+    public SpeakTask StartSpeak(CacheItem item, float speed, float pitch,
                            TTSAudioControl.AudioFinishedObserver observer, TTSRequest ttsRequest) {
-        if (mEngine == null || mCurrentVoice == null) {
+        if (mEngine == null || mCurrentVoice == null || mTTSAudioControl == null) {
             String errorMsg = "No TTS engine loaded !";
             Log.e(LOG_TAG, errorMsg);
             throw new RuntimeException(errorMsg);
@@ -140,7 +131,7 @@ public class TTSEngineController {
             mTaskFuture.cancel(true);
         }
         Log.v(LOG_TAG, "StartSpeak: scheduling new SpeakTask (1)");
-        SpeakTask speakTask = new SpeakTask(item.getUuid(), speed, pitch, sampleRate, observer, mCurrentVoice, ttsRequest);
+        SpeakTask speakTask = new SpeakTask(item.getUuid(), speed, pitch, observer, mCurrentVoice, ttsRequest);
         mTaskFuture = mExecutorService.submit(speakTask);
         return speakTask;
     }
@@ -171,8 +162,12 @@ public class TTSEngineController {
      */
     synchronized
     public void StopSpeak(TTSEngineController.SpeakTask speakTask) {
-        mTTSAudioControl16khz.stop();
-        mTTSAudioControl22khz.stop();
+        if (mEngine == null || mCurrentVoice == null || mTTSAudioControl == null) {
+            String errorMsg = "StopSpeak(): No TTS engine loaded !";
+            Log.e(LOG_TAG, errorMsg);
+            throw new RuntimeException(errorMsg);
+        }
+        mTTSAudioControl.stop();
         if (speakTask != null) {
             speakTask.stopSynthesis();
         }
@@ -188,7 +183,6 @@ public class TTSEngineController {
         CacheItem item;
         float speed;
         float pitch;
-        int sampleRate;
         TTSObserver observer;
         TTSAudioControl.AudioFinishedObserver audioObserver;
         boolean isStopped = false;
@@ -202,10 +196,9 @@ public class TTSEngineController {
          *                      speed
          * @param pitch         pitch multiplier of voice, how many times higher/lower than normal voice
          *                      pitch
-         * @param sampleRate    sample rate to use for the synthesis
          * @param ttsRequest    request to be used for the synthesis
          */
-        public SpeakTask(String itemUuid, float speed, float pitch, int sampleRate,
+        public SpeakTask(String itemUuid, float speed, float pitch,
                          TTSAudioControl.AudioFinishedObserver audioObserver, DeviceVoice voice,
                          TTSRequest ttsRequest) {
             this.ttsRequest = ttsRequest;
@@ -213,7 +206,6 @@ public class TTSEngineController {
             this.item = optItem.orElse(null);
             this.speed = speed;
             this.pitch = pitch;
-            this.sampleRate = sampleRate;
             this.audioObserver = audioObserver;
             this.observer = null;
             this.voice = voice;
@@ -235,7 +227,6 @@ public class TTSEngineController {
             this.observer = observer;
             this.speed = observer.getSpeed();
             this.pitch = observer.getPitch();
-            this.sampleRate = mEngine.GetNativeSampleRate();
             this.voice = voice;
         }
 
@@ -246,7 +237,11 @@ public class TTSEngineController {
          */
         public void run() {
             Log.v(LOG_SPEAK_TASK_TAG, "run() called");
-            assert(sampleRate == mEngine.GetNativeSampleRate());
+            if (mEngine == null || mCurrentVoice == null || mTTSAudioControl == null) {
+                String errorMsg = "run(): No TTS engine loaded !";
+                Log.e(LOG_TAG, errorMsg);
+                throw new RuntimeException(errorMsg);
+            }
 
             if (shouldStop())  {
                 Log.v(LOG_SPEAK_TASK_TAG, "run(): shouldStop(1): true");
@@ -269,11 +264,13 @@ public class TTSEngineController {
             }
 
             byte[] audioData;
+            PhonemeEntry phonemeEntry = null;
             if (!audioBuffers.isEmpty()) {
                 audioData = audioBuffers.get(0);
             } else {
                 // no audio for utterance yet
-                PhonemeEntry phonemeEntry = utterance.getPhonemesList().get(0);
+                // TODO: optimization: could we save the phonemes directly
+                phonemeEntry = utterance.getPhonemesList().get(0);
                 audioData = synthesizeSpeech(phonemeEntry);
             }
 
@@ -289,14 +286,16 @@ public class TTSEngineController {
             if (observer == null) {
                 // TODO: also the media players should stop, if item has changed:
                 //       - pass the cache item along
-                byte[] processedAudio = AudioManager.applyPitchAndSpeed(audioData, sampleRate, pitch, speed);
-                if (sampleRate == AudioManager.SAMPLE_RATE_FLITE) {
-                    mTTSAudioControl16khz.play(new TTSAudioControl.AudioEntry(processedAudio, audioObserver));
-                } else {
-                    mTTSAudioControl22khz.play(new TTSAudioControl.AudioEntry(processedAudio, audioObserver));
-                }
+                byte[] processedAudio = AudioManager.applyPitchAndSpeed(audioData, mEngine.GetNativeSampleRate(), pitch, speed);
+                mTTSAudioControl.play(new TTSAudioControl.AudioEntry(processedAudio, audioObserver));
             } else {
                 observer.update(audioData, ttsRequest);
+            }
+
+            // update utterance cache with the synthesized audio. We do this only after the audio
+            // have been enqueued
+            if (phonemeEntry != null) {
+                saveAudioToCacheEntry(phonemeEntry, audioData);
             }
         }
 
@@ -311,37 +310,51 @@ public class TTSEngineController {
          */
         @Nullable
         private byte[] synthesizeSpeech(PhonemeEntry phonemeEntry) {
-            Log.v(LOG_SPEAK_TASK_TAG, "synthesizeSpeech() :" + phonemeEntry.getSymbols());
-            byte[] bytes;
+            Log.v(LOG_SPEAK_TASK_TAG, "synthesizeSpeech() called");
             if (mEngine == null) {
                 Log.e(LOG_SPEAK_TASK_TAG, "synthesizeSpeech(): mEngine is null");
                 return null;
             }
-            bytes = mEngine.SpeakToPCM(phonemeEntry.getSymbols());
+            return mEngine.SpeakToPCM(phonemeEntry.getSymbols());
+        }
 
+        private boolean saveAudioToCacheEntry(PhonemeEntry phonemeEntry, byte[] bytes) {
             SampleRate sampleRate;
-            if (mEngine.GetNativeSampleRate() == 22050) {
-                sampleRate = SAMPLE_RATE_22KHZ;
-            } else if (mEngine.GetNativeSampleRate() == 16000) {
-                sampleRate = SAMPLE_RATE_16KHZ;
-            } else {
-                throw new IllegalStateException("Unknown sample rate: " + mEngine.GetNativeSampleRate());
+            switch(mEngine.GetNativeSampleRate())
+            {
+                case 11025:
+                    sampleRate = SAMPLE_RATE_11KHZ;
+                    break;
+                case 16000:
+                    sampleRate = SAMPLE_RATE_16KHZ;
+                    break;
+                case 22050:
+                    sampleRate = SAMPLE_RATE_22KHZ;
+                    break;
+                case 44100:
+                    sampleRate = SAMPLE_RATE_44_1KHZ;
+                    break;
+                case 48000:
+                    sampleRate = SAMPLE_RATE_48KHZ;
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown sample rate: " + mEngine.GetNativeSampleRate());
             }
+
             final VoiceAudioDescription vad = UtteranceCacheManager.newAudioDescription(AUDIO_FMT_PCM,
                     sampleRate, bytes.length, mCurrentVoice.InternalName, mCurrentVoice.Version);
             if (bytes.length == 0) {
                 Log.w(LOG_SPEAK_TASK_TAG, "synthesizeSpeech(): No audio generated ?!");
-                return null;
+                return false;
             }
             UtteranceCacheManager ucm = App.getAppRepository().getUtteranceCache();
             if (ucm.addAudioToCacheItem(this.item.getUuid(), phonemeEntry, vad, bytes)) {
                 Log.v(LOG_SPEAK_TASK_TAG, "Cached speech audio " + this.item.getUuid());
             } else {
                 Log.e(LOG_SPEAK_TASK_TAG, "Couldn't add audio to cache item " + this.item.getUuid());
-                return null;
+                return false;
             }
-
-            return bytes;
+            return true;
         }
 
         /**

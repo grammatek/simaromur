@@ -366,16 +366,18 @@ public class VoiceInfo extends AppCompatActivity
                 return;
             }
             mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_cloud_checked_solid);
-            toggleSpeakButton();
-        } else if (mVoice.type.equals(Voice.TYPE_TORCH)) {
-            toggleSpeakButton();
-        } else {
-            toggleSpeakButton();
         }
+        toggleSpeakButton();
 
-        // execute frontend, generate new TTS request
+        // execute frontend
         CacheItem item = appRepo.getUtteranceCache().addUtterance(text);
         item = appRepo.executeFrontendAndSaveIntoCache(text, item, mVoice);
+        if ((item.getUtterance().getPhonemesCount() == 0) ||
+                item.getUtterance().getPhonemesList().get(0).getSymbols().isEmpty()) {
+            Log.w(LOG_TAG, "onPlayClicked: No phonemes to speak");
+            return;
+        }
+        // create TTS request
         TTSRequest ttsRequest = new TTSRequest(item.getUuid());
         appRepo.setCurrentTTSRequest(ttsRequest);
 

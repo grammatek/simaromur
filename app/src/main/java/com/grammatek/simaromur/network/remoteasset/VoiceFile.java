@@ -18,10 +18,10 @@ public class VoiceFile {
     @SerializedName("Platform")
     public String platform;
     // Type of the asset should match the type in VoiceDao in case of a voice asset, i.e.
-    // "clustergen", "clunits", "torchscript", "phoneme"
+    // "vits"
     @SerializedName("Type")
     public String type;
-    // The phoneme set to use for this asset, e.g. "ipa", "sampa", "flite"
+    // The phoneme set to use for this asset, e.g. "ipa", "sampa"
     @SerializedName("PhonemeType")
     public String phonemeType;
     @SerializedName("Md5Sum")

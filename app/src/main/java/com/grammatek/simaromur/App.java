@@ -20,8 +20,6 @@ public class App extends Application {
     private static FirebaseAnalytics sFirebaseAnalytics;
     private static FirebaseCrashlytics sFirebaseCrashlytics;
     private static App sApplication;
-
-    ConnectionCheck mConnectionChecker;
     public static App getApplication() {
         return sApplication;
     }
@@ -79,8 +77,6 @@ public class App extends Application {
         Log.v(LOG_TAG, "onCreate()");
         super.onCreate();
         sApplication = this;
-        mConnectionChecker = new ConnectionCheck(this);
-        mConnectionChecker.registerNetworkCallback();
         // Obtain the FirebaseAnalytics instance.
         FirebaseApp.initializeApp(getContext());
         sFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
