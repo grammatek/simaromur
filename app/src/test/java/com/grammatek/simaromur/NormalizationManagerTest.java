@@ -32,12 +32,12 @@ public class NormalizationManagerTest {
 
     @Test
     public void processTest() {
-        String input = "Space-X";
+        String input = "síma 421-6368";
         NormalizationManager manager = new NormalizationManager(context, pronDict);
         String processed = manager.process(input);
         System.out.println(processed);
 
-        assertEquals("space - x .",
+        assertEquals("síma fjórir tveir einn - sex þrír sex átta .",
                 processed);
     }
 
@@ -173,6 +173,9 @@ public class NormalizationManagerTest {
     private Map<String, String> getV14TestSentences() {
         // test sentences added for the deployment of v1.4
         Map<String, String> sent = new HashMap<>();
+        sent.put("99.200.000", "níutíu og níu milljónir og tvö hundruð þúsund .");
+        sent.put("9.200.000", "níu milljónir og tvö hundruð þúsund .");
+        sent.put("H&M", "h og m .");
         sent.put("láta skoðanir sínar í ljós í athugasemdum.“, segir hún.",
                 "láta skoðanir sínar í ljós í athugasemdum \" . , segir hún .");
         sent.put("Ôlafsson, framkvæmdastjóri Stakka víkur ehf., segir",
@@ -298,7 +301,7 @@ public class NormalizationManagerTest {
         testSentences.put("er þetta í 23. skiptið sem mótið er haldið .", "er þetta í tuttugasta og þriðja skiptið sem mótið er haldið .".toLowerCase());
         testSentences.put("Skráning er hafin á http://keflavik.is/fimleikar/ og ef eitthvað er óljóst er hægt að hafa samband í síma 421-6368 eða á fimleikar@keflavik.is",
                 "Skráning er hafin á keflavik punktur is skástrik ".toLowerCase()  +
-                        "fimleikar og ef eitthvað er óljóst er hægt að hafa samband í síma fjórir tveir einn- sex þrír sex átta eða á fimleikar hjá keflavik punktur is .".toLowerCase());
+                        "fimleikar og ef eitthvað er óljóst er hægt að hafa samband í síma fjórir tveir einn - sex þrír sex átta eða á fimleikar hjá keflavik punktur is .".toLowerCase());
         testSentences.put("Austlæg átt, 5-13 m/s síðdegis.", "Austlæg átt , fimm til þrettán metrar á sekúndu síðdegis .".toLowerCase());
         testSentences.put("hlutfallið á Vestfjörðum þar sem 14,1% íbúa eru innflytjendur",
                 "hlutfallið á Vestfjörðum þar sem fjórtán komma eitt prósent íbúa eru innflytjendur .".toLowerCase());

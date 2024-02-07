@@ -172,7 +172,7 @@ public class TTSNormalizer {
                 else if (token.length() > 1 && token.charAt(0) == token.charAt(1))
                     token = insertSpaces(token);
                 else if ((token.length() > 1 && NormalizationDictionaries.NOT_LETTER.matcher(token).matches())
-                || !PUNCTUATION_TO_KEEP.matcher(token).matches())
+                || (token.length() == 1 && !PUNCTUATION_TO_KEEP.matcher(token).matches()))
                     token = normalizeDigits(token);
             }
 

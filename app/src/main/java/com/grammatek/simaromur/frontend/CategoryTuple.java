@@ -25,7 +25,7 @@ public class CategoryTuple {
     private final String expansion;
 
     public CategoryTuple(String pattern, String rule, String category, String expansion) {
-        this.numberPattern = Pattern.compile(".*" + pattern + ".*");
+        this.numberPattern = Pattern.compile(pattern);
         this.rule = Pattern.compile(".*" + rule);
         this.category = category;
         this.expansion = expansion;

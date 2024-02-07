@@ -337,6 +337,7 @@ public class NormalizationDictionaries {
         abbreviationDict.put(Pattern.compile("(1)( )?°E", flags), "$1 gráða austur$2");
         abbreviationDict.put(Pattern.compile("([02-9])( )?°S" + EOS, flags), "$1 gráður suður $2");
         abbreviationDict.put(Pattern.compile("(1)( )?°S", flags), "$1 gráða suður $2");
+        abbreviationDict.put(Pattern.compile("[Hh]&[mM]", flags), "h og m");
     }
 
     public static final Map<Pattern, String> directionDict = new HashMap<>();
