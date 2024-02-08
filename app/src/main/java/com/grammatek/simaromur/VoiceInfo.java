@@ -26,6 +26,7 @@ import com.grammatek.simaromur.device.DownloadVoiceManager;
 import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.network.ConnectionCheck;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -121,6 +122,8 @@ public class VoiceInfo extends AppCompatActivity
 
         // more options (3 dots ...)
         CardView moreOptions = findViewById(R.id.moreOptionsBackground);
+        moreOptions.setVisibility(View.INVISIBLE);
+        moreOptions.setEnabled(false);
         moreOptions.setOnClickListener(view -> {
             // TODO: update not yet implemented
             boolean isUpdateAvailable = false;
@@ -158,6 +161,9 @@ public class VoiceInfo extends AppCompatActivity
                 }
             } else if (mVoice.needsDownload()){
                 Log.v(LOG_TAG, "updateUi: voice needs download");
+                moreOptions.setVisibility(View.VISIBLE);
+                moreOptions.setEnabled(true);
+
                 // set text view and play button
                 typeTextView.setText(getResources().getString(R.string.type_local_downloaded));
                 speakableTextView.setText(getResources().getString(R.string.voice_test_text_on_device));
@@ -178,15 +184,17 @@ public class VoiceInfo extends AppCompatActivity
                 mNetworkAvailabilityIcon.setImageResource(R.drawable.ic_action_download);
                 mNetworkAvailabilityIcon.setColorFilter(getResources().getColor(android.R.color.holo_green_light, null));
                 typeTextView.setText(getResources().getString(R.string.type_local));
-                if (mVoice.isFast()) {
-                    moreOptions.setVisibility(View.VISIBLE);
-                    moreOptions.setEnabled(true);
-                    speakableTextView.setText(getResources().getString(R.string.voice_test_text_on_device_fast));
-                } else {
+                if (mVoice.url.equals("assets")) {
+                    Log.v(LOG_TAG, "updateUi: voice is inside assets, cannot delete or update");
                     moreOptions.setVisibility(View.INVISIBLE);
                     moreOptions.setEnabled(false);
-                    speakableTextView.setText(getResources().getString(R.string.voice_test_text_on_device));
+
+                } else {
+                    Log.v(LOG_TAG, "updateUi: voice is deletable");
+                    moreOptions.setVisibility(View.VISIBLE);
+                    moreOptions.setEnabled(true);
                 }
+                speakableTextView.setText(getResources().getString(R.string.voice_test_text_on_device_fast));
                 speakableTextView.setVisibility(View.VISIBLE);
                 playButton.setVisibility(View.VISIBLE);
             }
