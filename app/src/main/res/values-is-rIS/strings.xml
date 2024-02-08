@@ -24,7 +24,7 @@
     <string name="info_other">Annað</string>
     <string name="wiki_github">Leiðbeiningar</string>
     <string name="info_about_device_title">Upplýsingar um Tæki</string>
-    <string name="info_copyright_url">https://github.com/grammatek/simaromur/blob/master/LICENSE-GPL3</string>
+    <string name="info_copyright_url">https://github.com/grammatek/simaromur/blob/master/LICENSE-APACHE2</string>
     <string name="open_in_new">Opna í nýjum glugga</string>
     <string name="is_IS">Íslenska</string>
     <string name="en_EN">Enska</string>
