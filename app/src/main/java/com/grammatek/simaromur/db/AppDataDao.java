@@ -84,8 +84,8 @@ public abstract class AppDataDao {
      */
     public void updateVoiceListTimestamp() {
         AppData appData = getAppData();
-        appData.simVoiceListUpdateTime = new java.util.Date();
-        Log.v(LOG_TAG, "updateVoiceListTimestamp: " + appData.simVoiceListUpdateTime);
+        appData.voiceListUpdateTime = new java.util.Date();
+        Log.v(LOG_TAG, "updateVoiceListTimestamp: " + appData.voiceListUpdateTime);
         update(appData);
     }
 
@@ -94,10 +94,10 @@ public abstract class AppDataDao {
         if (appData == null) {
             return true;
         }
-        Date lastUpdate = appData.simVoiceListUpdateTime;
+        Date lastUpdate = appData.voiceListUpdateTime;
         if (lastUpdate == null) {
             return true;
         }
-        return (appData.simVoiceListUpdateTime.before(date));
+        return (appData.voiceListUpdateTime.before(date));
     }
 }
