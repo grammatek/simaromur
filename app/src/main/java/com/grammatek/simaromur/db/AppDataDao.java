@@ -62,8 +62,8 @@ public abstract class AppDataDao {
      * @param voice the current voice to select, it needs to already exist in db
      */
     public void selectCurrentVoice(Voice voice) {
-        if ((voice.voiceId == 0))
-            throw new AssertionError("selectCurrentVoice: voiceId == 0");
+        if ((voice.voiceId <= 0))
+            throw new AssertionError("selectCurrentVoice: voiceId <= 0");
         AppData appData = getAppData();
         appData.currentVoiceId = voice.voiceId;
         update(appData);
@@ -72,7 +72,7 @@ public abstract class AppDataDao {
     /**
      * Returns id of current voice from AppData table.
      *
-     * @return voice id of the current selected voice
+     * @return voice id of the current selected voice or -1 if no voice is selected
      */
     public Long getCurrentVoiceId() {
         AppData appData = getAppData();
@@ -84,8 +84,8 @@ public abstract class AppDataDao {
      */
     public void updateVoiceListTimestamp() {
         AppData appData = getAppData();
-        appData.simVoiceListUpdateTime = new java.util.Date();
-        Log.v(LOG_TAG, "updateVoiceListTimestamp: " + appData.simVoiceListUpdateTime);
+        appData.voiceListUpdateTime = new java.util.Date();
+        Log.v(LOG_TAG, "updateVoiceListTimestamp: " + appData.voiceListUpdateTime);
         update(appData);
     }
 
@@ -94,10 +94,10 @@ public abstract class AppDataDao {
         if (appData == null) {
             return true;
         }
-        Date lastUpdate = appData.simVoiceListUpdateTime;
+        Date lastUpdate = appData.voiceListUpdateTime;
         if (lastUpdate == null) {
             return true;
         }
-        return (appData.simVoiceListUpdateTime.before(date));
+        return (appData.voiceListUpdateTime.before(date));
     }
 }
