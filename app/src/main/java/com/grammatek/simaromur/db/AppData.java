@@ -30,12 +30,19 @@ public class AppData {
     // boolean for privacy info dialog acceptance of the user
     @ColumnInfo(name = "privacy_info_dialog_accepted", defaultValue = "0")
     @NonNull
-    public Boolean privacyInfoDialogAccepted = false;
+    public Boolean privacyInfoDialogAccepted;
 
     // boolean for CrashLytics user consent
     @ColumnInfo(name = "crash_lytics_user_consent_accepted", defaultValue = "0")
     @NonNull
-    public Boolean crashLyticsUserConsentGiven = false;
+    public Boolean crashLyticsUserConsentGiven;
+
+    public AppData() {
+        schemaVersion = "8";
+        currentVoiceId = -1;
+        privacyInfoDialogAccepted = false;
+        crashLyticsUserConsentGiven = false;
+    }
 
     @NonNull
     @Override

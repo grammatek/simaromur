@@ -165,13 +165,19 @@ public abstract class ApplicationDb extends RoomDatabase {
 
             AppData appData = mAppDataDao.getAppData();
             if (appData == null) {
+                // initialize fresh app data table values. This is after a fresh install
+                Log.i(LOG_TAG, "PopulateDbAsync: Fresh install, initializing App data table");
                 appData = new AppData();
                 mAppDataDao.insert(appData);
+            } else {
+                Log.v(LOG_TAG, "PopulateDbAsync: App data table found.");
             }
 
             List<Voice> voices = mVoiceDao.getAnyVoices();
             if (voices == null || voices.isEmpty()) {
-                Log.d(LOG_TAG, "PopulateDbAsync: no voices yet, network voices are updated async.");
+                Log.d(LOG_TAG, "PopulateDbAsync: no voices yet");
+            } else {
+                Log.d(LOG_TAG, "PopulateDbAsync: Voices found.");
             }
             return null;
         }
