@@ -140,7 +140,19 @@ public class TestRoomDbMigration {
         db.execSQL("INSERT INTO voice_table VALUES (2, 'Steinn', 'male', 'stein_vits_onnx_xs_ipa', 'isl-ISL', 'Íslenska'," +
                 " 'Steinn', 'onnx', 'now', 'now', 'assets', 'is-steinn-xs-ipa.onnx is-steinn-xs-ipa.onnx.json', '0.5', '31a565683d0927cb8a39d5f80ebd85c1', 0)");
         db.close();
-        db = testHelper.runMigrationsAndValidate(TEST_DB_NAME, 8, true, ApplicationDb.MIGRATION_7_8);
+        testHelper.runMigrationsAndValidate(TEST_DB_NAME, 8, true, ApplicationDb.MIGRATION_7_8);
+    }
+    @Test
+    public void migrationFrom7To8NoValidVoicesLeft() throws IOException {
+        // Create the database in version 7 with only non-ONNX voice, then migrate to 8
+        SupportSQLiteDatabase db =
+                testHelper.createDatabase(TEST_DB_NAME, 7);
+        db.execSQL("INSERT INTO voice_table VALUES (1, 'Álfur', 'male', 'Alfur', 'is-IS', 'Íslenska(icelandic)'," +
+                " '', 'network', 'now', 'now', 'http://someurl', 'downloadpath', 'API1', 'nomd5sum', 0)");
+        db.execSQL("INSERT INTO app_data_table VALUES (1, '7', 1, '/flite/voices', 'today'," +
+                " '/sim/voices', 'today', 1, 1)");
+        db.close();
+        testHelper.runMigrationsAndValidate(TEST_DB_NAME, 8, true, ApplicationDb.MIGRATION_7_8);
     }
     @Test
     public void TestDBV2() throws IOException {

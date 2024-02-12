@@ -99,8 +99,16 @@ public abstract class ApplicationDb extends RoomDatabase {
             database.execSQL("DROP TABLE app_data_table");
             database.execSQL("ALTER TABLE app_data_table_temp RENAME TO app_data_table");
 
-            // if the current_voice_id is not existing in voice_table, set it to the first voice found in voice_table
-            database.execSQL("UPDATE app_data_table SET current_voice_id = (SELECT voiceId FROM voice_table LIMIT 1) WHERE current_voice_id NOT IN (SELECT voiceId FROM voice_table)");
+            // if the current_voice_id does not exist in voice_table or is NULL, set it to the first voice found in voice_table,
+            // if there is no entry in voice_table, set it to -1
+            database.execSQL(
+                    "UPDATE app_data_table " +
+                            "SET current_voice_id = CASE " +
+                            "WHEN current_voice_id IN (SELECT voiceId FROM voice_table) THEN current_voice_id " +
+                            "ELSE -1 " +
+                            "END " +
+                            "WHERE current_voice_id NOT IN (SELECT voiceId FROM voice_table) OR current_voice_id IS NULL;"
+            );
 
             // clean up the database file: doesn't work inside a transaction
             //database.execSQL("VACUUM");
