@@ -22,7 +22,7 @@ import java.util.List;
 )
 public abstract class ApplicationDb extends RoomDatabase {
     private final static String LOG_TAG = "Simaromur_" + ApplicationDb.class.getSimpleName();
-    static final int LATEST_VERSION = 7;
+    static final int LATEST_VERSION = 8;
     private static volatile ApplicationDb INSTANCE;
 
     public abstract AppDataDao appDataDao();
@@ -78,6 +78,43 @@ public abstract class ApplicationDb extends RoomDatabase {
             database.execSQL("UPDATE voice_table SET url = 'https://api.grammatek.com/tts/v0' WHERE type = 'network'");
         }
     };
+
+    static public final Migration MIGRATION_7_8 = new Migration(7, 8) {  // v7 => 8
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            Log.v(LOG_TAG, "MIGRATION_7_8");
+
+            // adapt voice_table to new schema: delete all but onnx voices and update schema version
+            database.execSQL("DELETE FROM voice_table WHERE type != 'onnx'");
+            database.execSQL("UPDATE app_data_table SET schema_version = '8'");
+
+            // adapt app_data_table to new schema: drop unnecessary columns. This is not directly
+            // supported in SQLite. We need to create a new table, copy the data over and finally
+            // drop the old table. Please take into account the definitions of AppData class !
+            database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS app_data_table_temp (`appDataId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `schema_version` TEXT NOT NULL, `current_voice_id` INTEGER NOT NULL, `voice_list_update_time` TEXT, `privacy_info_dialog_accepted` INTEGER NOT NULL DEFAULT 0, `crash_lytics_user_consent_accepted` INTEGER NOT NULL DEFAULT 0)");
+            database.execSQL(
+                    "INSERT INTO app_data_table_temp SELECT appDataId, schema_version, current_voice_id, sim_voice_list_update_time, privacy_info_dialog_accepted, crash_lytics_user_consent_accepted FROM app_data_table"
+            );
+            database.execSQL("DROP TABLE app_data_table");
+            database.execSQL("ALTER TABLE app_data_table_temp RENAME TO app_data_table");
+
+            // if the current_voice_id does not exist in voice_table or is NULL, set it to the first voice found in voice_table,
+            // if there is no entry in voice_table, set it to -1
+            database.execSQL(
+                    "UPDATE app_data_table " +
+                            "SET current_voice_id = CASE " +
+                            "WHEN current_voice_id IN (SELECT voiceId FROM voice_table) THEN current_voice_id " +
+                            "ELSE -1 " +
+                            "END " +
+                            "WHERE current_voice_id NOT IN (SELECT voiceId FROM voice_table) OR current_voice_id IS NULL;"
+            );
+
+            // clean up the database file: doesn't work inside a transaction
+            //database.execSQL("VACUUM");
+        }
+    };
+
     public static ApplicationDb getDatabase(final Context context) {
         Log.v(LOG_TAG, "getDatabase");
         if (INSTANCE == null) {
@@ -85,7 +122,7 @@ public abstract class ApplicationDb extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             ApplicationDb.class, "application_db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                             // Wipes and rebuilds instead of migrating if no Migration object.
                             .fallbackToDestructiveMigration()
                             .allowMainThreadQueries()
@@ -128,15 +165,19 @@ public abstract class ApplicationDb extends RoomDatabase {
 
             AppData appData = mAppDataDao.getAppData();
             if (appData == null) {
+                // initialize fresh app data table values. This is after a fresh install
+                Log.i(LOG_TAG, "PopulateDbAsync: Fresh install, initializing App data table");
                 appData = new AppData();
-                appData.fliteVoiceListPath = App.getDataPath();
-                appData.simVoiceListPath = App.getVoiceDataPath();
                 mAppDataDao.insert(appData);
+            } else {
+                Log.v(LOG_TAG, "PopulateDbAsync: App data table found.");
             }
 
             List<Voice> voices = mVoiceDao.getAnyVoices();
             if (voices == null || voices.isEmpty()) {
-                Log.d(LOG_TAG, "PopulateDbAsync: no voices yet, network voices are updated async.");
+                Log.d(LOG_TAG, "PopulateDbAsync: no voices yet");
+            } else {
+                Log.d(LOG_TAG, "PopulateDbAsync: Voices found.");
             }
             return null;
         }
