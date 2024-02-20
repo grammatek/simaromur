@@ -157,12 +157,8 @@ public class TTSService extends TextToSpeechService {
                 loadedVoiceName = mRepository.getLoadedVoiceName();
             } else {
                 Log.w(LOG_TAG, "onSynthesizeText: couldn't load voice ("+voiceNameToLoad+")");
-                callback.start(mRepository.getVoiceNativeSampleRate(), AudioFormat.ENCODING_PCM_16BIT,
-                        AudioManager.N_CHANNELS);
                 callback.error(TextToSpeech.ERROR_SERVICE);
-                if (callback.hasStarted() && ! callback.hasFinished()) {
-                    callback.done();
-                }
+                callback.done();
                 return;
             }
         }
