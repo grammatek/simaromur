@@ -129,24 +129,29 @@ public class TTSService extends TextToSpeechService {
         String country = request.getCountry();
         String variant = request.getVariant();
         String text = request.getCharSequenceText().toString();
+        Log.i(LOG_TAG, "onSynthesizeText: " + text);
         String voiceName = request.getVoiceName();
         int callerUid = request.getCallerUid();
         Bundle params = request.getParams();
-        // we will get speechrate and pitch from the settings,
-        // but in case the retrieval of the values fails, let's get the values from the request first.
         int speechrate = request.getSpeechRate();
         int pitch = request.getPitch();
+        Log.i(LOG_TAG, "onSynthesizeText: speechrate/pitch from request: (" + speechrate + "/" + pitch + ")");
         try {
-            speechrate = Settings.Secure.getInt(getContentResolver(), Settings.Secure.TTS_DEFAULT_RATE);
-            pitch = Settings.Secure.getInt(getContentResolver(), Settings.Secure.TTS_DEFAULT_PITCH);
+            // Use the voice settings for the base speech rate and derive the client's speech rate
+            // from it. Then we adapt the base speech rate to a feasible value and multiply it with
+            // the client's speech rate. Both together build the effective speech rate.
+            int settingsSpeechRate = Settings.Secure.getInt(getContentResolver(), Settings.Secure.TTS_DEFAULT_RATE);
+            float adaptedSettingsSpeechRate = adaptSpeechRate(settingsSpeechRate) / 100.0f;
+            Log.i(LOG_TAG, "onSynthesizeText: speechrate from settings: (" + settingsSpeechRate + ")");
+            float clientSpeechRate = speechrate / (settingsSpeechRate / 100.0f);
+            speechrate = (int) (adaptedSettingsSpeechRate * clientSpeechRate);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        Log.i(LOG_TAG, "onSynthesizeText: " + text);
+
         Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/" + country + "/" + variant
-                + "), callerUid: " + callerUid + " speed: " + speechrate + " pitch: " + pitch
+                + "), callerUid: " + callerUid + " effective speed: " + speechrate + " pitch: " + pitch
                 + " bundle: " + params);
-        speechrate = adaptSpeechRate(speechrate);
 
         String loadedVoiceName = mRepository.getLoadedVoiceName();
         if (loadedVoiceName.equals("")) {
@@ -157,12 +162,8 @@ public class TTSService extends TextToSpeechService {
                 loadedVoiceName = mRepository.getLoadedVoiceName();
             } else {
                 Log.w(LOG_TAG, "onSynthesizeText: couldn't load voice ("+voiceNameToLoad+")");
-                callback.start(mRepository.getVoiceNativeSampleRate(), AudioFormat.ENCODING_PCM_16BIT,
-                        AudioManager.N_CHANNELS);
                 callback.error(TextToSpeech.ERROR_SERVICE);
-                if (callback.hasStarted() && ! callback.hasFinished()) {
-                    callback.done();
-                }
+                callback.done();
                 return;
             }
         }
@@ -235,7 +236,8 @@ public class TTSService extends TextToSpeechService {
 
     /**
      * Adapt speechrate to feasible values.
-     * The possible values retrievable for speechrate are from 10 - 600 (i.e. 0.1x - 6.0x).
+     * The possible values retrievable for speechrate settings in the settins menu are from 10 - 600
+     * (i.e. 0.1x - 6.0x).
      * We reduce these to values between 50 and 300 (0.5x - 3.0x). A speechrate of 100 still
      * should be 100. We adapt all values != 100 to the above range proportionally
      *
