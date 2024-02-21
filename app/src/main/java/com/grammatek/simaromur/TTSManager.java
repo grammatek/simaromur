@@ -190,7 +190,7 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
     private void openTtsSettings() {
         Intent intent = new Intent();
         intent.setAction("com.android.settings.TTS_SETTINGS");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
     }
 
