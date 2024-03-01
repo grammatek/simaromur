@@ -145,12 +145,16 @@ public class TTSService extends TextToSpeechService {
             Log.i(LOG_TAG, "onSynthesizeText: speechrate from settings: (" + settingsSpeechRate + ")");
             float clientSpeechRate = speechrate / (settingsSpeechRate / 100.0f);
             speechrate = (int) (adaptedSettingsSpeechRate * clientSpeechRate);
+            // Use the voice settings for the pitch. In contrast to the speech rate, the pitch is
+            // not changeable by e.g. TalkBack, but somehow, we get strange pitch variations via
+            // the request itself and cannot trust it. See also issue #24
+            pitch = Settings.Secure.getInt(getContentResolver(), Settings.Secure.TTS_DEFAULT_PITCH);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
 
         Log.v(LOG_TAG, "onSynthesizeText: (" + language + "/" + country + "/" + variant
-                + "), callerUid: " + callerUid + " effective speed: " + speechrate + " pitch: " + pitch
+                + "), callerUid: " + callerUid + " effective speed: " + speechrate + ", effective pitch: " + pitch
                 + " bundle: " + params);
 
         String loadedVoiceName = mRepository.getLoadedVoiceName();
