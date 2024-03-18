@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <TextView
+        android:id="@+id/term_title"
+        style="@style/text_view_style_transparent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@android:color/black"
+        android:text="@string/term_title"
+        android:textColor="@android:color/holo_green_light"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="@+id/term_text"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/term_text"
+        style="@style/text_view_style"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="start|top"
+        android:hint="@string/enter_text"
+        android:importantForAutofill="no"
+        android:inputType="textAutoCorrect|textMultiLine"
+        android:minLines="2"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toStartOf="@+id/playButton1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/term_title"
+        tools:ignore="LabelFor" />
+
+    <ImageButton
+        android:id="@+id/playButton1"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="bottom|right"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="@string/play_term_title_description"
+        android:src="@drawable/play_drawable"
+        android:text="@string/play_term_title_description"
+        android:background="@android:color/black"
+        app:tint="@color/white"
+        app:layout_constraintBottom_toBottomOf="@+id/term_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/term_text"/>
+
+    <TextView
+        android:id="@+id/replacement_title"
+        style="@style/text_view_style_transparent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="48dp"
+        android:background="@android:color/black"
+        android:gravity="left|top"
+        android:text="@string/replacement_title"
+        android:textAlignment="viewEnd"
+        android:textSize="16sp"
+        android:textStyle="italic"
+        app:layout_constraintEnd_toEndOf="@+id/replacement_text"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/term_text" />
+
+    <EditText
+        android:id="@+id/replacement_text"
+        style="@style/text_view_style"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="left|top"
+        android:hint="@string/enter_text"
+        android:importantForAutofill="no"
+        android:inputType="textAutoCorrect|textMultiLine"
+        android:minLines="2"
+        android:orientation="vertical"
+        android:textStyle="italic"
+        app:layout_constraintEnd_toStartOf="@+id/playButton2"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/replacement_title"
+        tools:ignore="LabelFor" />
+
+    <ImageButton
+        android:id="@+id/playButton2"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="bottom|right"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="@string/play_term_title_description"
+        android:src="@drawable/play_drawable"
+        android:text="@string/play_term_title_description"
+        android:background="@android:color/black"
+        app:tint="@color/white"
+        app:layout_constraintBottom_toBottomOf="@+id/replacement_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/replacement_text"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/save_button"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="92dp"
+        android:backgroundTint="@android:color/holo_green_light"
+        android:contentDescription="@string/save_entry"
+        android:src="@drawable/ic_fluent_checkmark_48_regular"
+        app:fabCustomSize="56dp"
+        app:layout_constraintEnd_toStartOf="@+id/delete_button_norm_dict"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/replacement_text"
+        app:maxImageSize="48dp"
+        app:tint="@android:color/white"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/delete_button_norm_dict"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="92dp"
+        android:backgroundTint="@android:color/holo_red_light"
+        android:contentDescription="@string/delete_norm_entry"
+        android:src="@drawable/ic_fluent_delete_48_regular"
+        app:fabCustomSize="56dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/save_button"
+        app:layout_constraintTop_toBottomOf="@+id/replacement_text"
+        app:maxImageSize="32dp"
+        app:tint="@android:color/white"/>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

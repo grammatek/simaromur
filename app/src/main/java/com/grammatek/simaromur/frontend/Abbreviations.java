@@ -37,6 +37,7 @@ public class Abbreviations {
     }
 
     private Set<String> readAbbrFromFile(int resID) {
+        // TODO: move to FileUtils
         Set<String> abbrSet = new HashSet<>();
         Resources res = context.getResources();
         String line;

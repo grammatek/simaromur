@@ -41,10 +41,11 @@ public class TTSService extends TextToSpeechService {
     @Override
     public void onCreate() {
         Log.i(LOG_TAG, "onCreate()");
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder(StrictMode.getVmPolicy())
-                .detectLeakedClosableObjects()
-                .build());
-
+        /**
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder(StrictMode.getVmPolicy())
+                    .detectLeakedClosableObjects()
+                    .build());
+        */
         mRepository = App.getAppRepository();
         // This calls onIsLanguageAvailable() and must run after Initialization
         super.onCreate();
@@ -197,7 +198,7 @@ public class TTSService extends TextToSpeechService {
         // item and save it into cache, then test one-by-one availability of every single
         // requested utterance component and eventually add the missing pieces
         CacheItem item = mRepository.getUtteranceCache().addUtterance(text);
-        item = mRepository.executeFrontendAndSaveIntoCache(text, item, voice);
+        item = mRepository.executeFrontendAndSaveIntoCache(text, item, voice, false);
         if ((item.getUtterance().getPhonemesCount() == 0) ||
                 item.getUtterance().getPhonemesList().get(0).getSymbols().isEmpty()) {
             Log.w(LOG_TAG, "onSynthesizeText: No phonemes to speak");

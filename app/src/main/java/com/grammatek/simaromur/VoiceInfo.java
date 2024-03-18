@@ -379,7 +379,7 @@ public class VoiceInfo extends AppCompatActivity
 
         // execute frontend
         CacheItem item = appRepo.getUtteranceCache().addUtterance(text);
-        item = appRepo.executeFrontendAndSaveIntoCache(text, item, mVoice);
+        item = appRepo.executeFrontendAndSaveIntoCache(text, item, mVoice, false);
         if ((item.getUtterance().getPhonemesCount() == 0) ||
                 item.getUtterance().getPhonemesList().get(0).getSymbols().isEmpty()) {
             Log.w(LOG_TAG, "onPlayClicked: No phonemes to speak");

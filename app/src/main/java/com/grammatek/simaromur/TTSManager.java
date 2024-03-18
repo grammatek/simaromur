@@ -37,9 +37,10 @@ public class TTSManager extends Activity implements OnItemClickListener, TextToS
 
     static final LauncherIcon[] ICONS = {
             new LauncherIcon(R.drawable.simaromur_large, R.string.simaromur_voice_manager, VoiceManager.class),
+            new LauncherIcon(R.drawable.library_large, R.string.simaromur_norm_dictionary, NormDictListView.class),
+            new LauncherIcon(R.drawable.custom_settings_large, R.string.tts_settings_label, TTSManager.class),
             new LauncherIcon(R.drawable.custom_info_large, R.string.simaromur_info, InfoViewer.class),
             new LauncherIcon(R.drawable.feedback_large, R.string.simaromur_feedback, EmailFeedback.class),
-            new LauncherIcon(R.drawable.custom_settings_large, R.string.tts_settings_label, TTSManager.class),
     };
 
     @SuppressLint("ClickableViewAccessibility")

@@ -65,9 +65,6 @@ public class PronunciationVits {
      *          relevant phonemes were found.
      */
     public String transcribe(String text, final String voiceType, final String voiceVersion) {
-        // lazy initialization of g2p
-        if (mPronounciation.GetG2p() == null)
-            mPronounciation.initializeG2P();
         mG2P = mPronounciation.GetG2p();
         assert(mG2P != null);
 
