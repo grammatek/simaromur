@@ -1,12 +1,13 @@
 package com.grammatek.simaromur;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
 import com.grammatek.simaromur.cache.CacheItem;
-import com.grammatek.simaromur.db.AppData;
+import com.grammatek.simaromur.db.NormDictEntry;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.device.TTSEngineController;
@@ -14,43 +15,36 @@ import com.grammatek.simaromur.device.TTSEngineController;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * View Model to keep a reference to the App repository and
- * an up-to-date list of all voices.
- */
-public class VoiceViewModel extends AndroidViewModel {
-    private final static String LOG_TAG = "Simaromur_" + VoiceViewModel.class.getSimpleName();
+public class NormDictViewModel extends AndroidViewModel {
+    private final static String LOG_TAG = "Simaromur_" + NormDictViewModel.class.getSimpleName();
 
     private final AppRepository mRepository;
     private TTSEngineController.SpeakTask mDevSpeakTask = null;
 
     // these variables are for data caching
-    private AppData mAppData;                       // application data
+    private LiveData<List<NormDictEntry>> mAllEntries;
 
-    public VoiceViewModel(Application application) {
+    public NormDictViewModel(Application application) {
         super(application);
         mRepository = App.getAppRepository();
     }
 
-    // Return application data
-    public AppData getAppData() {
-        if (mAppData == null) {
-            mAppData = mRepository.getCachedAppData();
+    // Return all entries
+    public LiveData<List<NormDictEntry>> getEntries() {
+        if (mAllEntries == null) {
+            mAllEntries = mRepository.getUserDictEntries();
         }
-        return mAppData;
+        return mAllEntries;
     }
 
-    // Return all voices
-    public LiveData<List<Voice>> getAllVoices() {
-        return mRepository.getAllVoices();
-    }
-
-    // Return specific voice
-    public Voice getVoiceWithId(long voiceId) {
-        List<Voice> voices = getAllVoices().getValue();
-        for(Voice voice: Objects.requireNonNull(voices)) {
-            if (voice.voiceId == voiceId)
-                return voice;
+    // Return specific entry
+    public NormDictEntry getEntryWithId(long entryId) {
+        if (mAllEntries == null) {
+            return null;
+        }
+        for(NormDictEntry entry: Objects.requireNonNull(mAllEntries.getValue())) {
+            if (entry.id == entryId)
+                return entry;
         }
         return null;
     }
@@ -84,5 +78,15 @@ public class VoiceViewModel extends AndroidViewModel {
             mRepository.stopDeviceSpeak(mDevSpeakTask);
         }
         mDevSpeakTask = null;
+    }
+
+    public void createOrUpdate(NormDictEntry mEntry) {
+        Log.v(LOG_TAG, "update: " + mEntry.term + " -> " + mEntry.replacement);
+        mRepository.createOrUpdateUserDictEntry(mEntry);
+    }
+
+    public void delete(NormDictEntry mEntry) {
+        Log.v(LOG_TAG, "delete: " + mEntry.term + " -> " + mEntry.replacement);
+        mRepository.deleteUserDictEntry(mEntry);
     }
 }

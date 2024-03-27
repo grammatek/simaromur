@@ -25,10 +25,11 @@ import com.grammatek.simaromur.cache.UtteranceCacheManager;
 import com.grammatek.simaromur.db.AppData;
 import com.grammatek.simaromur.db.AppDataDao;
 import com.grammatek.simaromur.db.ApplicationDb;
+import com.grammatek.simaromur.db.NormDictEntry;
+import com.grammatek.simaromur.db.NormDictEntryDao;
 import com.grammatek.simaromur.db.Voice;
 import com.grammatek.simaromur.db.VoiceDao;
 import com.grammatek.simaromur.device.DownloadVoiceManager;
-import com.grammatek.simaromur.device.SymbolsLvLIs;
 import com.grammatek.simaromur.device.TTSAudioControl;
 import com.grammatek.simaromur.device.TTSEngineController;
 import com.grammatek.simaromur.device.pojo.DeviceVoice;
@@ -45,12 +46,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * Abstracted application repository as promoted by the Architecture Guide.
@@ -62,10 +65,13 @@ public class AppRepository {
     private final static long NETWORK_VOICE_QUERY_TIME_MS = 1000 * 60 * 30;   // 30 min.
     private final AppDataDao mAppDataDao;
     private final VoiceDao mVoiceDao;
+    private final NormDictEntryDao mNormDictDao;
     private LiveData<AppData> mAppData;
     private LiveData<List<com.grammatek.simaromur.db.Voice>> mAllVoices;
+    private LiveData<List<com.grammatek.simaromur.db.NormDictEntry>> mAllUserDictEntries;
     private AppData mCachedAppData;
     private List<com.grammatek.simaromur.db.Voice> mAllCachedVoices;
+    private HashMap<NormDictEntry, Pattern> mAllCachedUserDictEntries;
     private final VoiceController mNetworkVoiceController;
     private final SpeakController mNetworkSpeakController;
     private final ApiDbUtil mApiDbUtil;
@@ -199,6 +205,7 @@ public class AppRepository {
                 CacheLowWatermark, CacheHighWatermark);
         mAppDataDao = db.appDataDao();
         mVoiceDao = db.voiceDao();
+        mNormDictDao = db.normDictDao();
         mApiDbUtil = new ApiDbUtil(mVoiceDao);
         mAVM = new AssetVoiceManager(App.getContext());
         mDVM = new DownloadVoiceManager();
@@ -229,6 +236,9 @@ public class AppRepository {
         });
         mAllVoices = mVoiceDao.getAllVoices();
         mAllVoices.observeForever(voices -> {
+            if (voices == null) {
+                return;
+            }
             Log.v(LOG_TAG, "mAllVoices update: " + voices);
             // Update cached voices
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -237,11 +247,39 @@ public class AppRepository {
                 mAllCachedVoices = Objects.requireNonNullElse(voices, new ArrayList<>());
             }
         });
-
+        mAllUserDictEntries = mNormDictDao.getSortedEntries();
+        mAllUserDictEntries.observeForever(entries -> {
+            if (entries == null) {
+                return;
+            }
+            Log.v(LOG_TAG, "mAllUserDictEntries update: " + entries.size() + " entries");
+            mAllCachedUserDictEntries = createNormDictRegexMap(entries);
+        });
         mMediaPlayer = new MediaPlayObserver();
         mScheduler = Executors.newSingleThreadScheduledExecutor();
         // only do this once at the beginning
         mScheduler.schedule(assetVoiceRunnable, 0, TimeUnit.SECONDS);
+        Log.v(LOG_TAG, "AppRepository() done");
+    }
+
+    /**
+     * Create a map of regex patterns for all normalization dictionary entries for fast
+     * lookup during normalization.
+     *
+     * @param entries   list of normalization dictionary entries
+     * @return         map of regex patterns for all normalization dictionary entries
+     */
+    private HashMap<NormDictEntry, Pattern> createNormDictRegexMap(List<NormDictEntry> entries) {
+        HashMap<NormDictEntry, Pattern> regexMap = new HashMap<>();
+        for (NormDictEntry entry : entries) {
+            // make for every NormDictEntry.term a regular expression matching on word boundaries and
+            // case insensitive. Note: we cannot use \b for the word boundary's term end,
+            // because of possible trailing punctuation
+            Pattern regex = Pattern.compile("\\b(?i)" +
+                    Pattern.quote(entry.term.strip().toLowerCase()) + "(?!\\S)");
+            regexMap.put(entry, regex);
+        }
+        return regexMap;
     }
 
     /**
@@ -338,6 +376,46 @@ public class AppRepository {
     }
 
     /**
+     * Get a LiveData list of all current normalization dictionary entries.
+     *
+     * @return List of all current normalization dictionary entries as LiveData
+     */
+    public LiveData<List<NormDictEntry>> getUserDictEntries() {
+        Log.v(LOG_TAG, "getUserDictEntries");
+        return mAllUserDictEntries;
+    }
+
+    /**
+     * Creates or updates the given entry inside the Db.
+     */
+    public void createOrUpdateUserDictEntry(NormDictEntry entry) {
+        mNormDictDao.insert(entry);
+        mUtteranceCacheManager.clearCache();
+    }
+
+
+    /**
+     * Deletes the given entry from the Db.
+     * @param mEntry  the entry to be deleted
+     */
+    public void deleteUserDictEntry(NormDictEntry mEntry) {
+        mNormDictDao.delete(mEntry);
+        mUtteranceCacheManager.clearCache();
+    }
+
+    /**
+     * Returns map of all observed/cached user normalization dictionary entries and the corresponding
+     * compiled term regular expression pattern. If there are any changes in the model, this map
+     * is updated automatically.
+     *
+     * @return map of all cached voices
+     */
+    public final HashMap<NormDictEntry, Pattern>  getCachedUserDictEntries() {
+        Log.v(LOG_TAG, "getCachedUserDictEntries");
+        return mAllCachedUserDictEntries;
+    }
+
+    /**
      * Returns list of all observed/cached voices. If there are any changes in the model,
      * this list will be updated.
      *
@@ -353,7 +431,7 @@ public class AppRepository {
      *
      * @param languageCode language code, e.g. "is-IS"
      * @todo Do this regularly via a timer
-     * @todo If we feed "is-IS" here, then TTS service doesn' proceed, check it out !
+     * @todo If we feed "is-IS" here, then TTS service doesn't proceed, check it out !
      */
     public void streamNetworkVoices(String languageCode) {
         Log.v(LOG_TAG, "streamNetworkVoices");
@@ -903,6 +981,15 @@ public class AppRepository {
         return null;
     }
 
+    /**
+     * Get the currently selected voice.
+     *
+     * @return the currently selected voice
+     */
+    Voice getCurrentVoice() {
+        return mSelectedVoice;
+    }
+
     public String getLoadedVoiceName() {
         if (mSelectedVoice != null) {
             return mSelectedVoice.name;
@@ -916,17 +1003,22 @@ public class AppRepository {
      *
      * @param text Raw text as received by the TTS service
      * @param item cache item to save into the speech audio cache
+     * @param voice voice to use for normalization and G2P
+     * @param doIgnoreUserDict true to ignore user dictionary, false otherwise
      * @return updated cache item
      */
     synchronized
-    public CacheItem executeFrontendAndSaveIntoCache(String text, CacheItem item, com.grammatek.simaromur.db.Voice voice) {
+    public CacheItem executeFrontendAndSaveIntoCache(String text,
+                                                     CacheItem item,
+                                                     com.grammatek.simaromur.db.Voice voice,
+                                                     boolean doIgnoreUserDict) {
         String phonemes = "";
         if (item.getUtterance().getNormalized().isEmpty()) {
             // we always need to normalize the text, but it doesn't hurt, if we always do G2P as well
             // for network voices, this is currently all that is needed.
-            String normalizedText = mFrontend.getNormalizationManager().process(text);
+            String normalizedText = mFrontend.getNormalizationManager().process(text, doIgnoreUserDict);
             phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
-            Log.v(LOG_TAG, "onSynthesizeText: original (\"" + text + "\"), normalized (\"" + normalizedText + "\"), phonemes (\"" + phonemes + "\")");
+            Log.v(LOG_TAG, "executeFrontendAndSaveIntoCache: original (\"" + text + "\"), normalized (\"" + normalizedText + "\"), phonemes (\"" + phonemes + "\")");
             if (!phonemes.isEmpty()) {
                 Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
                 item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
@@ -935,7 +1027,7 @@ public class AppRepository {
         } else if (item.getUtterance().getPhonemesCount() == 0) {
             final String normalizedText = item.getUtterance().getNormalized();
             phonemes = mFrontend.transcribe(normalizedText, voice.type, voice.version);
-            Log.v(LOG_TAG, "onSynthesizeText: normalized (\"" + normalizedText + "\"), phonemes (\"" + phonemes + "\")");
+            Log.v(LOG_TAG, "executeFrontendAndSaveIntoCache: normalized (\"" + normalizedText + "\"), phonemes (\"" + phonemes + "\")");
             if (!phonemes.isEmpty()) {
                 Utterance updatedUtterance = UtteranceCacheManager.newUtterance(text, normalizedText, List.of(phonemes));
                 item = mUtteranceCacheManager.saveUtterance(updatedUtterance);
@@ -1109,5 +1201,4 @@ public class AppRepository {
             return null;
         }
     }
-
 }

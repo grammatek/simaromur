@@ -5,6 +5,7 @@
     <string name="icelandic_sample">Þetta er prófunarsetning á íslensku fyrir talgervilinn Símarómur.</string>
     <string name="simaromur_manager">Símarómur</string>
     <string name="simaromur_voice_manager">Voices</string>
+    <string name="simaromur_norm_dictionary">Dictionary</string>
     <string name="simaromur_info">About</string>
     <string name="simaromur_feedback">Feedback</string>
     <string name="email_subject">Feedback on Símarómur</string>
@@ -23,6 +24,8 @@
     <string name="voice_type">Type</string>
     <string name="speak_voice_title">Play</string>
     <string name="play_voice_title_description">Speak the shown text</string>
+    <string name="play_term_title_description">Speak the shown text</string>
+    <string name="play_replacement_title_description">Speak the shown text</string>
     <string name="info_other">Other</string>
     <string name="wiki_github">Instructions</string>
     <string name="info_about_device_title">Device Information</string>
@@ -34,6 +37,7 @@
     <string name="en_US">U.S. English</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="delete_norm_entry">Delete</string>
     <string name="not_yet">No thanks</string>
     <string name="doit">Do it!</string>
     <string name="tts_settings">Before you can use Símarómur as a screen reader, you have to activate it in the Android TTS settings</string>
@@ -49,7 +53,7 @@
     <string name="info_version_error">Error retrieving version info</string>
     <string name="info_supported_abis">Supported ABIs</string>
     <string name="info_phone_model">Phone Model</string>
-    <string name="info_about">© (2021–2022) Grammatek ehf.\nhttps://www.grammatek.com</string>
+    <string name="info_about">© (2021–2024) Grammatek ehf.\nhttps://www.grammatek.com</string>
     <string name="info_repo_url">https://github.com/grammatek/simaromur/wiki</string>
     <string name="info_benchmark">Benchmark</string>
     <string name="info_benchmark_value">times faster than real time</string>
@@ -86,4 +90,10 @@
     <string name="voice_deletion_q">Really delete voice?</string>
     <string name="voice_deletion_not_possible">You cannot delete the voice you are currently using, please select a different voice and try again</string>
     <string name="no_email_client">There is no email client installed</string>
+    <string name="term_title">Term</string>
+    <string name="replacement_title">Replacement</string>
+    <string name="save_entry">Save</string>
+    <string name="add_dict_entry">Add entry</string>
+    <string name="dict_entry_deletion_title">Delete entry</string>
+    <string name="dict_entry_deletion_q">Really delete entry?</string>
 </resources>

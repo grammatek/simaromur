@@ -29,7 +29,7 @@ public class NormalizationManager {
     private static final String POS_MODEL = "pos/is-pos-reduced-maxent.bin";
 
     private final Context mContext;
-    private final POSTaggerME mPosTagger;
+    private POSTaggerME mPosTagger;
     private final TTSUnicodeNormalizer mUnicodeNormalizer;
     private final Tokenizer mTokenizer;
     private final TTSNormalizer mTTSNormalizer;
@@ -39,25 +39,21 @@ public class NormalizationManager {
         mUnicodeNormalizer = new TTSUnicodeNormalizer(context, pronDict);
         mTokenizer = new Tokenizer(context);
         mTTSNormalizer = new TTSNormalizer();
-        mPosTagger = initPOSTagger();
-        if (mPosTagger == null) {
-            Log.e(LOG_TAG, "Failed to initialize POS tagger");
-            throw new RuntimeException("Failed to initialize POS tagger");
-        }
     }
 
     /**
      * Processes the input text according to the defined steps: unicode cleaning,
      * tokenizing, normalizing
      * @param text the input text
+     * @param doIgnoreUserDict if true, the user dictionary is ignored
      * @return normalized version of 'text'
      */
-    public String process(final String text) {
+    public String process(final String text, boolean doIgnoreUserDict) {
         Log.v(LOG_TAG, "process() called");
         String cleaned = mUnicodeNormalizer.normalizeEncoding(text);
 
         List<String> strings = mTokenizer.detectSentences(cleaned);
-        List<String> normalizedSentences = normalize(strings);
+        List<String> normalizedSentences = normalize(strings, doIgnoreUserDict);
         List<String> cleanNormalized = mUnicodeNormalizer.normalizeAlphabet(normalizedSentences);
         for (String sentence : cleanNormalized) {
             Log.v(LOG_TAG, "normalized sentence: " + sentence);
@@ -66,12 +62,12 @@ public class NormalizationManager {
     }
 
     // pre-normalization, tagging and final normalization of the sentences in 'tokenized'
-    private List<String> normalize(final List<String> strings) {
+    private List<String> normalize(final List<String> strings, boolean doIgnoreUserDict) {
         String preNormalized;
         List<String> normalized = new ArrayList<>();
 
         for (String sentence : strings) {
-            preNormalized = mTTSNormalizer.preNormalize(sentence);
+            preNormalized = mTTSNormalizer.preNormalize(sentence, doIgnoreUserDict);
             String[] tags = tagText(preNormalized);
             // preNormalized is tokenized as string, so we know splitting on whitespace will give
             // us the correct tokens according to the tokenizer
@@ -112,6 +108,15 @@ public class NormalizationManager {
 
             return tags;
         }
+
+        if (mPosTagger == null) {
+            // this takes ~2 seconds
+            mPosTagger = initPOSTagger();
+            if (mPosTagger == null) {
+                Log.e(LOG_TAG, "Failed to initialize POS tagger");
+                throw new RuntimeException("Failed to initialize POS tagger");
+            }
+        }
         tags = mPosTagger.tag(tokens);
         if (DEBUG) {
             printProbabilities(tags, mPosTagger, tokens);
@@ -126,7 +131,6 @@ public class NormalizationManager {
             InputStream iStream = mContext.getAssets().open(POS_MODEL);
             POSModel posModel = new POSModel(iStream);
             posTagger = new POSTaggerME(posModel);
-
         } catch(IOException e) {
             e.printStackTrace();
         }

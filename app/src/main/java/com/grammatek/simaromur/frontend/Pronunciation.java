@@ -55,10 +55,13 @@ public class Pronunciation {
     }
 
     public Pronunciation(Context context) {
+        Log.v(LOG_TAG, "Pronunciation() called");
         mContext = context;
-        mPronDict = readPronDict();
-        mIpaPronDict = readIpaPronDict();
         mAlphabets = initializeAlphabets();
+        // the following members are lazily initialized:
+        // - mG2P
+        // - mPronDict
+        // - mIpaPronDict
     }
 
     public String transcribe(String text) {
@@ -133,14 +136,15 @@ public class Pronunciation {
         StringBuilder sb = new StringBuilder();
         for (String tok : tokens) {
             String transcr = "";
-            if (mPronDict.containsKey(tok)) {
-                transcr = mPronDict.get(tok).getTranscript().trim();
+            Map<String, PronDictEntry> pronDict = GetPronDict();
+            if (pronDict.containsKey(tok)) {
+                transcr = pronDict.get(tok).getTranscript().trim();
             }
             else if (tok.equals(SymbolsLvLIs.TagPause)){
                 transcr = SymbolsLvLIs.SymbolShortPause;
             }
             else {
-                transcr = mG2P.process(tok).trim();
+                transcr = GetG2p().process(tok).trim();
             }
 
             // bug in Thrax grammar, catch the error here: insert space before C if missing
@@ -182,10 +186,25 @@ public class Pronunciation {
         return List.copyOf(mAlphabets.keySet());
     }
 
-    public void initializeG2P() {
+    private NativeG2P initializeG2P() {
         if (mG2P == null) {
             mG2P = new NativeG2P(this.mContext);
         }
+        return mG2P;
+    }
+
+    private Map<String, PronDictEntry> initializePronDict() {
+        if (mPronDict == null) {
+            mPronDict = readPronDict();
+        }
+        return mPronDict;
+    }
+
+    private Map<String, PronDictEntry> initializeIpaPronDict() {
+        if (mIpaPronDict == null) {
+            mIpaPronDict = readIpaPronDict();
+        }
+        return mIpaPronDict;
     }
 
 
@@ -229,6 +248,7 @@ public class Pronunciation {
     }
 
     private Map<String, PronDictEntry> readPronDict() {
+        Log.v(LOG_TAG, "readPronDict() called");
         Map<String, PronDictEntry> pronDict = new HashMap<>();
         final List<String> fileContent = FileUtils.readLinesFromResourceFile(this.mContext,
                 R.raw.ice_pron_dict_standard_clear_2201_extended);
@@ -242,6 +262,7 @@ public class Pronunciation {
     }
 
     private Map<String, PronDictEntry> readIpaPronDict() {
+        Log.v(LOG_TAG, "readIpaPronDict() called");
         Map<String, PronDictEntry> pronDict = new HashMap<>();
         final List<String> fileContent = FileUtils.readLinesFromResourceFile(this.mContext,
                 R.raw.ice_pron_dict_standard_clear_2201_extended);
@@ -255,14 +276,14 @@ public class Pronunciation {
     }
 
     public NativeG2P GetG2p() {
-        return mG2P;
+        return initializeG2P();
     }
 
     public Map<String, PronDictEntry> GetPronDict() {
-        return mPronDict;
+        return initializePronDict();
     }
     public Map<String, PronDictEntry> GetIpaPronDict() {
-        return mIpaPronDict;
+        return initializeIpaPronDict();
     }
     public Map<String, Map<String, Map<String, String>>> GetAlphabets() {
         return mAlphabets;

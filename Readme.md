@@ -1,32 +1,50 @@
 # Símarómur
 
-This project provides an Icelandic TTS application for the Android TTS service.
+This project provides an Icelandic TTS application for the Android TTS service. The current state
+of the project is *production-ready*.
+
+The app is available on the [Google Play Store](https://play.google.com/store/apps/details?id=com.grammatek.simaromur).
 
 ## Voices
 
 Símarómur provides access to neural network [on-device voices](https://github.com/grammatek/simaromur_voices)
 that are bundled via assets.
 
-Handling of device-local voices started originally based on [Flite TTS Engine For Android](https://github.com/happyalu/Flite-TTS-Engine-for-Android),
-but we changed the code considerably and started with a clean slate instead of forking the project.
-We replaced many deprecated API's and also use current TTS Service Android API's. We also use CMake
-for integrating the C++ part instead of ndk-build and adapted the JNI part to be compatible with 64Bit
-platforms.
+Currently, there is one male voice available, named **Steinn**. This voice is not only highly intelligible
+but also possesses a pleasant and engaging tone, making it a versatile, general-purpose option that
+sets the standard for Icelandic on-device text-to-speech (TTS) technology. It is well-suited for
+reading both short and lengthy texts, providing a consistent listening experience.
 
-### New since version 2.x
-Deprecated FLite voices and the former neural network voices. Nowadays, Flite voices are obsolete
-and we are using purely neural network voices instead. The FLite project is barely maintained, and
-the runtime performance of the neural network voices is closing in on the FLite voices rapidly.
-We can achieve 25x realtime speed with the neural network voices on a Pixel 6 phone.
+We are currently developing a multi-speaker model that will include a female voice, slated for
+future release.
 
-The neural network model is based on [VITS](https://github.com/jaywalnut310/vits) and trained via
-[Piper TTS](https://github.com/rhasspy/piper)
+## User Normalization Dictionary
+
+Users can add normalization entries to accommodate alternative pronunciations of words or tokens.
+These alternative pronunciations take precedence over the built-in normalization rules, applying
+the specified replacements for any such terms found in the text being read.
+
+To simplify usage, replacements can be made at the grapheme level without the need to understand or
+use regular expression syntax. Users can immediately hear how the entered term and its replacement
+sound with the current voice by using play buttons.
+
+By default, the user normalization dictionary starts empty. At present, importing or exporting the
+dictionary is not supported.
 
 ## Text Normalization & G2P
 
 Icelandic text normalization is performed before the text enters G2P.
 Local voice G2P is [rule-based](https://github.com/grammatek/g2p-thrax) and is implemented using the C++
 frameworks Thrax & OpenFST, which are accessed via JNI.
+
+## New since version 2.x
+Deprecated FLite voices and the former neural network voices. Nowadays, Flite voices are obsolete
+and we are using purely neural network voices instead. The FLite project is barely maintained, and
+the runtime performance of the neural network voices is closing in on the FLite voices rapidly.
+We can achieve 25x realtime speed with the neural network model on a Pixel 6 phone.
+
+The neural network model is based on [VITS](https://github.com/jaywalnut310/vits) and trained via
+[Piper TTS](https://github.com/rhasspy/piper). 
 
 ## Build Prerequisites
 

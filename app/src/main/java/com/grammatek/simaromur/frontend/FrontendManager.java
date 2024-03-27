@@ -41,18 +41,6 @@ public class FrontendManager {
     }
 
     /**
-     * Processes text for input into a TTS engine. This includes unicode cleaning, tokenizing, and
-     * normalizing the the text, and then to convert it into an X-SAMPA transcription.
-     *
-     * @param text raw input text
-     * @return an X-SAMPA transcription of @text
-     */
-    public String process(String text) {
-        final String normalized = mNormalizationManager.process(text);
-        return transcribe(normalized, IGNORE_TYPE, IGNORE_VERSION);
-    }
-
-    /**
      * Transcribe text to IPA symbols. Punctuation is kept as is, which conforms to the kind of
      * IPA dialect encoded into the VITS model.
      *

@@ -34,7 +34,7 @@ public class NormalizationManagerTest {
     public void processTest() {
         String input = "síma 421-6368";
         NormalizationManager manager = new NormalizationManager(context, pronDict);
-        String processed = manager.process(input);
+        String processed = manager.process(input, false);
         System.out.println(processed);
 
         assertEquals("síma fjórir tveir einn - sex þrír sex átta .",
@@ -45,7 +45,7 @@ public class NormalizationManagerTest {
     public void processDigitsTest() {
         NormalizationManager manager = new NormalizationManager(context, pronDict);
         for (String sent : getDigits().keySet()) {
-            String processed = manager.process(sent);
+            String processed = manager.process(sent, false);
             assertEquals(getDigits().get(sent), processed);
         }
     }
@@ -54,7 +54,7 @@ public class NormalizationManagerTest {
     public void processSymbolsTest() {
         NormalizationManager manager = new NormalizationManager(context, pronDict);
         for (String sent : getSymbols().keySet()) {
-            String processed = manager.process(sent);
+            String processed = manager.process(sent, false);
             assertEquals(getSymbols().get(sent), processed);
         }
     }
@@ -63,7 +63,7 @@ public class NormalizationManagerTest {
     public void processNewIssuesTest() {
         NormalizationManager manager = new NormalizationManager(context, pronDict);
         for (String sent : getNewTestSentences().keySet()) {
-            String processed = manager.process(sent);
+            String processed = manager.process(sent, false);
             assertEquals(getNewTestSentences().get(sent), processed);
         }
     }
@@ -72,7 +72,7 @@ public class NormalizationManagerTest {
     public void processV14IssuesTest() {
         NormalizationManager manager = new NormalizationManager(context, pronDict);
         for (String sent : getV14TestSentences().keySet()) {
-            String processed = manager.process(sent);
+            String processed = manager.process(sent, false);
             assertEquals(getV14TestSentences().get(sent), processed);
         }
     }
@@ -81,7 +81,7 @@ public class NormalizationManagerTest {
     public void processListTest() {
         NormalizationManager manager = new NormalizationManager(context, pronDict);
         for (String sent : getTestSentences().keySet()) {
-            String processed = manager.process(sent);
+            String processed = manager.process(sent, false);
             assertEquals(getTestSentences().get(sent), processed);
         }
     }

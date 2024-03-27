@@ -1,7 +1,11 @@
 package com.grammatek.simaromur.frontend;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
+import com.grammatek.simaromur.App;
+import com.grammatek.simaromur.db.NormDictEntry;
 import com.grammatek.simaromur.device.SymbolsLvLIs;
 
 import java.util.*;
@@ -21,6 +25,7 @@ import java.util.stream.Stream;
  */
 
 public class TTSNormalizer {
+    private static final String LOG_TAG = "Simaromur_" + TTSNormalizer.class.getSimpleName();
 
     private final List<CategoryTuple> BigCardinalFilledTupleList = Stream.of(CardinalOnesTuples.getTuples(), CardinalThousandTuples.getTuples(), CardinalMillionTuples.getTuples(),
                     CardinalBigTuples.getTuples())
@@ -80,9 +85,13 @@ public class TTSNormalizer {
      * @param text input text, unicode-normalized and if splitted on whitespace we have an array of tokens
      * @return pre-normalized text, i.e. some common abbreviations expanded
      */
-    public String preNormalize(String text) {
+    public String preNormalize(String text, boolean doIgnoreUserDict) {
         String normalized = text;
-        String domain = ""; //we will need to determine this from "text" in real life!
+        String domain = ""; // we will need to determine this from "text" in real life!
+
+        if (!doIgnoreUserDict) {
+            normalized = replaceFromNormDict(normalized);
+        }
 
         // some pre-processing and formatting of digits
         if (DIGITS_PTRN.matcher(normalized).matches()) {
@@ -128,6 +137,38 @@ public class TTSNormalizer {
         // if we have domain "sport" a hyphen between numbers is silent, otherwise it is normalized to "til"
         if (HYPHEN_PTRN.matcher(normalized).matches()) {
             normalized = replaceHyphen(normalized, domain);
+        }
+        return normalized;
+    }
+
+    /**
+     * Replace abbreviations and other patterns from the normalization dictionary via the
+     * NormDictEntry database.
+     *
+     * @param sentence  input sentence
+     * @return         normalized sentence with search terms replaced
+     */
+    private String replaceFromNormDict(String sentence) {
+        // replace abbreviations and other patterns from the normalization dictionary via the
+        // NormDictEntry Db
+        String normalized = sentence;
+        final HashMap<NormDictEntry, Pattern> entriesMap = App.getAppRepository().getCachedUserDictEntries();
+        final List<NormDictEntry> entries = new ArrayList<>(entriesMap.keySet());
+
+        // sort terms according to their size descendingly to match longer strings first.
+        // This is important for terms that are contained in other terms, e.g. "Donald Duck"
+        // should be replaced before "Duck"
+        entries.sort((o1, o2) -> o2.term.length() - o1.term.length());
+        for (NormDictEntry entry : entries) {
+            Pattern regex = entriesMap.get(entry);
+            assert regex != null;
+            if (regex.matcher(normalized).find()) {
+                //Log.v(LOG_TAG, "replaceFromNormDict() - replacing: " + regex + " with: " + entry.replacement);
+                normalized = regex.matcher(normalized).replaceAll(entry.replacement);
+            }
+        }
+        if (!normalized.equals(sentence)) {
+            Log.v(LOG_TAG, "replaceFromNormDict() replaced: " + sentence + " with: " + normalized);
         }
         return normalized;
     }

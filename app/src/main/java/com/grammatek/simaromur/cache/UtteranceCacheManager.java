@@ -635,7 +635,6 @@ public class UtteranceCacheManager {
         assert(!voiceName.isEmpty());
         assert(!voiceVersion.isEmpty());
         final String key = voiceName + ":" + voiceVersion;
-        Log.v(LOG_TAG, "buildVoiceKey(): " + key);
         return key;
     }
 

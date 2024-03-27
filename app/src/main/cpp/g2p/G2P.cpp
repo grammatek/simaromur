@@ -49,7 +49,7 @@ void G2P::Initialize()
     try
     {
     std::set_new_handler(FailedNewHandler);
-    char* argv0 = "G2P";
+    char* argv0 = (char*) "G2P";
     char** argv  = &argv0;
     int argc = 1;
     SET_FLAGS(argv[0], &argc, &argv, true);

@@ -5,6 +5,7 @@
     <string name="icelandic_sample">Þetta er prófunarsetning á íslensku fyrir talgervilinn Símarómur.</string>
     <string name="simaromur_manager">Símarómur</string>
     <string name="simaromur_voice_manager">Raddir</string>
+    <string name="simaromur_norm_dictionary">Orðabók</string>
     <string name="simaromur_info">Um Símaróm</string>
     <string name="simaromur_feedback">Ábendingar</string>
     <string name="email_subject">Ábending vegna Símaróms</string>
@@ -20,7 +21,9 @@
     <string name="voice_availability_title">Staða</string>
     <string name="voice_type">Tegund</string>
     <string name="speak_voice_title">Spila</string>
-    <string name="play_voice_title_description">Lesa sýndan texta</string>
+    <string name="play_voice_title_description">Lesa texta</string>
+    <string name="play_term_title_description">Lesa texta</string>
+    <string name="play_replacement_title_description">Lesa sýndan texta</string>
     <string name="info_other">Annað</string>
     <string name="wiki_github">Leiðbeiningar</string>
     <string name="info_about_device_title">Upplýsingar um Tæki</string>
@@ -31,6 +34,7 @@
     <string name="en_US">Enska</string>
     <string name="ok">Í lagi</string>
     <string name="cancel">Hætta</string>
+    <string name="delete_norm_entry">Eyða</string>
     <string name="doit">Virkja!</string>
     <string name="tts_settings">Áður en þú getur notað Símaróm sem skjálesara þarftu að virkja hann í stillingum fyrir talgervil</string>
     <string name="important">Mikilvægt</string>
@@ -42,7 +46,7 @@
     <string name="info_android_version">Android útgáfa</string>
     <string name="info_supported_abis">Studd ABIs</string>
     <string name="info_phone_model">Gerð síma</string>
-    <string name="info_about">© (2021–2022) Grammatek ehf.\nhttps://www.grammatek.com\</string>
+    <string name="info_about">© (2021–2024) Grammatek ehf.\nhttps://www.grammatek.com\</string>
     <string name="info_repo_url">https://github.com/grammatek/simaromur/wiki</string>
     <string name="info_benchmark">Viðmið</string>
     <string name="info_benchmark_value">sinnum hraðar en rauntími</string>
@@ -86,4 +90,10 @@
     <string name="voice_deletion_q">Virkilega eyða rödd?</string>
     <string name="voice_deletion_not_possible">Þú getur ekki eytt röddinni sem er valin, vinsamlegast veldu aðra rödd og reyndu aftur</string>
     <string name="no_email_client">Það er ekkert tölvupóstforrit uppsett</string>
+    <string name="term_title">Orð</string>
+    <string name="replacement_title">Lesa sem</string>
+    <string name="save_entry">Save</string>
+    <string name="add_dict_entry">Bæta við færslu</string>
+    <string name="dict_entry_deletion_title">Eyða færslu</string>
+    <string name="dict_entry_deletion_q">Ertu viss um að þú viljir eyða færslu?</string>
 </resources>

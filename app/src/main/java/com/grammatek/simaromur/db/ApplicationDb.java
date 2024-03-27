@@ -18,15 +18,16 @@ import java.util.List;
 
 @Database(
         version = ApplicationDb.LATEST_VERSION,
-        entities = {Voice.class, AppData.class}
+        entities = {Voice.class, AppData.class, NormDictEntry.class}
 )
 public abstract class ApplicationDb extends RoomDatabase {
     private final static String LOG_TAG = "Simaromur_" + ApplicationDb.class.getSimpleName();
-    static final int LATEST_VERSION = 8;
+    static final int LATEST_VERSION = 9;
     private static volatile ApplicationDb INSTANCE;
 
     public abstract AppDataDao appDataDao();
     public abstract VoiceDao voiceDao();
+    public abstract NormDictEntryDao normDictDao();
 
     static public final Migration MIGRATION_1_2 = new Migration(1, 2){ // From version 1 to version 2
         @Override
@@ -115,6 +116,16 @@ public abstract class ApplicationDb extends RoomDatabase {
         }
     };
 
+    static public final Migration MIGRATION_8_9 = new Migration(8, 9){ // From version 8 to version 9
+        @Override
+        public void migrate(SupportSQLiteDatabase database){
+            Log.v(LOG_TAG, "MIGRATION_8_9");
+            // Remove eventually existing table/index
+            database.execSQL("DROP TABLE IF EXISTS norm_dict_table");
+            database.execSQL("CREATE TABLE IF NOT EXISTS norm_dict_table (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `term` TEXT NOT NULL, `replacement` TEXT NOT NULL)");
+        }
+    };
+
     public static ApplicationDb getDatabase(final Context context) {
         Log.v(LOG_TAG, "getDatabase");
         if (INSTANCE == null) {
@@ -122,7 +133,7 @@ public abstract class ApplicationDb extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             ApplicationDb.class, "application_db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                             // Wipes and rebuilds instead of migrating if no Migration object.
                             .fallbackToDestructiveMigration()
                             .allowMainThreadQueries()
@@ -154,10 +165,12 @@ public abstract class ApplicationDb extends RoomDatabase {
 
         private final AppDataDao mAppDataDao;
         private final VoiceDao mVoiceDao;
+        private final NormDictEntryDao mNormDictDao;
 
         PopulateDbAsync(ApplicationDb db) {
             mAppDataDao = db.appDataDao();
             mVoiceDao = db.voiceDao();
+            mNormDictDao = db.normDictDao();
         }
 
         @Override
@@ -178,6 +191,13 @@ public abstract class ApplicationDb extends RoomDatabase {
                 Log.d(LOG_TAG, "PopulateDbAsync: no voices yet");
             } else {
                 Log.d(LOG_TAG, "PopulateDbAsync: Voices found.");
+            }
+
+            List<NormDictEntry> normDictEntries = mNormDictDao.getEntries();
+            if (normDictEntries == null || normDictEntries.isEmpty()) {
+                Log.d(LOG_TAG, "PopulateDbAsync: no normDictEntries yet");
+            } else {
+                Log.d(LOG_TAG, "PopulateDbAsync: normDictEntries found.");
             }
             return null;
         }

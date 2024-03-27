@@ -10,28 +10,28 @@
         android:id="@+id/textViewLeft"
         style="@style/text_view_style"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="50"
-        android:background="@color/colorPrimaryDark"
+        android:layout_height="wrap_content"
+        android:layout_weight="66.6"
         android:gravity="start"
-        android:maxLines="2"
+        android:background="@color/colorPrimaryDark"
+        android:ellipsize="none"
+        android:scrollHorizontally="false"
+        android:singleLine="true"
         android:textAlignment="textStart"
-        android:textColor="@android:color/holo_green_light"
-        tools:text="placeholder text"
-        android:ellipsize="end"/>
+        tools:text="placeholder text that is too long" />
 
     <TextView
         android:id="@+id/textViewRight"
         style="@style/text_view_style"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="50"
+        android:gravity="center"
         android:background="@color/colorPrimaryDark"
-        android:gravity="right"
-        android:maxLines="2"
-        android:textAlignment="viewEnd"
-        android:textStyle="italic"
-        tools:text="placeholder text"
-        android:ellipsize="end"/>
+        android:ellipsize="none"
+        android:scrollHorizontally="false"
+        android:singleLine="true"
+        android:textAlignment="center"
+        tools:text="placeholder text" />
 
 </LinearLayout>
+

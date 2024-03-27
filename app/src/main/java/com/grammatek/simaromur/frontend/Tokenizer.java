@@ -88,6 +88,10 @@ public class Tokenizer {
      * @return a list of sentences as strings
      */
     public List<String> detectSentences(String text) {
+        // TODO: if the sentence ends with an abbreviation and a dot, then the dot is
+        //       separated from the abbreviation. We should add a heuristics to check
+        //       if the abbreviation is at the end of a sentence, and if so, keep the dot where
+        //       it is. Example: ".... kl."
         List<String> sentences = new ArrayList<>();
         String[] tokensArr = text.split("\\s");
         StringBuilder sb = new StringBuilder();
