@@ -19,6 +19,8 @@ jobs:
           ENCODED_KS: ${{ secrets.KEYSTORE }}
         run: |
           TMP_KEYSTORE_FILE_PATH="${RUNNER_TEMP}"/keystore
+          echo -n "${{ secrets.KEYSTORE }}" | xxd -ps
+          echo
           mkdir -p "${TMP_KEYSTORE_FILE_PATH}"
           echo "$ENCODED_KS" | base64 -di > "${TMP_KEYSTORE_FILE_PATH}"/simaromur_ks.jks
           ls -al "${TMP_KEYSTORE_FILE_PATH}"
@@ -65,6 +67,12 @@ jobs:
       - name: "Build the app"
         run: |
           git submodule update --init
+          echo -n "${{ secrets.SIGNING_KEY_ALIAS }}" | xxd -ps
+          echo
+          echo -n "${{ secrets.SIGNING_KEY_PASSWORD }}" | xxd -ps
+          echo
+          echo -n "${{ secrets.SIGNING_STORE_PASSWORD }}" | xxd -ps
+          echo
           ./gradlew assemble
           ./gradlew build -x test
         env:
